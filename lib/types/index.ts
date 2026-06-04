@@ -136,6 +136,7 @@ export type AdminMetrics = {
   relapse_rate_7d: number
   chat_today: number
   flagged_messages: number
+  new_users_7d: number
   activity_30d: { date: string; checkins: number; panic: number }[]
 }
 

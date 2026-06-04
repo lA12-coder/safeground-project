@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Flame, Sparkles } from 'lucide-react';
 
 interface StreakCardProps {
   currentStreak: number;
@@ -14,21 +14,50 @@ const milestones = [3, 7, 14, 30, 60, 90];
 export function StreakCard({ currentStreak, longestStreak, totalCleanDays }: StreakCardProps) {
   const nextMilestone = milestones.find(m => m > currentStreak) || 90;
   const isMilestone = milestones.includes(currentStreak);
+  const percentToNext = Math.min((currentStreak / nextMilestone) * 100, 100);
+
+  const getStreakTier = () => {
+    if (currentStreak >= 90) return { label: 'Legend', color: 'text-amber-600', icon: Sparkles }
+    if (currentStreak >= 30) return { label: 'Champion', color: 'text-amber-500', icon: Flame }
+    if (currentStreak >= 14) return { label: 'Warrior', color: 'text-amber-500', icon: Flame }
+    if (currentStreak >= 7) return { label: 'Committed', color: 'text-amber-500', icon: Flame }
+    return { label: 'Beginner', color: 'text-amber-600', icon: Sparkles }
+  }
+
+  const tier = getStreakTier()
 
   return (
-    <div className="card p-8 space-y-6 parchment-glow">
+    <div className="card p-8 space-y-6 parchment-glow transition-colors duration-300">
       {/* Main Streak Display */}
       <div className="text-center space-y-4">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, type: 'spring' }}
-          className="text-7xl font-serif font-bold text-primary"
+          className="relative"
         >
-          {currentStreak}
+          <motion.span
+            animate={isMilestone ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="text-7xl font-serif font-bold text-primary"
+          >
+            {currentStreak}
+          </motion.span>
+          {currentStreak > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2"
+            >
+              <span className={`inline-flex items-center gap-1 text-sm font-semibold ${tier.color}`}>
+                <tier.icon className="w-4 h-4" />
+                {tier.label}
+              </span>
+            </motion.div>
+          )}
         </motion.div>
         <div>
-          <h3 className="heading-md text-on-surface">Days of Strength</h3>
+          <h3 className="font-bold text-xl text-on-surface">Days of Strength</h3>
           {isMilestone && (
             <motion.p
               animate={{ y: [0, -5, 0] }}
@@ -66,13 +95,20 @@ export function StreakCard({ currentStreak, longestStreak, totalCleanDays }: Str
             <span className="text-sm font-semibold text-on-surface-variant">Next Milestone</span>
             <span className="text-xs text-primary font-bold">{nextMilestone} days</span>
           </div>
-          <div className="w-full bg-surface-container-low rounded-full h-2 overflow-hidden">
+          <div className="relative w-full bg-surface-container-low rounded-full h-3 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${(currentStreak / nextMilestone) * 100}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="h-full bg-gradient-to-r from-primary to-primary-container"
+              animate={{ width: `${percentToNext}%` }}
+              transition={{ duration: 1, ease: 'easeOut' }}
+              className="h-full bg-gradient-to-r from-primary to-primary-container rounded-full"
             />
+            {percentToNext > 20 && (
+              <motion.div
+                animate={{ x: [0, 4, 0] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="absolute top-1/2 -translate-y-1/2 right-2 w-1 h-1 bg-white/50 rounded-full"
+              />
+            )}
           </div>
         </div>
       )}

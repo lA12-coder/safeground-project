@@ -62,6 +62,7 @@ async function fetchAdminData() {
 
   const metrics: AdminMetrics = {
     total_users: total_users || 0,
+    new_users_7d: 0,
     panic_today: panic_today || 0,
     active_streaks: active_streaks || 0,
     provider_queue: provider_queue || 0,

@@ -50,6 +50,17 @@ export default function OrgRegistrationPage() {
     }
   }
 
+  const steps = ['Basic Info', 'Spiritual Foundation', 'Leadership & Docs', 'Agreement']
+  const [currentStep, setCurrentStep] = useState(0)
+
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) setCurrentStep(prev => prev + 1)
+  }
+
+  const handleBack = () => {
+    if (currentStep > 0) setCurrentStep(prev => prev - 1)
+  }
+
   if (submitted) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fbfaf8] px-6">
@@ -88,177 +99,234 @@ export default function OrgRegistrationPage() {
           </p>
         </section>
 
-        <section className="mt-14 grid gap-6 lg:grid-cols-[1fr_34%]">
-          <div className="rounded-lg border-2 border-[#c2512d] bg-white p-8">
-            <div className="mb-7 flex items-center gap-3">
-              <Home size={22} className="text-[#c2512d]" />
-              <h2 className="text-2xl font-bold">Basic Information</h2>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              <label className="space-y-2">
-                <span className="text-sm font-bold tracking-widest">Organization Name</span>
-                <input
-                  value={form.org_name}
-                  onChange={event => update('org_name', event.target.value)}
-                  placeholder="e.g. Al-Noor Grounding Center"
-                  className="w-full rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
+        {/* Progress Steps */}
+        <div className="mt-10 mb-8">
+          <div className="flex items-center justify-between">
+            {steps.map((step, i) => (
+              <div key={step} className="flex items-center flex-1">
+                <div className={`flex items-center gap-2 ${i <= currentStep ? 'text-[#9a4f00]' : 'text-[#806b5d]'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    i < currentStep ? 'bg-[#007233] text-white' :
+                    i === currentStep ? 'bg-[#9a4f00] text-white' : 'bg-[#e3ddd7] text-[#806b5d]'
+                  }`}>
+                    {i < currentStep ? '✓' : i + 1}
+                  </div>
+                  <span className="text-sm font-semibold hidden sm:block">{step}</span>
+                </div>
+                {i < steps.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-3 ${i < currentStep ? 'bg-[#007233]' : 'bg-[#e3ddd7]'}`} />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 1: Basic Information */}
+        {currentStep === 0 && (
+          <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_34%]">
+            <div className="rounded-lg border-2 border-[#c2512d] bg-white p-8">
+              <div className="mb-7 flex items-center gap-3">
+                <Home size={22} className="text-[#c2512d]" />
+                <h2 className="text-2xl font-bold">Basic Information</h2>
+              </div>
+              <div className="grid gap-6 md:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-sm font-bold tracking-widest">Organization Name *</span>
+                  <input
+                    value={form.org_name}
+                    onChange={event => update('org_name', event.target.value)}
+                    placeholder="e.g. Al-Noor Grounding Center"
+                    className="w-full rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
+                    required
+                  />
+                </label>
+                <label className="space-y-2">
+                  <span className="text-sm font-bold tracking-widest">Faith Category *</span>
+                  <select
+                    value={form.faith_category}
+                    onChange={event => update('faith_category', event.target.value)}
+                    className="w-full rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
+                  >
+                    <option>Orthodox</option>
+                    <option>Muslim</option>
+                    <option>Protestant</option>
+                    <option>Interfaith</option>
+                  </select>
+                </label>
+              </div>
+              <label className="mt-6 block space-y-2">
+                <span className="text-sm font-bold tracking-widest">Mission Statement *</span>
+                <textarea
+                  value={form.mission}
+                  onChange={event => update('mission', event.target.value)}
+                  rows={5}
+                  placeholder="Describe how your organization supports grounding and spiritual well-being..."
+                  className="w-full resize-none rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
+                  required
                 />
               </label>
-              <label className="space-y-2">
-                <span className="text-sm font-bold tracking-widest">Faith Category</span>
-                <select
-                  value={form.faith_category}
-                  onChange={event => update('faith_category', event.target.value)}
-                  className="w-full rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
-                >
-                  <option>Orthodox</option>
-                  <option>Muslim</option>
-                  <option>Protestant</option>
-                  <option>Interfaith</option>
-                </select>
-              </label>
             </div>
-            <label className="mt-6 block space-y-2">
-              <span className="text-sm font-bold tracking-widest">Mission Statement</span>
-              <textarea
-                value={form.mission}
-                onChange={event => update('mission', event.target.value)}
-                rows={5}
-                placeholder="Describe how your organization supports grounding and spiritual well-being..."
-                className="w-full resize-none rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
-              />
-            </label>
-          </div>
 
-          <aside className="relative min-h-80 overflow-hidden rounded-lg bg-[url('https://images.unsplash.com/photo-1528538090384-1b5bb505bf4e?auto=format&fit=crop&w=900&q=80')] bg-cover bg-center">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#5a2700] via-[#5a2700]/35 to-transparent" />
-            <p className="absolute bottom-8 left-7 max-w-xs font-serif text-xl font-bold italic text-white">
-              "A place where the soul finds its footing."
-            </p>
-          </aside>
-        </section>
+            <aside className="relative min-h-80 overflow-hidden rounded-lg bg-[url('https://images.unsplash.com/photo-1528538090384-1b5bb505bf4e?auto=format&fit=crop&w=900&q=80')] bg-cover bg-center">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#5a2700] via-[#5a2700]/35 to-transparent" />
+              <p className="absolute bottom-8 left-7 max-w-xs font-serif text-xl font-bold italic text-white">
+                "A place where the soul finds its footing."
+              </p>
+            </aside>
+          </section>
+        )}
 
-        <section className="mt-6 rounded-lg border-2 border-[#00b86b] bg-white p-8">
-          <div className="mb-8 flex items-center gap-3">
-            <Church size={22} className="text-[#00a862]" />
-            <h2 className="text-2xl font-bold">Spiritual Foundation</h2>
-          </div>
-          <div className="grid gap-8 lg:grid-cols-3">
-            <div>
-              <h3 className="mb-4 text-sm font-bold tracking-widest">Faith Tradition</h3>
-              <div className="space-y-3">
-                {traditions.map(item => (
-                  <button key={item} className="flex w-full items-center gap-3 rounded-lg bg-[#f0f0ef] px-4 py-4 text-left">
-                    <span className="h-5 w-5 rounded-full border border-[#6f7785]" />
-                    {item}
+        {/* Step 2: Spiritual Foundation */}
+        {currentStep === 1 && (
+          <section className="mt-8 rounded-lg border-2 border-[#00b86b] bg-white p-8">
+            <div className="mb-8 flex items-center gap-3">
+              <Church size={22} className="text-[#00a862]" />
+              <h2 className="text-2xl font-bold">Spiritual Foundation</h2>
+            </div>
+            <div className="grid gap-8 lg:grid-cols-3">
+              <div>
+                <h3 className="mb-4 text-sm font-bold tracking-widest">Faith Tradition</h3>
+                <div className="space-y-3">
+                  {traditions.map(item => (
+                    <button key={item} className="flex w-full items-center gap-3 rounded-lg bg-[#f0f0ef] px-4 py-4 text-left hover:bg-[#e3ddd7] transition-colors">
+                      <span className="h-5 w-5 rounded-full border border-[#6f7785]" />
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="mb-4 text-sm font-bold tracking-widest">Recovery Ministry Type</h3>
+                <div className="space-y-3">
+                  {ministries.map(item => (
+                    <label key={item} className="flex items-center gap-3 cursor-pointer hover:text-[#9a4f00] transition-colors">
+                      <input type="checkbox" className="h-4 w-4 rounded border-[#6f7785]" />
+                      {item}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="mb-4 text-sm font-bold tracking-widest">Current Programs</h3>
+                <input placeholder="Add a program tag..." className="w-full rounded-full border border-[#d9b7a4] px-5 py-3 outline-none focus:border-[#9a4f00]" />
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <span className="rounded-full border border-[#f7c25a] bg-[#fff8e5] px-4 py-2 text-sm font-bold text-[#d97706]">Daily Prayer x</span>
+                  <span className="rounded-full border border-[#f7c25a] bg-[#fff8e5] px-4 py-2 text-sm font-bold text-[#d97706]">Meditative Walking x</span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Step 3: Leadership & Docs */}
+        {currentStep === 2 && (
+          <section className="mt-8 grid gap-6 lg:grid-cols-2">
+            <div className="rounded-lg border border-[#eadfd5] bg-white p-8">
+              <div className="mb-8 flex items-center gap-3">
+                <UserRound size={22} className="text-[#c2512d]" />
+                <h2 className="text-2xl font-bold">Leadership</h2>
+              </div>
+              <label className="flex items-center gap-5 rounded-xl bg-[#f0f0ef] px-5 py-5 hover:bg-[#e3ddd7] transition-colors">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#ffd8be] text-[#9a4f00]">
+                  <UserRound />
+                </span>
+                <span>
+                  <span className="block text-xs text-[#806b5d]">Lead Spiritual Director *</span>
+                  <input
+                    value={form.leader}
+                    onChange={event => update('leader', event.target.value)}
+                    placeholder="Full Name"
+                    className="mt-1 bg-transparent outline-none"
+                  />
+                </span>
+              </label>
+              <div className="mt-7">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-bold tracking-widest">Mentor List</span>
+                  <span className="text-sm font-bold">(Max 5)</span>
+                </div>
+                <div className="flex gap-3">
+                  <input
+                    value={form.mentor}
+                    onChange={event => update('mentor', event.target.value)}
+                    placeholder="Mentor email..."
+                    className="flex-1 rounded-lg border border-[#d9b7a4] px-4 py-3 outline-none"
+                  />
+                  <button className="rounded-lg bg-[#006c43] px-5 text-white hover:brightness-110 transition-all">
+                    <Plus size={22} />
                   </button>
-                ))}
+                </div>
               </div>
             </div>
-            <div>
-              <h3 className="mb-4 text-sm font-bold tracking-widest">Recovery Ministry Type</h3>
-              <div className="space-y-3">
-                {ministries.map(item => (
-                  <label key={item} className="flex items-center gap-3">
-                    <input type="checkbox" className="h-4 w-4 rounded border-[#6f7785]" />
-                    {item}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="mb-4 text-sm font-bold tracking-widest">Current Programs</h3>
-              <input placeholder="Add a program tag..." className="w-full rounded-full border border-[#d9b7a4] px-5 py-3 outline-none" />
-              <div className="mt-4 flex flex-wrap gap-3">
-                <span className="rounded-full border border-[#f7c25a] bg-[#fff8e5] px-4 py-2 text-sm font-bold text-[#d97706]">Daily Prayer x</span>
-                <span className="rounded-full border border-[#f7c25a] bg-[#fff8e5] px-4 py-2 text-sm font-bold text-[#d97706]">Meditative Walking x</span>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        <section className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-[#eadfd5] bg-white p-8">
-            <div className="mb-8 flex items-center gap-3">
-              <UserRound size={22} className="text-[#c2512d]" />
-              <h2 className="text-2xl font-bold">Leadership</h2>
-            </div>
-            <label className="flex items-center gap-5 rounded-xl bg-[#f0f0ef] px-5 py-5">
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#ffd8be] text-[#9a4f00]">
-                <UserRound />
-              </span>
-              <span>
-                <span className="block text-xs text-[#806b5d]">Lead Spiritual Director</span>
-                <input
-                  value={form.leader}
-                  onChange={event => update('leader', event.target.value)}
-                  placeholder="Full Name"
-                  className="mt-1 bg-transparent outline-none"
-                />
-              </span>
-            </label>
-            <div className="mt-7">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-bold tracking-widest">Mentor List</span>
-                <span className="text-sm font-bold">(Max 5)</span>
+            <div className="rounded-lg border border-[#eadfd5] bg-white p-8">
+              <div className="mb-8 flex items-center gap-3">
+                <ShieldCheck size={22} className="text-[#ff7a00]" />
+                <h2 className="text-2xl font-bold">Verification</h2>
               </div>
-              <div className="flex gap-3">
-                <input
-                  value={form.mentor}
-                  onChange={event => update('mentor', event.target.value)}
-                  placeholder="Mentor email..."
-                  className="flex-1 rounded-lg border border-[#d9b7a4] px-4 py-3 outline-none"
-                />
-                <button className="rounded-lg bg-[#006c43] px-5 text-white">
-                  <Plus size={22} />
-                </button>
+              <p className="leading-7 text-[#4d362a]">
+                Please upload formal documentation of your religious organization or non-profit status.
+              </p>
+              <div className="mt-8 flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#d9b7a4] text-center hover:border-[#9a4f00] transition-colors cursor-pointer">
+                <Upload size={34} className="text-[#8a7160]" />
+                <p className="mt-3 font-bold text-[#8a7160]">Drag & Drop Documents</p>
+                <p className="text-xs text-[#d3ad97]">PDF, JPG (Max 5MB)</p>
               </div>
             </div>
-          </div>
+          </section>
+        )}
 
-          <div className="rounded-lg border border-[#eadfd5] bg-white p-8">
-            <div className="mb-8 flex items-center gap-3">
-              <ShieldCheck size={22} className="text-[#ff7a00]" />
-              <h2 className="text-2xl font-bold">Verification</h2>
+        {/* Step 4: Agreement */}
+        {currentStep === 3 && (
+          <section className="mt-8 rounded-lg border border-[#f2c84b] bg-[#fff8d9] p-8">
+            <h2 className="flex items-center gap-3 text-2xl font-bold text-[#c2512d]">
+              <ShieldCheck size={22} />
+              Sanctuary Safety & Ethical Agreement
+            </h2>
+            <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_46%]">
+              <div className="space-y-5 text-[#4d362a]">
+                <p>By registering, you commit to the <strong>SafeGround Covenant:</strong></p>
+                <p className="text-[#007233]">Zero tolerance for harmful, coercive, or abusive teachings.</p>
+                <p className="text-[#007233]">Commitment to evidence-based recovery alongside faith practices.</p>
+                <p className="text-[#007233]">Full transparency in leadership and financial structures.</p>
+              </div>
+              <div className="rounded-xl bg-white p-7">
+                <label className="flex items-start gap-4 cursor-pointer">
+                  <input type="checkbox" checked={agreed} onChange={event => setAgreed(event.target.checked)} className="mt-1 h-6 w-6" />
+                  <span className="text-lg">We agree to the Sanctuary Safety Rules and Ethical Conduct.</span>
+                </label>
+              </div>
             </div>
-            <p className="leading-7 text-[#4d362a]">
-              Please upload formal documentation of your religious organization or non-profit status.
-            </p>
-            <div className="mt-8 flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#d9b7a4] text-center">
-              <Upload size={34} className="text-[#8a7160]" />
-              <p className="mt-3 font-bold text-[#8a7160]">Drag & Drop Documents</p>
-              <p className="text-xs text-[#d3ad97]">PDF, JPG (Max 5MB)</p>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        <section className="mt-6 rounded-lg border border-[#f2c84b] bg-[#fff8d9] p-8">
-          <h2 className="flex items-center gap-3 text-2xl font-bold text-[#c2512d]">
-            <ShieldCheck size={22} />
-            Sanctuary Safety & Ethical Agreement
-          </h2>
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_46%]">
-            <div className="space-y-5 text-[#4d362a]">
-              <p>By registering, you commit to the <strong>SafeGround Covenant:</strong></p>
-              <p className="text-[#007233]">Zero tolerance for harmful, coercive, or abusive teachings.</p>
-              <p className="text-[#007233]">Commitment to evidence-based recovery alongside faith practices.</p>
-              <p className="text-[#007233]">Full transparency in leadership and financial structures.</p>
-            </div>
-            <div className="rounded-xl bg-white p-7">
-              <label className="flex items-start gap-4">
-                <input type="checkbox" checked={agreed} onChange={event => setAgreed(event.target.checked)} className="mt-1 h-6 w-6" />
-                <span className="text-lg">We agree to the Sanctuary Safety Rules and Ethical Conduct.</span>
-              </label>
-              <button
-                onClick={handleSubmit}
-                disabled={!agreed || submitting}
-                className="mt-6 w-full rounded-lg bg-[#9a4f00] px-7 py-4 text-xl font-bold text-white disabled:opacity-50"
-              >
-                {submitting ? 'Submitting...' : 'Complete Registration'}
-              </button>
-            </div>
-          </div>
-        </section>
+        {/* Navigation Buttons */}
+        <div className="mt-8 flex items-center justify-between">
+          <button
+            onClick={handleBack}
+            disabled={currentStep === 0}
+            className="px-8 py-4 rounded-lg border border-[#d9b7a4] text-[#4d362a] font-bold disabled:opacity-30 hover:bg-[#f4eee9] transition-all"
+          >
+            Back
+          </button>
+          {currentStep < steps.length - 1 ? (
+            <button
+              onClick={handleNext}
+              disabled={currentStep === 0 && !form.org_name}
+              className="px-8 py-4 rounded-lg bg-[#006c43] text-white font-bold hover:brightness-110 disabled:opacity-50 transition-all"
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              disabled={!agreed || submitting}
+              className="px-8 py-4 rounded-lg bg-[#9a4f00] text-xl font-bold text-white disabled:opacity-50 hover:brightness-110 transition-all"
+            >
+              {submitting ? 'Submitting...' : 'Complete Registration'}
+            </button>
+          )}
+        </div>
 
         <footer className="py-14 text-center text-sm font-bold tracking-widest text-[#806b5d]">
           © 2024 SafeGround Collective - A Therapeutic Grounding Initiative

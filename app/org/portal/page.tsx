@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 import { Users, Calendar, Activity, BarChart3 } from 'lucide-react'
 
 interface Booking {
   id: string
   scheduled_at: string
-  status: string
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
   profiles: { alias: string } | null
 }
 
@@ -93,15 +94,21 @@ export default function OrgWellnessPortal() {
 
   return (
     <div className="min-h-screen bg-surface">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="mb-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        <div className="mb-2">
           <h1 className="text-3xl font-bold text-primary">Organization Wellness Portal</h1>
           <p className="text-on-surface-variant mt-1">Manage your programs and support participants</p>
         </div>
 
-        <div className="grid grid-cols-4 gap-6 mb-8">
+        {/* Metric Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {metricCards.map(({ label, icon: Icon, value, color }) => (
-            <div key={label} className="card p-6">
+            <motion.div
+              key={label}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6"
+            >
               <Icon className={`w-5 h-5 ${color} mb-2`} />
               <p className="text-3xl font-bold text-on-surface">
                 {loading ? (
@@ -113,13 +120,26 @@ export default function OrgWellnessPortal() {
                 )}
               </p>
               <p className="text-sm text-on-surface-variant">{label}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-on-surface mb-4">Upcoming Appointments</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Upcoming Appointments */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-on-surface">Upcoming Appointments</h2>
+              {stats && stats.appointments > 0 && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold">
+                  {stats.appointments} upcoming
+                </span>
+              )}
+            </div>
             {loading ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
@@ -127,9 +147,9 @@ export default function OrgWellnessPortal() {
                 ))}
               </div>
             ) : stats && stats.bookings.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {stats.bookings.filter(b => b.status !== 'cancelled').slice(0, 6).map((apt) => (
-                  <div key={apt.id} className="flex items-center justify-between p-3 bg-surface-container-low rounded-lg">
+                  <div key={apt.id} className="flex items-center justify-between p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
                     <div>
                       <p className="font-medium text-on-surface">{apt.profiles?.alias || 'Anonymous'}</p>
                       <p className="text-sm text-on-surface-variant">
@@ -142,6 +162,8 @@ export default function OrgWellnessPortal() {
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                         apt.status === 'confirmed'
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-700'
+                          : apt.status === 'completed'
+                          ? 'bg-gray-100 text-gray-600'
                           : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700'
                       }`}>
                         {apt.status}
@@ -151,12 +173,24 @@ export default function OrgWellnessPortal() {
                 ))}
               </div>
             ) : (
-              <p className="text-on-surface-variant text-sm text-center py-8">No appointments yet.</p>
+              <div className="text-center py-8">
+                <Calendar className="w-8 h-8 text-on-surface-variant mx-auto mb-2 opacity-50" />
+                <p className="text-on-surface-variant text-sm">No appointments yet.</p>
+              </div>
             )}
-          </div>
+          </motion.div>
 
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-on-surface mb-4">Platform Health</h2>
+          {/* Platform Health */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-on-surface">Platform Health</h2>
+            </div>
             {loading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
@@ -164,18 +198,23 @@ export default function OrgWellnessPortal() {
                 ))}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between text-sm mb-1.5">
                     <span className="text-on-surface-variant">Engagement Rate</span>
                     <span className="font-semibold text-on-surface">{stats?.engagement || 0}%</span>
                   </div>
-                  <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: `${stats?.engagement || 0}%` }} />
+                  <div className="h-2.5 bg-surface-container-high rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stats?.engagement || 0}%` }}
+                      transition={{ duration: 1, ease: 'easeOut' }}
+                      className="h-full bg-primary rounded-full"
+                    />
                   </div>
                 </div>
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between text-sm mb-1.5">
                     <span className="text-on-surface-variant">Appointment Fill Rate</span>
                     <span className="font-semibold text-on-surface">
                       {stats && stats.bookings.length > 0
@@ -183,21 +222,31 @@ export default function OrgWellnessPortal() {
                         : 0}%
                     </span>
                   </div>
-                  <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 rounded-full" style={{
-                      width: `${stats && stats.bookings.length > 0
-                        ? Math.round((stats.bookings.filter(b => b.status === 'confirmed' || b.status === 'completed').length / stats.bookings.length) * 100)
-                        : 0}%`
-                    }} />
+                  <div className="h-2.5 bg-surface-container-high rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{
+                        width: `${stats && stats.bookings.length > 0
+                          ? Math.round((stats.bookings.filter(b => b.status === 'confirmed' || b.status === 'completed').length / stats.bookings.length) * 100)
+                          : 0}%`
+                      }}
+                      transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
+                      className="h-full bg-amber-500 rounded-full"
+                    />
                   </div>
                 </div>
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between text-sm mb-1.5">
                     <span className="text-on-surface-variant">Program Participation</span>
                     <span className="font-semibold text-on-surface">{stats?.programs || 0} programs</span>
                   </div>
-                  <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min((stats?.programs || 0) * 25, 100)}%` }} />
+                  <div className="h-2.5 bg-surface-container-high rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((stats?.programs || 0) * 25, 100)}%` }}
+                      transition={{ duration: 1, delay: 0.4, ease: 'easeOut' }}
+                      className="h-full bg-blue-500 rounded-full"
+                    />
                   </div>
                 </div>
               </div>
@@ -205,14 +254,14 @@ export default function OrgWellnessPortal() {
 
             {stats && stats.enrollments.length > 0 && (
               <div className="mt-6 pt-4 border-t border-outline-variant/30">
-                <h3 className="text-sm font-semibold text-on-surface mb-2">Program Schedule</h3>
+                <h3 className="text-sm font-semibold text-on-surface mb-3">Program Schedule</h3>
                 <div className="space-y-2">
                   {stats.enrollments.slice(0, 5).map((msg, i) => {
                     const [program, week] = msg.split(' — ')
                     return (
-                      <div key={i} className="flex items-center justify-between text-sm">
-                        <span className="text-on-surface-variant">{program}</span>
-                        <span className="text-on-surface-variant/60">{week}</span>
+                      <div key={i} className="flex items-center justify-between text-sm p-2 bg-surface-container-low rounded-lg">
+                        <span className="text-on-surface font-medium">{program}</span>
+                        <span className="text-xs text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded-full">{week}</span>
                       </div>
                     )
                   })}
@@ -221,9 +270,13 @@ export default function OrgWellnessPortal() {
             )}
 
             {!loading && (!stats || (stats.bookings.length === 0 && stats.enrollments.length === 0)) && (
-              <p className="text-on-surface-variant text-sm text-center py-8">No platform data yet. Seed demo data to populate metrics.</p>
+              <div className="text-center py-8">
+                <BarChart3 className="w-8 h-8 text-on-surface-variant mx-auto mb-2 opacity-50" />
+                <p className="text-on-surface-variant text-sm">No platform data yet.</p>
+                <p className="text-xs text-on-surface-variant/60 mt-1">Seed demo data to populate metrics.</p>
+              </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

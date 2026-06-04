@@ -26,8 +26,9 @@ export async function GET(request: NextRequest) {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]
 
-    const [{ count: total_users }, { count: panic_today }, { count: active_streaks }] = await Promise.all([
+    const [{ count: total_users }, { count: new_users_7d }, { count: panic_today }, { count: active_streaks }] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgoStr),
       supabase.from('habit_logs').select('*', { count: 'exact', head: true }).eq('ai_intervention_triggered', true).gte('log_date', today),
       supabase.from('streaks').select('*', { count: 'exact', head: true }).gt('current_streak', 0),
     ])
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
 
     const metrics: AdminMetrics = {
       total_users: total_users || 0,
+      new_users_7d: new_users_7d || 0,
       panic_today: panic_today || 0,
       active_streaks: active_streaks || 0,
       provider_queue: provider_queue || 0,
