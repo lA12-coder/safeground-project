@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
 
 interface AffirmationRequest {
   moodScore: number;
   urgeIntensity: number;
 }
 
-const client = new Anthropic();
+const SYSTEM_PROMPT =
+  'You are a compassionate recovery companion for Ethiopian university students. Generate daily affirmations that are culturally respectful, non-judgmental, and focused on strength and healing.';
 
 const fallbackAffirmations = [
   'Your strength is not measured by your struggles, but by your courage to face them.',
@@ -26,8 +27,7 @@ export async function POST(request: NextRequest) {
     const body: AffirmationRequest = await request.json();
     const { moodScore = 5, urgeIntensity = 5 } = body;
 
-    // Use fallback if API key not configured
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!isGeminiConfigured()) {
       const fallback = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)];
       return NextResponse.json({
         success: true,
@@ -36,44 +36,32 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Build context about the user's state
     const contextPrompt = `
 The user's current state:
 - Mood Score: ${moodScore}/5 (1=very sad, 5=excellent)
 - Urge Intensity: ${urgeIntensity}/10 (how strongly they're craving)
 
-Generate a single compassionate, culturally respectful daily affirmation (2-3 sentences) for an Ethiopian university student in recovery from khat addiction. 
-Use metaphors of strength, nature, and academic focus. 
+Generate a single compassionate, culturally respectful daily affirmation (2-3 sentences) for an Ethiopian university student in recovery from khat addiction.
+Use metaphors of strength, nature, and academic focus.
 Do NOT mention religion unless directly relevant.
 Output ONLY the affirmation text, nothing else.
 `;
 
-    const response = await client.messages.create({
-      model: 'claude-opus-4-20250514',
-      max_tokens: 150,
-      system: 'You are a compassionate recovery companion for Ethiopian university students. Generate daily affirmations that are culturally respectful, non-judgmental, and focused on strength and healing.',
-      messages: [
-        {
-          role: 'user',
-          content: contextPrompt,
-        },
-      ],
+    const affirmation = await generateGeminiText({
+      systemPrompt: SYSTEM_PROMPT,
+      userMessage: contextPrompt,
+      maxOutputTokens: 150,
+      temperature: 0.8,
     });
-
-    // Extract the affirmation text
-    const affirmation = (response.content[0] as { text: string }).text.trim();
-
-    console.log('[v0] Generated affirmation for mood:', moodScore, 'urge:', urgeIntensity);
 
     return NextResponse.json({
       success: true,
       affirmation,
-      source: 'claude',
+      source: 'gemini',
     });
   } catch (error) {
-    console.error('[v0] Error generating affirmation:', error);
+    console.error('[affirmation]', error);
 
-    // Fallback to static affirmation on any error
     const fallback = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)];
     return NextResponse.json({
       success: true,

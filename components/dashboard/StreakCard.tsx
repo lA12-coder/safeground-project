@@ -9,11 +9,13 @@ interface StreakCardProps {
   totalCleanDays: number;
 }
 
-const milestones = [3, 7, 14, 30, 60, 90];
+import { STREAK_MILESTONES } from '@/lib/utils/streakUtils';
+
+const milestones = STREAK_MILESTONES;
 
 export function StreakCard({ currentStreak, longestStreak, totalCleanDays }: StreakCardProps) {
   const nextMilestone = milestones.find(m => m > currentStreak) || 90;
-  const isMilestone = milestones.includes(currentStreak);
+  const isMilestone = (milestones as readonly number[]).includes(currentStreak);
 
   return (
     <div className="card p-8 space-y-6 parchment-glow">

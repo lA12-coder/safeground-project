@@ -87,7 +87,7 @@ export default function DashboardPage() {
                 <p className="body-md opacity-90">
                   Your daily check-in helps us understand your patterns and support you better.
                 </p>
-                <Link href="/dashboard/log" className="inline-block btn-primary bg-primary-fixed text-on-primary-fixed">
+                <Link href="/log" className="inline-block btn-primary">
                   Log Your Day
                 </Link>
               </div>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      <PanicButton />
+      <PanicButton variant="fab" />
     </div>
   );
 }

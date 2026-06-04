@@ -30,7 +30,8 @@ export function isStreakActive(lastLogDate: Date, dayThreshold: number = 1): boo
   return daysSinceLastLog <= dayThreshold;
 }
 
+export const STREAK_MILESTONES = [3, 7, 14, 30, 60, 90] as const;
+
 export function getNextStreakMilestone(currentStreak: number): number {
-  const milestones = [7, 14, 30, 60, 100];
-  return milestones.find((m) => m > currentStreak) || currentStreak + 30;
+  return STREAK_MILESTONES.find((m) => m > currentStreak) ?? 90;
 }

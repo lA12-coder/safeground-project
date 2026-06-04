@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { HabitLogForm } from '@/components/dashboard/HabitLogForm';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 export default function LogPage() {
   const handleSubmit = (data: any) => {
@@ -10,19 +10,8 @@ export default function LogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant">
-        <div className="px-6 md:px-12 py-4 flex justify-between items-center max-w-6xl mx-auto">
-          <div className="flex items-center gap-3">
-            <Shield className="w-6 h-6 text-primary" />
-            <span className="font-serif text-2xl font-bold text-primary">SafeGround</span>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-6 md:px-12 py-12 space-y-8">
+    <div className="page-shell">
+      <main className="max-w-2xl mx-auto px-6 md:px-12 py-8 md:py-12 space-y-8">
         <div className="space-y-4">
           <h1 className="heading-hero text-on-surface">How is your heart today?</h1>
           <p className="body-lg text-on-surface-variant">
