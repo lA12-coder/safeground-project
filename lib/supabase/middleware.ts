@@ -8,7 +8,14 @@ import {
 import { isOnboardingComplete } from '@/lib/auth/onboarding';
 import { AUTH_ENTRY_PATHS, isNextClientNavigation } from '@/lib/auth/middleware-utils';
 
-/** Preserve session cookies set during getUser() on redirect responses */
+const EXTRA_PROTECTED_PREFIXES = ['/provider', '/org/portal'];
+
+function isExtraProtectedPath(pathname: string): boolean {
+  return EXTRA_PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
 function redirectWithSession(request: NextRequest, pathname: string, sessionResponse: NextResponse) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
@@ -66,15 +73,47 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const onboardingDone = isOnboardingComplete(user);
+
+  if (pathname.startsWith('/guardian/') || pathname.startsWith('/org/register')) {
+    return supabaseResponse;
+  }
+
+  if (pathname.startsWith('/admin')) {
+    if (!user) {
+      return redirectWithSession(request, '/login', supabaseResponse);
+    }
+    const adminEmails = (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (!user.email || !adminEmails.includes(user.email.toLowerCase())) {
+      return redirectWithSession(request, '/', supabaseResponse);
+    }
+    return supabaseResponse;
+  }
+
+  let onboardingDone = isOnboardingComplete(user);
+
+  if (user && !onboardingDone) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_done')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profile?.onboarding_done) {
+      onboardingDone = true;
+    }
+  }
+
   const clientNav = isNextClientNavigation(request);
 
   if (clientNav && AUTH_ENTRY_PATHS.has(pathname)) {
     return supabaseResponse;
   }
 
-  // Protected app routes (not onboarding — checked in onboarding/layout.tsx)
-  if (!user && isProtectedPath(pathname)) {
+  const requiresAuth = isProtectedPath(pathname) || isExtraProtectedPath(pathname);
+
+  if (!user && requiresAuth) {
     const safeRedirect = sanitizeRedirectTo(pathname) ?? '/dashboard';
     return redirectWithSessionAndSearch(
       request,
@@ -88,7 +127,7 @@ export async function updateSession(request: NextRequest) {
     if (pathname === '/login' || pathname === '/register') {
       return redirectWithSession(request, ONBOARDING_PATH, supabaseResponse);
     }
-    if (isProtectedPath(pathname)) {
+    if (requiresAuth) {
       return redirectWithSession(request, ONBOARDING_PATH, supabaseResponse);
     }
   }
