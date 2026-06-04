@@ -2,11 +2,13 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import {
   isProtectedPath,
+  isPublicPath,
   ONBOARDING_PATH,
   sanitizeRedirectTo,
 } from '@/lib/auth/paths';
 import { isOnboardingComplete } from '@/lib/auth/onboarding';
 import { AUTH_ENTRY_PATHS, isNextClientNavigation } from '@/lib/auth/middleware-utils';
+import { getSupabaseUrl, isSupabaseConfigured } from '@/lib/supabase/env';
 
 const EXTRA_PROTECTED_PREFIXES = ['/provider', '/org/portal'];
 
@@ -47,10 +49,21 @@ function redirectWithSessionAndSearch(
 }
 
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith('/api')) {
+    return NextResponse.next({ request });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
+  if (!isSupabaseConfigured()) {
+    console.warn('[proxy] Supabase env missing — skipping session refresh');
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    getSupabaseUrl(),
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
@@ -68,11 +81,21 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
+  let user = null;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.warn('[proxy] getUser failed:', error.message);
+    } else {
+      user = data.user;
+    }
+  } catch (err) {
+    console.warn('[proxy] getUser network error:', err);
+    if (isPublicPath(pathname) || pathname.startsWith('/guardian/') || pathname.startsWith('/org/register')) {
+      return supabaseResponse;
+    }
+    return supabaseResponse;
+  }
 
   if (pathname.startsWith('/guardian/') || pathname.startsWith('/org/register')) {
     return supabaseResponse;
@@ -95,13 +118,17 @@ export async function updateSession(request: NextRequest) {
   let onboardingDone = isOnboardingComplete(user);
 
   if (user && !onboardingDone) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_done')
-      .eq('id', user.id)
-      .maybeSingle();
-    if (profile?.onboarding_done) {
-      onboardingDone = true;
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_done')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (profile?.onboarding_done) {
+        onboardingDone = true;
+      }
+    } catch {
+      // profiles table may be missing during setup
     }
   }
 
