@@ -11,6 +11,7 @@ interface SeedButton {
 }
 
 const seedButtons: SeedButton[] = [
+  { label: '✅ Seed Auth Users (Admin/Student/Provider)', type: 'auth', color: 'bg-amber-700 hover:bg-amber-800' },
   { label: 'Seed Demo Users (25)', type: 'users', color: 'bg-primary hover:bg-primary/90' },
   { label: 'Seed 60-Day Habit Logs', type: 'logs', color: 'bg-green-700 hover:bg-green-800' },
   { label: 'Seed Provider Directory', type: 'providers', color: 'bg-blue-600 hover:bg-blue-700' },
