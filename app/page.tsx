@@ -123,7 +123,7 @@ export default function LandingPage() {
             {features.map((feature, idx) => {
               const Icon = feature.icon;
               const bgClass = feature.bgColor || 'bg-surface-container card';
-              
+
               return (
                 <div
                   key={idx}

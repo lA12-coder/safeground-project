@@ -1,277 +1,208 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useState } from 'react'
+import { BriefcaseBusiness, Coffee, Lock, Users } from 'lucide-react'
 
-const moodEmojis = [
-  { value: 1, emoji: '😔', label: 'Very Bad' },
-  { value: 2, emoji: '😐', label: 'Bad' },
-  { value: 3, emoji: '🙂', label: 'Okay' },
-  { value: 4, emoji: '😊', label: 'Good' },
-  { value: 5, emoji: '🌟', label: 'Excellent' },
-];
+const contexts = [
+  { label: 'Khat Related', icon: Coffee },
+  { label: 'Alcohol Related', icon: Coffee },
+  { label: 'Social Pressure', icon: Users },
+]
 
-const urgeOptions = ['None', 'Low', 'Medium', 'High'];
-
-const triggerTags = [
-  'Stress',
-  'Boredom',
-  'Late Night',
-  'Social Media',
-  'Peer Pressure',
-  'Family Issues',
-  'Academic Pressure',
-  'Loneliness',
-  'Celebration',
-];
+const defaultTriggers = ['Loneliness', 'Work Stress']
 
 interface HabitLogFormProps {
-  onSubmit?: (data: any) => void;
+  onSubmit?: (data: any) => void
 }
 
 export function HabitLogForm({ onSubmit }: HabitLogFormProps) {
-  const [mood, setMood] = useState<number | null>(null);
-  const [stress, setStress] = useState(5);
-  const [urge, setUrge] = useState<string | null>(null);
-  const [khatUsed, setKhatUsed] = useState(false);
-  const [khatHoursAgo, setKhatHoursAgo] = useState('');
-  const [alcoholUsed, setAlcoholUsed] = useState(false);
-  const [triggers, setTriggers] = useState<string[]>([]);
-  const [notes, setNotes] = useState('');
-  const [showRelapseWarning, setShowRelapseWarning] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mood, setMood] = useState(5)
+  const [stress, setStress] = useState(3)
+  const [urge, setUrge] = useState(0)
+  const [triggers, setTriggers] = useState(defaultTriggers)
+  const [notes, setNotes] = useState('')
+  const [slipToday, setSlipToday] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const toggleTrigger = (trigger: string) => {
-    setTriggers((prev) =>
-      prev.includes(trigger) ? prev.filter((t) => t !== trigger) : [...prev, trigger]
-    );
-  };
+  const removeTrigger = (trigger: string) => {
+    setTriggers(prev => prev.filter(item => item !== trigger))
+  }
 
-  const handleKhatChange = (checked: boolean) => {
-    if (checked) {
-      setShowRelapseWarning(true);
-    } else {
-      setKhatUsed(false);
-      setKhatHoursAgo('');
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setIsSubmitting(true)
+
+    const formData = {
+      mood,
+      stress,
+      urge: String(urge),
+      khatUsed: slipToday,
+      khatHoursAgo: null,
+      alcoholUsed: false,
+      triggers,
+      notes,
     }
-  };
-
-  const confirmRelapse = () => {
-    setKhatUsed(true);
-    setShowRelapseWarning(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
 
     try {
-      const formData = {
-        mood,
-        stress,
-        urge,
-        khatUsed,
-        khatHoursAgo: khatUsed ? parseInt(khatHoursAgo) : null,
-        alcoholUsed,
-        triggers,
-        notes,
-      };
-
       const response = await fetch('/api/habits/log', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
-      });
+      })
 
       if (response.ok) {
-        // Reset form
-        setMood(null);
-        setStress(5);
-        setUrge(null);
-        setKhatUsed(false);
-        setKhatHoursAgo('');
-        setAlcoholUsed(false);
-        setTriggers([]);
-        setNotes('');
-        onSubmit?.(formData);
+        onSubmit?.(formData)
+        setNotes('')
       }
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="card p-8 space-y-8">
-      {/* Mood Selector */}
+    <form onSubmit={handleSubmit} className="space-y-16">
       <section className="space-y-4">
-        <h3 className="heading-md text-on-surface">How is your heart today?</h3>
-        <div className="flex justify-between gap-2">
-          {moodEmojis.map((m) => (
-            <button
-              key={m.value}
-              type="button"
-              onClick={() => setMood(m.value)}
-              className={`text-5xl p-2 transition-all hover:scale-125 ${
-                mood === m.value ? 'scale-125' : 'grayscale hover:grayscale-0'
-              }`}
-              title={m.label}
-            >
-              {m.emoji}
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <label className="font-serif text-base text-[#211712]">General Mood</label>
+          <span className="font-serif text-[#8a3d08]">{mood}</span>
+        </div>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value={mood}
+          onChange={(event) => setMood(Number(event.target.value))}
+          className="w-full accent-[#9a4f00]"
+        />
+        <div className="flex justify-between font-serif text-sm text-[#806b5d]">
+          <span>Low / Heavy</span>
+          <span>Peaceful / Bright</span>
         </div>
       </section>
 
-      {/* Stress Slider */}
       <section className="space-y-4">
-        <div className="flex justify-between items-center">
-          <label className="label-caps">Stress Level</label>
-          <span className="text-3xl font-serif font-bold text-primary">{stress}</span>
+        <div className="flex items-center justify-between">
+          <label className="font-serif text-base text-[#211712]">Stress Level</label>
+          <span className="font-serif text-[#8a3d08]">{stress}</span>
         </div>
         <input
           type="range"
           min="1"
           max="10"
           value={stress}
-          onChange={(e) => setStress(parseInt(e.target.value))}
-          className="w-full h-2 bg-surface-container-low rounded-full accent-primary cursor-pointer"
+          onChange={(event) => setStress(Number(event.target.value))}
+          className="w-full accent-[#9a4f00]"
         />
-        <div className="flex justify-between text-xs text-on-surface-variant">
+        <div className="flex justify-between font-serif text-sm text-[#806b5d]">
           <span>Calm</span>
           <span>Overwhelmed</span>
         </div>
       </section>
 
-      {/* Urge Intensity */}
-      <section className="space-y-4">
-        <label className="label-caps block">Urge Intensity</label>
-        <div className="flex flex-wrap gap-2">
-          {urgeOptions.map((option) => (
+      <section className="space-y-5">
+        <h3 className="font-serif text-base text-[#211712]">Urge Intensity</h3>
+        <div className="grid grid-cols-6 gap-3 sm:grid-cols-11">
+          {Array.from({ length: 11 }, (_, value) => (
             <button
-              key={option}
+              key={value}
               type="button"
-              onClick={() => setUrge(option)}
-              className={`chip ${urge === option ? 'chip-active' : 'chip-inactive'}`}
+              onClick={() => setUrge(value)}
+              className={`h-10 rounded-full font-serif text-sm transition ${
+                urge === value ? 'bg-[#8bf2a1] text-[#007233]' : 'bg-[#eeeeed] text-[#3b2418] hover:bg-[#e3e0dc]'
+              }`}
             >
-              {option}
+              {value}
             </button>
           ))}
         </div>
       </section>
 
-      {/* Context Flags */}
-      <section className="space-y-4 p-6 bg-surface-container-low rounded-lg">
-        <h4 className="label-caps">Context & Behavior</h4>
-
-        {/* Khat Used */}
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={khatUsed && !showRelapseWarning}
-            onChange={(e) => handleKhatChange(e.target.checked)}
-            className="w-5 h-5 rounded cursor-pointer accent-error"
-          />
-          <span className="text-sm font-semibold text-on-surface">Khat used today</span>
-        </label>
-
-        {khatUsed && (
-          <input
-            type="number"
-            min="0"
-            max="24"
-            value={khatHoursAgo}
-            onChange={(e) => setKhatHoursAgo(e.target.value)}
-            placeholder="Hours ago?"
-            className="w-full px-4 py-2 border-2 border-outline-variant rounded-lg focus:border-primary focus:outline-none"
-          />
-        )}
-
-        {/* Alcohol Used */}
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={alcoholUsed}
-            onChange={(e) => setAlcoholUsed(e.target.checked)}
-            className="w-5 h-5 rounded cursor-pointer accent-primary"
-          />
-          <span className="text-sm font-semibold text-on-surface">Alcohol used today</span>
-        </label>
-      </section>
-
-      {/* Trigger Tags */}
-      <section className="space-y-4">
-        <label className="label-caps block">What triggered you today? (Select all that apply)</label>
-        <div className="flex flex-wrap gap-2">
-          {triggerTags.map((tag) => (
+      <section className="space-y-5">
+        <h3 className="font-serif text-base text-[#211712]">Specific Contexts</h3>
+        <div className="flex flex-wrap gap-4">
+          {contexts.map(({ label, icon: Icon }) => (
             <button
-              key={tag}
+              key={label}
               type="button"
-              onClick={() => toggleTrigger(tag)}
-              className={`chip ${triggers.includes(tag) ? 'chip-active' : 'chip-inactive'}`}
+              className="flex items-center gap-3 rounded-full border border-[#d7ad92] px-7 py-3 font-serif text-[#3b2418] transition hover:bg-[#fff8f2]"
             >
-              {tag}
+              <Icon size={18} />
+              {label}
             </button>
           ))}
         </div>
       </section>
 
-      {/* Notes */}
-      <section className="space-y-4">
-        <label htmlFor="notes" className="label-caps block">
-          Additional Notes
-        </label>
+      <section className="space-y-5">
+        <h3 className="font-serif text-base text-[#211712]">Identified Triggers</h3>
+        <div className="flex min-h-24 flex-wrap items-center gap-3 rounded-[2rem] bg-[#f0f0ef] px-6 py-5 shadow-inner">
+          {triggers.map(trigger => (
+            <button
+              key={trigger}
+              type="button"
+              onClick={() => removeTrigger(trigger)}
+              className="rounded-full bg-[#d8ebe1] px-4 py-2 font-serif text-sm text-[#007233]"
+            >
+              {trigger} x
+            </button>
+          ))}
+          <span className="flex items-center gap-2 font-serif text-sm text-[#6d625b]">
+            <BriefcaseBusiness size={16} className="sr-only" />
+            Add trigger...
+          </span>
+        </div>
+      </section>
+
+      <section className="space-y-5">
+        <div className="flex items-center justify-between">
+          <label htmlFor="notes" className="font-serif text-base text-[#211712]">Private Reflections</label>
+          <span className="flex items-center gap-2 font-serif text-sm text-[#007233]">
+            <Lock size={15} />
+            Local Storage Only
+          </span>
+        </div>
         <textarea
           id="notes"
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="What else would you like to record? This stays on your device only — never uploaded."
-          rows={4}
-          className="w-full px-4 py-3 border-2 border-outline-variant rounded-lg focus:border-primary focus:outline-none resize-none font-body-md"
+          onChange={(event) => setNotes(event.target.value)}
+          rows={6}
+          placeholder="How was your day truly? No one sees this but you."
+          className="w-full resize-none rounded-[2rem] border border-[#e1ddd9] bg-[#f3f3f2] px-6 py-6 font-serif text-[#3b2418] outline-none placeholder:text-[#d3ad97] focus:border-[#9a4f00]"
         />
-        <p className="text-xs text-on-surface-variant italic">
-          This session is encrypted and will not be saved unless you upgrade.
-        </p>
       </section>
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={!mood || !urge || isSubmitting}
-        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-      >
-        {isSubmitting ? 'Saving...' : "Save Today's Check-in"}
-      </button>
+      <section className="border-t border-[#decfc4] pt-10">
+        <label className="flex items-center justify-between rounded-full bg-[#fff0ef] px-6 py-5">
+          <span>
+            <span className="block font-serif text-[#b91c1c]">Did you have a slip today?</span>
+            <span className="font-serif text-sm text-[#3b2418]">We are here to help, not to judge.</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setSlipToday(prev => !prev)}
+            className={`flex h-8 w-16 items-center rounded-full p-1 transition ${slipToday ? 'bg-[#b91c1c]' : 'bg-[#d9dcdd]'}`}
+            aria-pressed={slipToday}
+          >
+            <span className={`h-6 w-6 rounded-full bg-white transition ${slipToday ? 'translate-x-8' : ''}`} />
+          </button>
+        </label>
+      </section>
 
-      {/* Relapse Warning Dialog */}
-      {showRelapseWarning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="card max-w-md p-8 space-y-6 bg-surface-container-highest">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-error" />
-              <h3 className="heading-md text-error">Acknowledge Your Slip</h3>
-            </div>
-            <p className="body-md">
-              We see you. Your honesty here is important for your recovery. Recording this helps us understand your patterns and support you better.
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowRelapseWarning(false)}
-                className="flex-1 btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmRelapse}
-                className="flex-1 btn-primary bg-error hover:bg-error/90"
-              >
-                I'm Recording This
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="flex flex-wrap justify-center gap-4 pt-8">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="min-w-44 rounded-full bg-[#9a4f00] px-8 py-4 font-serif font-bold text-white shadow-md transition hover:bg-[#783d00] disabled:opacity-60"
+        >
+          {isSubmitting ? 'Saving...' : 'Complete Log'}
+        </button>
+        <button
+          type="button"
+          className="min-w-44 rounded-full border border-[#6f5545] px-8 py-4 font-serif text-[#3b2418] transition hover:bg-[#f4eee9]"
+        >
+          Discard Entry
+        </button>
+      </div>
     </form>
-  );
+  )
 }

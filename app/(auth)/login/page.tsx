@@ -1,57 +1,143 @@
-import Link from 'next/link';
+'use client'
+
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { Shield } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+
+const demoAccounts = [
+  { label: 'Admin', email: 'admin@gmail.com', password: 'SafeGroundAdmin123!', redirect: '/admin' },
+  { label: 'Student', email: 'demo.student@safeground.test', password: 'SafeGroundStudent123!', redirect: '/dashboard' },
+  { label: 'Provider', email: 'provider@safeground.test', password: 'SafeGroundProvider123!', redirect: '/provider/dashboard' },
+]
 
 export default function LoginPage() {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-3xl font-bold text-brand-primary mb-2 text-center">SafeGround</h1>
-          <h2 className="text-xl font-semibold text-gray-900 mb-8 text-center">Sign In</h2>
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-          <form className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Email
-              </label>
+  async function signIn(targetEmail = email, targetPassword = password, redirectTo?: string) {
+    setLoading(true)
+    setError('')
+
+    const supabase = createClient()
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: targetEmail,
+      password: targetPassword,
+    })
+
+    setLoading(false)
+
+    if (signInError) {
+      setError(signInError.message)
+      return
+    }
+
+    if (redirectTo) {
+      router.push(redirectTo)
+      router.refresh()
+      return
+    }
+
+    const adminEmails = ['admin@gmail.com', 'superadmin@gmail.com']
+    if (adminEmails.includes(targetEmail.trim().toLowerCase())) router.push('/admin')
+    else if (targetEmail.includes('provider')) router.push('/provider/dashboard')
+    else router.push('/dashboard')
+    router.refresh()
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-surface px-4">
+      <div className="w-full max-w-md">
+        <div className="rounded-lg border border-outline-variant bg-white p-8 shadow-sm">
+          <div className="mb-8 text-center">
+            <div className="mb-3 flex items-center justify-center gap-2">
+              <Shield className="h-7 w-7 text-primary" />
+              <h1 className="font-serif text-3xl font-bold text-primary">SafeGround</h1>
+            </div>
+            <h2 className="text-xl font-semibold text-on-surface">Sign In</h2>
+          </div>
+
+          <form
+            className="space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void signIn()
+            }}
+          >
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-on-surface">Email</span>
               <input
                 type="email"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="w-full rounded-lg border border-outline-variant px-4 py-3 outline-none focus:border-primary"
                 placeholder="your@email.com"
+                required
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Password
-              </label>
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-on-surface">Password</span>
               <input
                 type="password"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"
-                placeholder="••••••••"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-lg border border-outline-variant px-4 py-3 outline-none focus:border-primary"
+                placeholder="Password"
+                required
               />
-            </div>
+            </label>
+
+            {error && (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"
-              className="w-full py-3 bg-brand-primary text-white rounded-lg font-semibold hover:bg-brand-darker transition-colors"
+              disabled={loading}
+              className="w-full rounded-lg bg-primary py-3 font-semibold text-white transition hover:bg-primary-container disabled:opacity-60"
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
+          <div className="mt-7 space-y-3">
+            <p className="text-center text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
+              Demo Accounts
+            </p>
+            <div className="grid gap-2">
+              {demoAccounts.map(account => (
+                <button
+                  key={account.email}
+                  onClick={() => void signIn(account.email, account.password, account.redirect)}
+                  disabled={loading}
+                  className="rounded-lg border border-outline-variant px-4 py-2 text-sm font-semibold text-primary transition hover:bg-surface-container-low disabled:opacity-60"
+                >
+                  Continue as {account.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="mt-8 text-center">
-            <p className="text-gray-600 mb-4">
+            <p className="mb-4 text-on-surface-variant">
               Don&apos;t have an account?{' '}
-              <Link href="/register" className="text-brand-primary font-semibold hover:underline">
+              <Link href="/register" className="font-semibold text-primary hover:underline">
                 Register here
               </Link>
             </p>
-            <Link href="/guest" className="text-sm text-gray-600 hover:text-brand-primary">
+            <Link href="/guest" className="text-sm text-on-surface-variant hover:text-primary">
               Continue as guest
             </Link>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
