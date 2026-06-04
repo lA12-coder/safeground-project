@@ -1,33 +1,72 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { useState } from 'react';
-import { Shield, Lock, RotateCw } from 'lucide-react';
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { Shield, Lock, RotateCw } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const languages = [
   { code: 'en', name: 'English', script: '' },
   { code: 'am', name: 'አማርኛ', script: 'Amharic' },
   { code: 'om', name: 'Oromifa', script: '' },
   { code: 'ti', name: 'ትግርኛ', script: 'Tigrinya' },
-];
+]
 
-const amharicNames = ['Selam', 'Abenezer', 'Aster', 'Desta', 'Fikir', 'Kidus', 'Meba', 'Nardos', 'Rahel', 'Tewodros'];
-const animals = ['Lion', 'Eagle', 'Leopard', 'Crane', 'Ibex', 'Fox', 'Wolf', 'Dove', 'Falcon', 'Lynx'];
+const amharicNames = ['Selam', 'Abenezer', 'Aster', 'Desta', 'Fikir', 'Kidus', 'Meba', 'Nardos', 'Rahel', 'Tewodros']
+const animals = ['Lion', 'Eagle', 'Leopard', 'Crane', 'Ibex', 'Fox', 'Wolf', 'Dove', 'Falcon', 'Lynx']
 
 function generateAlias(): string {
-  const name = amharicNames[Math.floor(Math.random() * amharicNames.length)];
-  const animal = animals[Math.floor(Math.random() * animals.length)];
-  const num = Math.floor(Math.random() * 100);
-  return `${name}-${animal}-${num}`;
+  const name = amharicNames[Math.floor(Math.random() * amharicNames.length)]
+  const animal = animals[Math.floor(Math.random() * animals.length)]
+  const num = Math.floor(Math.random() * 100)
+  return `${name}-${animal}-${num}`
 }
 
 export default function RegisterPage() {
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
-  const [alias, setAlias] = useState(generateAlias());
+  const router = useRouter()
+  const [selectedLanguage, setSelectedLanguage] = useState('en')
+  const [alias, setAlias] = useState(generateAlias())
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleRegister() {
+    setLoading(true)
+    setError('')
+
+    if (!email || !password) {
+      setError('Please enter an email and password')
+      setLoading(false)
+      return
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters')
+      setLoading(false)
+      return
+    }
+
+    const supabase = createClient()
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { alias, language_pref: selectedLanguage } },
+    })
+
+    setLoading(false)
+
+    if (signUpError) {
+      setError(signUpError.message)
+      return
+    }
+
+    router.push('/onboarding')
+  }
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md px-6 md:px-12 py-6 flex justify-between items-center border-b border-outline-variant">
         <div className="flex items-center gap-2">
           <Shield className="w-6 h-6 text-primary" />
@@ -43,18 +82,45 @@ export default function RegisterPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-grow flex flex-col items-center justify-center px-6 md:px-12 py-12">
         <div className="max-w-2xl w-full space-y-12">
-          {/* Welcome Header */}
           <div className="text-center space-y-4">
             <h1 className="heading-hero">Your healing journey starts <span className="text-primary italic">privately.</span></h1>
-            <p className="body-lg">No names, no emails, no phone numbers. Just a safe space for you to be yourself.</p>
+            <p className="body-lg">No names, no phone numbers. Just a safe space for you to be yourself.</p>
           </div>
 
-          {/* Onboarding Container */}
           <div className="card p-8 md:p-12 space-y-10 parchment-glow">
-            {/* Language Selection */}
+            {error && (
+              <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </p>
+            )}
+
+            <section className="space-y-4">
+              <label className="label-caps block">Email (for login)</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg border border-outline-variant px-4 py-3 outline-none focus:border-primary bg-surface-container-lowest"
+                placeholder="your@email.com"
+                required
+              />
+            </section>
+
+            <section className="space-y-4">
+              <label className="label-caps block">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg border border-outline-variant px-4 py-3 outline-none focus:border-primary bg-surface-container-lowest"
+                placeholder="At least 6 characters"
+                required
+                minLength={6}
+              />
+            </section>
+
             <section className="space-y-4">
               <label className="label-caps block">Choose Your Language</label>
               <div className="flex flex-wrap gap-3">
@@ -70,7 +136,6 @@ export default function RegisterPage() {
               </div>
             </section>
 
-            {/* Alias Generator */}
             <section className="space-y-4">
               <div className="flex justify-between items-end">
                 <label className="label-caps block">Your Anonymous Alias</label>
@@ -93,7 +158,6 @@ export default function RegisterPage() {
               </p>
             </section>
 
-            {/* Trust Section */}
             <section className="bg-surface-container-low/50 rounded-lg p-6 border-l-4 border-secondary flex gap-6 items-start">
               <div className="bg-secondary-container p-3 rounded-full text-on-secondary-container shrink-0">
                 <Lock className="w-6 h-6" />
@@ -107,23 +171,22 @@ export default function RegisterPage() {
             </section>
           </div>
 
-          {/* Navigation Buttons */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-4">
-            <button className="text-on-surface-variant hover:text-primary font-semibold flex items-center gap-2 transition-colors">
-              ← Exit SafeGround
-            </button>
-            <Link
-              href="/onboarding"
-              className="w-full md:w-auto btn-primary flex items-center justify-center gap-3"
-            >
-              Begin Your Recovery
-              <span>→</span>
+            <Link href="/login" className="text-on-surface-variant hover:text-primary font-semibold flex items-center gap-2 transition-colors">
+              ← Already have an account? Sign In
             </Link>
+            <button
+              onClick={handleRegister}
+              disabled={loading}
+              className="w-full md:w-auto btn-primary flex items-center justify-center gap-3 disabled:opacity-60"
+            >
+              {loading ? 'Creating Account...' : 'Create Account & Begin Recovery'}
+              <span>→</span>
+            </button>
           </div>
         </div>
       </main>
 
-      {/* Privacy Badges */}
       <section className="bg-surface-container-highest py-12 px-6 md:px-12">
         <div className="max-w-2xl mx-auto">
           <div className="grid grid-cols-3 gap-4 text-center">
@@ -149,5 +212,5 @@ export default function RegisterPage() {
         </div>
       </section>
     </div>
-  );
+  )
 }

@@ -60,6 +60,80 @@ function seededRandom(seed: number) {
   }
 }
 
+// ── Seed Auth Users ─────────────────────────────────────
+async function seedAuth() {
+  console.log('Creating auth users for demo login...')
+
+  const accounts = [
+    { email: 'admin@gmail.com', password: 'SafeGroundAdmin123!', role: 'admin' },
+    { email: 'demo.student@safeground.test', password: 'SafeGroundStudent123!', role: 'student' },
+    { email: 'provider@safeground.test', password: 'SafeGroundProvider123!', role: 'provider' },
+  ]
+
+  for (const acct of accounts) {
+    // Check if user already exists
+    const { data: existing } = await supabase.auth.admin.listUsers()
+    const users = existing?.users as { email?: string; id: string }[] | undefined
+    const found = users?.find(u => u.email === acct.email)
+    if (found) {
+      console.log(`  Auth user ${acct.email} already exists (id: ${found.id})`)
+      continue
+    }
+
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: acct.email,
+      password: acct.password,
+      email_confirm: true,
+    })
+
+    if (error) {
+      console.error(`  Failed to create ${acct.email}:`, error.message)
+      continue
+    }
+
+    console.log(`  Created auth user ${acct.email} -> ${data.user.id}`)
+
+    // Create profile for the auth user
+    if (acct.role === 'admin') {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        alias: 'Admin-SafeGround-00',
+        language_pref: 'english',
+        support_preference: 'secular',
+        trigger_tags: [],
+        streak_goal: 30,
+        region: 'Addis Abeba',
+        onboarding_done: true,
+      }, { onConflict: 'id' })
+      await supabase.from('streaks').upsert({
+        user_id: data.user.id,
+        current_streak: 0,
+        longest_streak: 0,
+        total_clean_days: 0,
+      }, { onConflict: 'user_id' })
+    } else if (acct.role === 'provider') {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        alias: 'Dr-Provider-00',
+        language_pref: 'english',
+        support_preference: 'clinical',
+        trigger_tags: [],
+        streak_goal: 0,
+        region: 'Addis Abeba',
+        onboarding_done: true,
+      }, { onConflict: 'id' })
+      await supabase.from('streaks').upsert({
+        user_id: data.user.id,
+        current_streak: 0,
+        longest_streak: 0,
+        total_clean_days: 0,
+      }, { onConflict: 'user_id' })
+    }
+  }
+
+  console.log('✅ Auth users seeded')
+}
+
 // ── Seed Users ──────────────────────────────────────────
 async function seedUsers() {
   console.log('Seeding 25 user profiles...')
@@ -422,6 +496,7 @@ async function main() {
 
   const startTime = Date.now()
 
+  if (types.includes('full') || types.includes('auth')) await seedAuth()
   if (types.includes('full') || types.includes('users')) await seedUsers()
   if (types.includes('full') || types.includes('logs')) await seedLogs()
   if (types.includes('full') || types.includes('providers')) await seedProviders()
