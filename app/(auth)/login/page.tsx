@@ -29,12 +29,26 @@ export default function LoginPage() {
       password: targetPassword,
     })
 
-    setLoading(false)
-
     if (signInError) {
+      if (signInError.message.includes('Invalid login credentials') && redirectTo) {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: targetEmail, password: targetPassword, alias: targetEmail.split('@')[0] }),
+        })
+        if (res.ok) {
+          setLoading(false)
+          router.push(redirectTo)
+          router.refresh()
+          return
+        }
+      }
+      setLoading(false)
       setError(signInError.message)
       return
     }
+
+    setLoading(false)
 
     if (redirectTo) {
       router.push(redirectTo)
