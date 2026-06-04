@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 interface HabitLogRequest {
   mood: number;
@@ -15,7 +16,6 @@ export async function POST(request: NextRequest) {
   try {
     const body: HabitLogRequest = await request.json();
 
-    // Validate required fields
     if (!body.mood || !body.urge) {
       return NextResponse.json(
         { error: 'Missing required fields: mood, urge' },
@@ -23,41 +23,70 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create habit log entry
-    const logEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      userId: 'anon-user-1', // Would come from session
-      mood: body.mood,
-      stress: body.stress,
-      urge: body.urge,
-      khatUsed: body.khatUsed,
-      khatHoursAgo: body.khatHoursAgo,
-      alcoholUsed: body.alcoholUsed,
-      triggers: body.triggers,
-      notes: body.notes,
-      createdAt: new Date().toISOString(),
-    };
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    // TODO: Insert into Supabase database
-    // const { data, error } = await supabase
-    //   .from('habit_logs')
-    //   .insert([logEntry]);
+    const { data, error } = await supabase
+      .from('habit_logs')
+      .insert({
+        user_id: user?.id ?? null,
+        log_type: body.khatUsed ? 'relapse' : 'daily',
+        mood: body.mood,
+        stress: body.stress,
+        urge: body.urge,
+        khat_used: body.khatUsed,
+        khat_hours_ago: body.khatUsed ? body.khatHoursAgo : null,
+        alcohol_used: body.alcoholUsed,
+        triggers: body.triggers ?? [],
+        notes: body.notes ?? '',
+      })
+      .select('id, created_at')
+      .single();
 
-    // TODO: Update streak calculation
-    // TODO: Check for khat risk window (4-9 hours after use)
+    if (error) {
+      console.error('[habits/log]', error);
+      return NextResponse.json(
+        {
+          error:
+            'Could not save habit log. Run supabase/migrations/00_full_schema.sql in the Supabase SQL Editor.',
+        },
+        { status: 503 }
+      );
+    }
 
-    console.log('[v0] Habit log saved:', logEntry);
+    if (user?.id && !body.khatUsed) {
+      const { data: streak } = await supabase
+        .from('streaks')
+        .select('current_streak, longest_streak, total_clean_days')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-    return NextResponse.json({
-      success: true,
-      data: logEntry,
-      message: 'Habit log saved successfully',
-    }, { status: 201 });
-  } catch (error) {
-    console.error('[v0] Error saving habit log:', error);
+      const current = (streak?.current_streak ?? 0) + 1;
+      const longest = Math.max(streak?.longest_streak ?? 0, current);
+      const total = (streak?.total_clean_days ?? 0) + 1;
+
+      await supabase.from('streaks').upsert({
+        user_id: user.id,
+        current_streak: current,
+        longest_streak: longest,
+        total_clean_days: total,
+        last_logged_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }
+
     return NextResponse.json(
-      { error: 'Failed to save habit log' },
-      { status: 500 }
+      {
+        success: true,
+        data: { id: data.id, createdAt: data.created_at },
+        message: 'Habit log saved successfully',
+      },
+      { status: 201 }
     );
+  } catch (error) {
+    console.error('[habits/log]', error);
+    return NextResponse.json({ error: 'Failed to save habit log' }, { status: 500 });
   }
 }

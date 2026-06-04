@@ -1,9 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Ethiopic:wght@400;600;700&display=swap');
 @import 'tailwindcss';
 
 @theme {
   --font-sans: 'Geist', system-ui, sans-serif;
   --font-serif: 'Noto Serif', serif;
+  --font-ethiopic: 'Noto Serif Ethiopic', 'Noto Serif', serif;
   
   --color-primary: #8d4b00;
   --color-primary-container: #b15f00;
@@ -39,6 +41,13 @@
   --radius-md: 0.5rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
+
+  /* Legacy aliases — keeps older pages on the design system */
+  --color-brand-primary: var(--color-primary);
+  --color-background: var(--color-surface);
+  --color-card: var(--color-surface-container-lowest);
+  --color-danger: var(--color-error);
+  --color-success: var(--color-secondary);
 }
 
 @layer base {
@@ -137,5 +146,25 @@
 
   .glass-panel {
     @apply bg-surface/80 backdrop-blur-md;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all;
+  }
+
+  .page-shell {
+    @apply min-h-screen bg-surface;
+  }
+
+  .page-content {
+    @apply max-w-6xl mx-auto px-6 md:px-12 py-8 md:py-12;
+  }
+
+  .dashboard-page-title {
+    @apply text-3xl md:text-4xl font-serif font-semibold leading-tight text-on-surface mb-2;
+  }
+
+  .dashboard-page-subtitle {
+    @apply text-base text-on-surface-variant leading-relaxed mb-8;
   }
 }

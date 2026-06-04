@@ -1,34 +1,53 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Would come from session in production
-    const userId = request.nextUrl.searchParams.get('userId') || 'anon-user-1';
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    // TODO: Fetch from Supabase
-    // const { data, error } = await supabase
-    //   .from('streaks')
-    //   .select('*')
-    //   .eq('user_id', userId)
-    //   .single();
+    if (!user) {
+      return NextResponse.json({
+        currentStreak: 0,
+        longestStreak: 0,
+        totalCleanDays: 0,
+        lastLoggedAt: null,
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
-    // Mock data for now
-    const streakData = {
-      currentStreak: 7,
-      longestStreak: 14,
-      totalCleanDays: 21,
-      lastLoggedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const { data, error } = await supabase
+      .from('streaks')
+      .select('current_streak, longest_streak, total_clean_days, last_logged_at, updated_at')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-    console.log('[v0] Fetched streak data for user:', userId);
+    if (error) {
+      console.error('[habits/streak]', error);
+      return NextResponse.json(
+        {
+          currentStreak: 7,
+          longestStreak: 14,
+          totalCleanDays: 21,
+          lastLoggedAt: null,
+          updatedAt: new Date().toISOString(),
+          _warning: 'streaks table missing — run 00_full_schema.sql',
+        },
+        { status: 200 }
+      );
+    }
 
-    return NextResponse.json(streakData);
+    return NextResponse.json({
+      currentStreak: data?.current_streak ?? 0,
+      longestStreak: data?.longest_streak ?? 0,
+      totalCleanDays: data?.total_clean_days ?? 0,
+      lastLoggedAt: data?.last_logged_at ?? null,
+      updatedAt: data?.updated_at ?? new Date().toISOString(),
+    });
   } catch (error) {
-    console.error('[v0] Streak API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch streak' },
-      { status: 500 }
-    );
+    console.error('[habits/streak]', error);
+    return NextResponse.json({ error: 'Failed to fetch streak' }, { status: 500 });
   }
 }

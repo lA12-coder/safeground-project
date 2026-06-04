@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Shield, Globe, AlertCircle, Users, Heart, Zap, Lock } from 'lucide-react';
+import { useState, useActionState } from 'react';
+import { Users, Lock } from 'lucide-react';
+import { completeOnboarding, type AuthActionResult } from '@/lib/auth/actions';
 
 const languages = [
   { code: 'en', name: 'English', icon: '🌍', script: 'Primary Interface' },
@@ -29,6 +29,8 @@ const supportModes = [
   { id: 'clinical', label: 'Clinical', description: 'Direct access to certified recovery specialists and therapists.' },
 ];
 
+const initialState: AuthActionResult = {};
+
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
@@ -36,6 +38,7 @@ export default function OnboardingPage() {
   const [selectedSupport, setSelectedSupport] = useState('secular');
   const [guardianOptIn, setGuardianOptIn] = useState<boolean | null>(null);
   const [goal, setGoal] = useState('');
+  const [state, formAction, pending] = useActionState(completeOnboarding, initialState);
 
   const handleTriggerToggle = (triggerId: string) => {
     setSelectedTriggers((prev) =>
@@ -56,24 +59,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-surface/80 backdrop-blur-md px-6 md:px-12 py-6 flex justify-between items-center border-b border-outline-variant">
-        <div className="flex items-center gap-2">
-          <Shield className="w-6 h-6 text-primary" />
-          <span className="font-serif font-bold text-2xl text-primary">SafeGround</span>
-        </div>
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full">
-          <Lock className="w-4 h-4 text-secondary" />
-          <span className="text-xs font-semibold text-on-surface-variant">256-bit Encrypted Session</span>
-        </div>
-        <button className="bg-error text-on-error font-semibold px-6 py-2 rounded-full hover:opacity-90 transition-all active:scale-95">
-          PANIC
-        </button>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-grow flex flex-col items-center justify-center px-6 md:px-12 py-12">
+    <main className="flex flex-col items-center justify-center px-6 md:px-12 py-12">
         <div className="max-w-2xl w-full space-y-12">
           {/* Progress */}
           <div className="space-y-4">
@@ -205,8 +191,8 @@ export default function OnboardingPage() {
             {step === 5 && (
               <div className="space-y-8 text-center">
                 <div className="space-y-4">
-                  <div className="w-16 h-16 bg-tertiary-fixed rounded-full flex items-center justify-center mx-auto">
-                    <Users className="w-8 h-8 text-on-tertiary-fixed" />
+                  <div className="w-16 h-16 bg-tertiary-container rounded-full flex items-center justify-center mx-auto">
+                    <Users className="w-8 h-8 text-on-tertiary" />
                   </div>
                   <h2 className="heading-md">Welcome to SafeGround</h2>
                   <p className="body-lg text-on-surface-variant">
@@ -231,9 +217,16 @@ export default function OnboardingPage() {
               </div>
             )}
 
+            {state.error && (
+              <p className="text-sm text-error" role="alert">
+                {state.error}
+              </p>
+            )}
+
             {/* Navigation */}
             <div className="flex justify-between items-center gap-4 pt-8 border-t border-outline-variant">
               <button
+                type="button"
                 onClick={handlePrev}
                 disabled={step === 1}
                 className="text-on-surface-variant font-semibold hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -242,15 +235,30 @@ export default function OnboardingPage() {
               </button>
               <div className="flex gap-2">
                 {step === 5 ? (
-                  <Link
-                    href="/dashboard"
-                    className="btn-primary flex items-center justify-center gap-2"
-                  >
-                    Enter the Sanctuary
-                    <span>→</span>
-                  </Link>
+                  <form action={formAction} className="inline">
+                    <input type="hidden" name="language" value={selectedLanguage} />
+                    <input type="hidden" name="support_mode" value={selectedSupport} />
+                    <input
+                      type="hidden"
+                      name="guardian_opt_in"
+                      value={guardianOptIn === true ? 'true' : 'false'}
+                    />
+                    <input type="hidden" name="recovery_goal" value={goal} />
+                    {selectedTriggers.map((t) => (
+                      <input key={t} type="hidden" name="triggers" value={t} />
+                    ))}
+                    <button
+                      type="submit"
+                      disabled={pending}
+                      className="btn-primary flex items-center justify-center gap-2 disabled:opacity-60"
+                    >
+                      {pending ? 'Saving…' : 'Enter the Sanctuary'}
+                      <span>→</span>
+                    </button>
+                  </form>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleNext}
                     className="btn-primary flex items-center justify-center gap-2"
                   >
@@ -262,12 +270,10 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          {/* Footer Badge */}
           <div className="text-center">
-            <p className="text-xs uppercase tracking-widest text-on-surface-variant">ZERO-LOG ARCHITECTURE</p>
+            <p className="text-xs uppercase tracking-widest text-on-surface-variant">Zero-log architecture</p>
           </div>
         </div>
-      </main>
-    </div>
+    </main>
   );
 }

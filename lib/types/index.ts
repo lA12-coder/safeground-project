@@ -51,11 +51,12 @@ export type TelehealthBooking = {
 
 export type AnonymousChat = {
   id: string;
-  room_id: string;
-  user_alias: string;
-  message: string;
-  flagged: boolean;
-  flag_reason?: string;
+  room_id: 'global' | 'crisis' | 'faith';
+  message_type: 'text' | 'milestone_share' | 'support_reaction';
+  content: string;
+  alias: string;
+  session_id: string;
+  reactions: Record<string, number>;
   created_at: string;
 };
 
