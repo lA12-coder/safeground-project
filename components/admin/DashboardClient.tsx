@@ -10,13 +10,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import type { AdminMetrics, Provider, AnonymousChat } from '@/lib/types'
 
-const AMBER = '#92400E'
-const AMBER_LIGHT = '#b45309'
-const RED = '#B91C1C'
-const GREEN = '#166534'
-const SURFACE_TEXT = '#1c1917'
-const MUTED_TEXT = '#64748B'
-const BORDER = '#d6d3d1'
+// Using CSS variables from globals.ts for design token consistency
 
 interface DashboardClientProps {
   metrics: AdminMetrics
@@ -125,10 +119,10 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#92400E]">System Overview</h1>
-          <p className="text-[#64748B] mt-1">Admin Portal &amp; Enterprise Monitoring</p>
+          <h1 className="font-serif text-5xl font-bold text-[#92400E]">System Overview</h1>
+          <p className="mt-2 text-[#3b2418]">Admin Portal &amp; Enterprise Monitoring</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-[#166534] rounded-full text-sm font-semibold border border-green-200">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -137,7 +131,7 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
       </div>
 
       {/* Metric Cards Row 1 */}
-      <div className="grid grid-cols-4 gap-6">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <div className="bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-[#64748B]">Total Users</span>
@@ -188,17 +182,18 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
       </div>
 
       {/* Regional Activity + Moderation Queue */}
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2 bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-[#1c1917] mb-4">Regional Activity</h2>
-          <div className="relative h-72 bg-[#92400E]/5 rounded-xl flex items-center justify-center overflow-hidden">
+      <div className="grid gap-6 xl:grid-cols-3">
+        <div className="xl:col-span-2 bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-[#1c1917]">Regional Activity Heatmap</h2>
+            <div className="flex items-center gap-4 text-sm font-bold">
+              <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full bg-[#eadbc8]" /> Low</span>
+              <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full bg-[#9a4f00]" /> High</span>
+            </div>
+          </div>
+          <div className="relative h-[24rem] rounded-lg bg-gradient-to-br from-[#1f3b3f] via-[#425f5e] to-[#d4c79c] flex items-center justify-center overflow-hidden">
             <div className="w-full h-full p-4">
               <EthiopiaMap />
-            </div>
-            <div className="absolute bottom-4 right-4 flex items-center gap-3 text-xs text-[#64748B] bg-white/80 rounded-lg px-3 py-1.5 shadow-sm">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-300" /> Low</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#b45309]" /> Med</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#B91C1C]" /> High</span>
             </div>
           </div>
         </div>
@@ -255,16 +250,23 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
         </div>
       </div>
 
+      <div className="grid gap-6 xl:grid-cols-2">
       {/* 30-Day Activity Trends */}
-      <div className="bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-[#1c1917] mb-4">30-Day Activity Trends</h2>
-        <div className="h-72">
+      <div className="bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-8">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-[#1c1917]">30-Day Activity Trends</h2>
+          <div className="flex items-center gap-5 text-xs text-[#3b2418]">
+            <span className="flex items-center gap-2"><span className="h-0.5 w-4 bg-[#9a4f00]" /> CHECK-INS</span>
+            <span className="flex items-center gap-2"><span className="h-0.5 w-4 bg-[#ef4444]" /> PANIC</span>
+          </div>
+        </div>
+        <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={metrics.activity_30d}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#d6d3d1" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#eee7df" />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: '#64748B' }}
+                tick={{ fontSize: 11, fill: '#3b2418' }}
                 tickFormatter={(v: string) => {
                   const d = new Date(v)
                   const day = d.getDate()
@@ -273,22 +275,22 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
                   return ''
                 }}
               />
-              <YAxis tick={{ fontSize: 11, fill: '#64748B' }} />
+              <YAxis hide />
               <Tooltip
                 contentStyle={{ borderRadius: '8px', border: '1px solid #d6d3d1' }}
                 labelFormatter={(v: string) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               />
-              <Bar dataKey="checkins" fill={AMBER_LIGHT} radius={[4, 4, 0, 0]} name="CHECK-INS" />
-              <Bar dataKey="panic" fill={RED} radius={[4, 4, 0, 0]} name="PANIC" />
+              <Bar dataKey="checkins" fill="#eee7df" stroke="#9a4f00" strokeWidth={3} radius={[4, 4, 0, 0]} name="CHECK-INS" />
+              <Bar dataKey="panic" fill="#ef4444" radius={[4, 4, 0, 0]} name="PANIC" />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Pending Provider Verifications Table */}
-      <div className="bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-[#1c1917]">Pending Provider Verifications</h2>
+          <h2 className="text-2xl font-bold text-[#1c1917]">Pending Provider Verifications</h2>
           <span className="text-xs text-[#64748B]">{providers.length} pending</span>
         </div>
 
@@ -340,6 +342,7 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
             </table>
           </div>
         )}
+      </div>
       </div>
     </div>
   )

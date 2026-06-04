@@ -1,45 +1,25 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, Users, ClipboardList, Upload, CheckCircle } from 'lucide-react'
+import { CheckCircle, Church, Home, Plus, ShieldCheck, Upload, UserRound } from 'lucide-react'
 
-const orgTypes = [
-  { value: 'ngo', label: 'NGO' },
-  { value: 'religious_org', label: 'Religious Org' },
-  { value: 'healthcare', label: 'Healthcare' },
-  { value: 'university', label: 'University' },
-]
-
-const servicesOffered = [
-  'Counseling', 'Support Groups', 'Crisis Intervention',
-  'Recovery Programs', 'Spiritual Guidance', 'Education & Outreach',
-]
-
-const languages = ['Amharic', 'English', 'Oromifa', 'Tigrinya', 'Somali']
+const traditions = ['Sufi Recovery Practice', 'Liturgical Grounding', 'Biblical 12-Step Integration']
+const ministries = ['Substance Use Support', 'Mental Health Advocacy', 'Grief & Bereavement', 'Holistic Grounding Workshops']
 
 export default function OrgRegistrationPage() {
-  const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [agreed, setAgreed] = useState(false)
   const [form, setForm] = useState({
-    org_name: '', org_type: '', reg_number: '', country: 'Ethiopia', city: '',
-    contact_name: '', contact_email: '', contact_phone: '', contact_role: '',
-    services: [] as string[], languages: [] as string[],
-    online: false, in_person: true, pro_bono: false, fee_structure: '',
+    org_name: '',
+    org_type: 'religious_org',
+    faith_category: 'Orthodox',
+    mission: '',
+    leader: '',
+    mentor: '',
   })
 
-  const totalSteps = 4
-
-  const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }))
-
-  function toggleArray(field: 'services' | 'languages', value: string) {
-    setForm(prev => ({
-      ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter(v => v !== value)
-        : [...prev[field], value],
-    }))
-  }
+  const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -48,25 +28,23 @@ export default function OrgRegistrationPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: form.contact_name,
+          name: form.leader || form.org_name,
           org_name: form.org_name,
           type: form.org_type,
-          city: form.city,
-          region: form.country,
-          bio: `Registered ${form.org_type} organization providing ${form.services.join(', ')}.`,
-          languages: form.languages,
-          online: form.online,
-          in_person: form.in_person,
-          pro_bono: form.pro_bono,
-          consultation_fee: form.fee_structure ? parseInt(form.fee_structure) : null,
+          city: 'Addis Ababa',
+          region: 'Ethiopia',
+          bio: form.mission || 'Faith-based recovery and spiritual grounding organization.',
+          languages: ['Amharic', 'English'],
+          online: true,
+          in_person: true,
+          pro_bono: true,
+          consultation_fee: null,
           is_verified: false,
           is_active: false,
         }),
       })
 
       if (res.ok) setSubmitted(true)
-    } catch (e) {
-      console.error('Submission failed:', e)
     } finally {
       setSubmitting(false)
     }
@@ -74,237 +52,218 @@ export default function OrgRegistrationPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-sm p-12 max-w-lg text-center">
-          <CheckCircle size={48} className="text-[#166534] mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-[#1c1917] mb-2">Registration Submitted</h1>
-          <p className="text-[#64748B] mb-6">
-            Your organization has been registered. Our admin team will review and verify your account within 2-3 business days.
-          </p>
-          <a href="/" className="text-[#92400E] font-semibold hover:text-[#78350F]">Return to SafeGround →</a>
-        </div>
-      </div>
+      <main className="flex min-h-screen items-center justify-center bg-[#fbfaf8] px-6">
+        <section className="max-w-lg rounded-2xl border border-[#eadfd5] bg-white p-10 text-center shadow-sm">
+          <CheckCircle size={48} className="mx-auto mb-4 text-[#007233]" />
+          <h1 className="font-serif text-3xl font-bold">Registration Submitted</h1>
+          <p className="mt-3 leading-7 text-[#4d362a]">Your sanctuary profile is in the admin approval queue.</p>
+        </section>
+      </main>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <Building2 size={32} className="text-[#92400E] mx-auto mb-2" />
-          <h1 className="text-3xl font-bold text-[#92400E]">Organization Registration</h1>
-          <p className="text-[#64748B] mt-1">Join SafeGround as a verified support provider</p>
+    <main className="min-h-screen bg-[#fbfaf8]">
+      <header className="border-b border-[#eadfd5] bg-[#fbfaf8]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+          <div className="flex items-center gap-2 font-serif text-3xl font-bold text-[#8a3d08]">
+            <ShieldCheck size={24} />
+            SafeGround
+          </div>
+          <nav className="hidden items-center gap-8 text-sm font-bold md:flex">
+            <a>Our Approach</a>
+            <a>Safeguarding</a>
+            <a>Help</a>
+            <a className="rounded-full bg-[#9a4f00] px-6 py-2 text-white">Support Hub</a>
+          </nav>
         </div>
+      </header>
 
-        <div className="bg-white rounded-2xl shadow-sm p-8">
-          <div className="flex items-center justify-between mb-8">
-            {[1, 2, 3, 4].map(s => (
-              <div key={s} className="flex items-center flex-1">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  s <= step ? 'bg-[#92400E] text-white' : 'bg-gray-200 text-gray-400'
-                }`}>
-                  {s}
-                </div>
-                {s < 4 && <div className={`flex-1 h-1 mx-2 rounded ${s < step ? 'bg-[#92400E]' : 'bg-gray-200'}`} />}
-              </div>
-            ))}
+      <div className="mx-auto max-w-6xl px-6 py-14">
+        <section className="text-center">
+          <h1 className="font-serif text-5xl font-bold text-[#17120f]">Spiritual Registration - Community Verification</h1>
+          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-[#4d362a]">
+            Welcome to the Sanctuary. Join our network of verified spiritual organizations dedicated to healing,
+            grounding, and recovery within faith traditions.
+          </p>
+        </section>
+
+        <section className="mt-14 grid gap-6 lg:grid-cols-[1fr_34%]">
+          <div className="rounded-lg border-2 border-[#c2512d] bg-white p-8">
+            <div className="mb-7 flex items-center gap-3">
+              <Home size={22} className="text-[#c2512d]" />
+              <h2 className="text-2xl font-bold">Basic Information</h2>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <label className="space-y-2">
+                <span className="text-sm font-bold tracking-widest">Organization Name</span>
+                <input
+                  value={form.org_name}
+                  onChange={event => update('org_name', event.target.value)}
+                  placeholder="e.g. Al-Noor Grounding Center"
+                  className="w-full rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm font-bold tracking-widest">Faith Category</span>
+                <select
+                  value={form.faith_category}
+                  onChange={event => update('faith_category', event.target.value)}
+                  className="w-full rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
+                >
+                  <option>Orthodox</option>
+                  <option>Muslim</option>
+                  <option>Protestant</option>
+                  <option>Interfaith</option>
+                </select>
+              </label>
+            </div>
+            <label className="mt-6 block space-y-2">
+              <span className="text-sm font-bold tracking-widest">Mission Statement</span>
+              <textarea
+                value={form.mission}
+                onChange={event => update('mission', event.target.value)}
+                rows={5}
+                placeholder="Describe how your organization supports grounding and spiritual well-being..."
+                className="w-full resize-none rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00]"
+              />
+            </label>
           </div>
 
-          {step === 1 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Building2 size={18} className="text-[#92400E]" />
-                <h2 className="text-lg font-semibold">Organization Information</h2>
-              </div>
-              <input
-                placeholder="Organization Name"
-                value={form.org_name}
-                onChange={e => update('org_name', e.target.value)}
-                className="w-full p-3 border border-gray-200 rounded-lg"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={form.org_type}
-                  onChange={e => update('org_type', e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                >
-                  <option value="">Organization Type</option>
-                  {orgTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-                <input
-                  placeholder="Registration Number"
-                  value={form.reg_number}
-                  onChange={e => update('reg_number', e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  placeholder="Country"
-                  value={form.country}
-                  onChange={e => update('country', e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                />
-                <input
-                  placeholder="City"
-                  value={form.city}
-                  onChange={e => update('city', e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                />
+          <aside className="relative min-h-80 overflow-hidden rounded-lg bg-[url('https://images.unsplash.com/photo-1528538090384-1b5bb505bf4e?auto=format&fit=crop&w=900&q=80')] bg-cover bg-center">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#5a2700] via-[#5a2700]/35 to-transparent" />
+            <p className="absolute bottom-8 left-7 max-w-xs font-serif text-xl font-bold italic text-white">
+              "A place where the soul finds its footing."
+            </p>
+          </aside>
+        </section>
+
+        <section className="mt-6 rounded-lg border-2 border-[#00b86b] bg-white p-8">
+          <div className="mb-8 flex items-center gap-3">
+            <Church size={22} className="text-[#00a862]" />
+            <h2 className="text-2xl font-bold">Spiritual Foundation</h2>
+          </div>
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div>
+              <h3 className="mb-4 text-sm font-bold tracking-widest">Faith Tradition</h3>
+              <div className="space-y-3">
+                {traditions.map(item => (
+                  <button key={item} className="flex w-full items-center gap-3 rounded-lg bg-[#f0f0ef] px-4 py-4 text-left">
+                    <span className="h-5 w-5 rounded-full border border-[#6f7785]" />
+                    {item}
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Users size={18} className="text-[#92400E]" />
-                <h2 className="text-lg font-semibold">Contact &amp; Leadership</h2>
+            <div>
+              <h3 className="mb-4 text-sm font-bold tracking-widest">Recovery Ministry Type</h3>
+              <div className="space-y-3">
+                {ministries.map(item => (
+                  <label key={item} className="flex items-center gap-3">
+                    <input type="checkbox" className="h-4 w-4 rounded border-[#6f7785]" />
+                    {item}
+                  </label>
+                ))}
               </div>
-              <input
-                placeholder="Primary Contact Name"
-                value={form.contact_name}
-                onChange={e => update('contact_name', e.target.value)}
-                className="w-full p-3 border border-gray-200 rounded-lg"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="email"
-                  placeholder="Contact Email"
-                  value={form.contact_email}
-                  onChange={e => update('contact_email', e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                />
-                <input
-                  placeholder="Contact Phone"
-                  value={form.contact_phone}
-                  onChange={e => update('contact_phone', e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-lg"
-                />
-              </div>
-              <input
-                placeholder="Role/Title"
-                value={form.contact_role}
-                onChange={e => update('contact_role', e.target.value)}
-                className="w-full p-3 border border-gray-200 rounded-lg"
-              />
             </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <ClipboardList size={18} className="text-[#92400E]" />
-                <h2 className="text-lg font-semibold">Service Details</h2>
+            <div>
+              <h3 className="mb-4 text-sm font-bold tracking-widest">Current Programs</h3>
+              <input placeholder="Add a program tag..." className="w-full rounded-full border border-[#d9b7a4] px-5 py-3 outline-none" />
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span className="rounded-full border border-[#f7c25a] bg-[#fff8e5] px-4 py-2 text-sm font-bold text-[#d97706]">Daily Prayer x</span>
+                <span className="rounded-full border border-[#f7c25a] bg-[#fff8e5] px-4 py-2 text-sm font-bold text-[#d97706]">Meditative Walking x</span>
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Services Offered</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {servicesOffered.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => toggleArray('services', s)}
-                      className={`p-2 rounded-lg text-sm border transition-colors ${
-                        form.services.includes(s)
-                          ? 'bg-amber-100 border-amber-300 text-amber-800'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                      }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Languages</label>
-                <div className="flex flex-wrap gap-2">
-                  {languages.map(l => (
-                    <button
-                      key={l}
-                      onClick={() => toggleArray('languages', l)}
-                      className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                        form.languages.includes(l)
-                          ? 'bg-green-100 border-green-300 text-green-700'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                      }`}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={form.online} onChange={e => update('online', e.target.checked)} />
-                  <span className="text-sm">Online</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={form.in_person} onChange={e => update('in_person', e.target.checked)} />
-                  <span className="text-sm">In-person</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={form.pro_bono} onChange={e => update('pro_bono', e.target.checked)} />
-                  <span className="text-sm">Pro-bono</span>
-                </label>
-              </div>
-              <input
-                placeholder="Fee structure (e.g. '100 USD/session' or leave blank if pro-bono)"
-                value={form.fee_structure}
-                onChange={e => update('fee_structure', e.target.value)}
-                className="w-full p-3 border border-gray-200 rounded-lg"
-              />
             </div>
-          )}
+          </div>
+        </section>
 
-          {step === 4 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Upload size={18} className="text-[#92400E]" />
-                <h2 className="text-lg font-semibold">Verification Documents</h2>
+        <section className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div className="rounded-lg border border-[#eadfd5] bg-white p-8">
+            <div className="mb-8 flex items-center gap-3">
+              <UserRound size={22} className="text-[#c2512d]" />
+              <h2 className="text-2xl font-bold">Leadership</h2>
+            </div>
+            <label className="flex items-center gap-5 rounded-xl bg-[#f0f0ef] px-5 py-5">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#ffd8be] text-[#9a4f00]">
+                <UserRound />
+              </span>
+              <span>
+                <span className="block text-xs text-[#806b5d]">Lead Spiritual Director</span>
+                <input
+                  value={form.leader}
+                  onChange={event => update('leader', event.target.value)}
+                  placeholder="Full Name"
+                  className="mt-1 bg-transparent outline-none"
+                />
+              </span>
+            </label>
+            <div className="mt-7">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-sm font-bold tracking-widest">Mentor List</span>
+                <span className="text-sm font-bold">(Max 5)</span>
               </div>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
-                <Upload size={32} className="text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Upload registration certificate and credentials</p>
-                <p className="text-xs text-gray-400 mt-1">PDF, JPG or PNG</p>
-                <button className="mt-4 px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200">
-                  Choose Files
+              <div className="flex gap-3">
+                <input
+                  value={form.mentor}
+                  onChange={event => update('mentor', event.target.value)}
+                  placeholder="Mentor email..."
+                  className="flex-1 rounded-lg border border-[#d9b7a4] px-4 py-3 outline-none"
+                />
+                <button className="rounded-lg bg-[#006c43] px-5 text-white">
+                  <Plus size={22} />
                 </button>
               </div>
-              <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                <p className="text-sm text-amber-800 font-medium">Review your information before submitting</p>
-                <p className="text-xs text-amber-600 mt-1">You will receive a confirmation email once submitted</p>
-              </div>
             </div>
-          )}
+          </div>
 
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-100">
-            {step > 1 ? (
-              <button
-                onClick={() => setStep(s => s - 1)}
-                className="px-6 py-2.5 border border-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-50"
-              >
-                Previous
-              </button>
-            ) : <div />}
-            {step < totalSteps ? (
-              <button
-                onClick={() => setStep(s => s + 1)}
-                className="px-6 py-2.5 bg-[#92400E] text-white rounded-lg font-semibold hover:bg-[#78350F]"
-              >
-                Next
-              </button>
-            ) : (
+          <div className="rounded-lg border border-[#eadfd5] bg-white p-8">
+            <div className="mb-8 flex items-center gap-3">
+              <ShieldCheck size={22} className="text-[#ff7a00]" />
+              <h2 className="text-2xl font-bold">Verification</h2>
+            </div>
+            <p className="leading-7 text-[#4d362a]">
+              Please upload formal documentation of your religious organization or non-profit status.
+            </p>
+            <div className="mt-8 flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#d9b7a4] text-center">
+              <Upload size={34} className="text-[#8a7160]" />
+              <p className="mt-3 font-bold text-[#8a7160]">Drag & Drop Documents</p>
+              <p className="text-xs text-[#d3ad97]">PDF, JPG (Max 5MB)</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-lg border border-[#f2c84b] bg-[#fff8d9] p-8">
+          <h2 className="flex items-center gap-3 text-2xl font-bold text-[#c2512d]">
+            <ShieldCheck size={22} />
+            Sanctuary Safety & Ethical Agreement
+          </h2>
+          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_46%]">
+            <div className="space-y-5 text-[#4d362a]">
+              <p>By registering, you commit to the <strong>SafeGround Covenant:</strong></p>
+              <p className="text-[#007233]">Zero tolerance for harmful, coercive, or abusive teachings.</p>
+              <p className="text-[#007233]">Commitment to evidence-based recovery alongside faith practices.</p>
+              <p className="text-[#007233]">Full transparency in leadership and financial structures.</p>
+            </div>
+            <div className="rounded-xl bg-white p-7">
+              <label className="flex items-start gap-4">
+                <input type="checkbox" checked={agreed} onChange={event => setAgreed(event.target.checked)} className="mt-1 h-6 w-6" />
+                <span className="text-lg">We agree to the Sanctuary Safety Rules and Ethical Conduct.</span>
+              </label>
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
-                className="px-6 py-2.5 bg-[#166534] text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+                disabled={!agreed || submitting}
+                className="mt-6 w-full rounded-lg bg-[#9a4f00] px-7 py-4 text-xl font-bold text-white disabled:opacity-50"
               >
-                {submitting ? 'Submitting...' : 'Submit Registration'}
+                {submitting ? 'Submitting...' : 'Complete Registration'}
               </button>
-            )}
+            </div>
           </div>
-        </div>
+        </section>
+
+        <footer className="py-14 text-center text-sm font-bold tracking-widest text-[#806b5d]">
+          © 2024 SafeGround Collective - A Therapeutic Grounding Initiative
+        </footer>
       </div>
-    </div>
+    </main>
   )
 }
