@@ -153,6 +153,7 @@ export default function AdminSeedPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
+            onClick={fetchStats}
             disabled={loading !== null}
             className="px-5 py-2 bg-surface-container-highest text-on-surface rounded-lg text-sm font-semibold hover:brightness-110 disabled:opacity-50 transition-all"
           >

@@ -1,82 +1,124 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Calendar, Clock, Users, CheckCircle, XCircle } from 'lucide-react'
 
-const appointments = [
-  { alias: 'Selam-Eagle-47', provider: 'Dr. Hiwot Bekele', type: 'Follow-up', date: 'Today, 2:00 PM', status: 'confirmed' },
-  { alias: 'Biruk-Crane-23', provider: 'Meron Gizaw', type: 'Initial', date: 'Today, 4:30 PM', status: 'pending' },
-  { alias: 'Tsega-Lion-91', provider: 'Dr. Yonas Alemu', type: 'Crisis', date: 'Tomorrow, 10:00 AM', status: 'confirmed' },
-  { alias: 'Fiker-Dove-12', provider: 'Dawit Hailu', type: 'Follow-up', date: 'Tomorrow, 3:00 PM', status: 'confirmed' },
-  { alias: 'Abenezer-Crane-68', provider: 'Dr. Selam Tesfaye', type: 'Initial', date: 'Jun 6, 9:00 AM', status: 'pending' },
-]
+interface Booking {
+  id: string
+  user_id: string
+  provider_id: string
+  booking_type: string
+  scheduled_at: string
+  status: string
+  profiles?: { alias: string }
+  providers?: { display_name: string }
+}
 
 export default function AdminAppointmentsPage() {
+  const supabase = createClient()
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchBookings() {
+      const { data } = await supabase
+        .from('telehealth_bookings')
+        .select('*, profiles(alias), providers(display_name)')
+        .order('scheduled_at', { ascending: false })
+        .limit(50)
+      if (data) setBookings(data as Booking[])
+      setLoading(false)
+    }
+    fetchBookings()
+  }, [supabase])
+
+  const pending = bookings.filter(b => b.status === 'pending').length
+  const confirmed = bookings.filter(b => b.status === 'confirmed').length
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#92400E]">Appointments</h1>
-        <p className="text-[#64748B] mt-1">Manage all telehealth appointments across the platform</p>
+        <h1 className="text-3xl font-bold text-primary">Appointments</h1>
+        <p className="text-on-surface-variant mt-1">Manage all telehealth appointments across the platform</p>
       </div>
 
       <div className="grid grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
-          <Calendar size={20} className="text-[#92400E] mb-2" />
-          <p className="text-3xl font-bold text-[#1c1917]">{appointments.length}</p>
-          <p className="text-sm text-[#64748B]">Total Appointments</p>
+        <div className="card p-6">
+          <Calendar className="w-5 h-5 text-primary mb-2" />
+          <p className="text-3xl font-bold text-on-surface">{bookings.length}</p>
+          <p className="text-sm text-on-surface-variant">Total Appointments</p>
         </div>
-        <div className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
-          <Clock size={20} className="text-[#92400E] mb-2" />
-          <p className="text-3xl font-bold text-[#1c1917]">{appointments.filter(a => a.status === 'pending').length}</p>
-          <p className="text-sm text-[#64748B]">Pending</p>
+        <div className="card p-6">
+          <Clock className="w-5 h-5 text-amber-700 mb-2" />
+          <p className="text-3xl font-bold text-on-surface">{pending}</p>
+          <p className="text-sm text-on-surface-variant">Pending</p>
         </div>
-        <div className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
-          <Users size={20} className="text-[#92400E] mb-2" />
-          <p className="text-3xl font-bold text-[#1c1917]">{appointments.filter(a => a.status === 'confirmed').length}</p>
-          <p className="text-sm text-[#64748B]">Confirmed</p>
+        <div className="card p-6">
+          <Users className="w-5 h-5 text-green-700 mb-2" />
+          <p className="text-3xl font-bold text-on-surface">{confirmed}</p>
+          <p className="text-sm text-on-surface-variant">Confirmed</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-[#1c1917] mb-4">All Appointments</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#d6d3d1]">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Alias</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Provider</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Type</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Date</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-[#64748B] uppercase tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((apt, i) => (
-                <tr key={i} className="border-b border-[#d6d3d1]/10 hover:bg-[#f5f5f4] transition-colors">
-                  <td className="py-3 px-4 font-medium text-[#1c1917]">{apt.alias}</td>
-                  <td className="py-3 px-4 text-[#64748B]">{apt.provider}</td>
-                  <td className="py-3 px-4">
-                    <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      apt.type === 'Crisis' ? 'bg-red-100 text-[#B91C1C]' :
-                      apt.type === 'Initial' ? 'bg-blue-100 text-blue-700' :
-                      'bg-purple-100 text-purple-700'
-                    }`}>
-                      {apt.type}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-[#64748B]">{apt.date}</td>
-                  <td className="py-3 px-4">
-                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      apt.status === 'confirmed' ? 'bg-green-100 text-[#166534]' : 'bg-amber-100 text-[#92400E]'
-                    }`}>
-                      {apt.status === 'confirmed' ? <CheckCircle size={10} /> : <XCircle size={10} />}
-                      {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
-                    </span>
-                  </td>
+      <div className="card p-6">
+        <h2 className="text-lg font-semibold text-on-surface mb-4">All Appointments</h2>
+        {loading ? (
+          <div className="animate-pulse space-y-3">
+            {[...Array(5)].map((_, i) => <div key={i} className="h-12 bg-surface-container-high rounded" />)}
+          </div>
+        ) : bookings.length === 0 ? (
+          <p className="text-on-surface-variant text-sm">No appointments yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-outline-variant">
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Alias</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Provider</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Type</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Date</th>
+                  <th className="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {bookings.map((b) => (
+                  <tr key={b.id} className="border-b border-outline-variant/50 hover:bg-surface-container-low">
+                    <td className="py-3 px-4 font-medium text-on-surface">
+                      {(b.profiles as { alias?: string })?.alias || 'Anonymous'}
+                    </td>
+                    <td className="py-3 px-4 text-on-surface-variant">
+                      {(b.providers as { display_name?: string })?.display_name || 'Unknown'}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface-variant">
+                        {b.booking_type === 'online' ? 'Online' : 'In-person'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-on-surface-variant">
+                      {new Date(b.scheduled_at).toLocaleDateString()}
+                    </td>
+                    <td className="py-3 px-4">
+                      {b.status === 'confirmed' ? (
+                        <span className="flex items-center gap-1 text-green-700 text-xs font-semibold">
+                          <CheckCircle className="w-3.5 h-3.5" /> Confirmed
+                        </span>
+                      ) : b.status === 'pending' ? (
+                        <span className="flex items-center gap-1 text-amber-700 text-xs font-semibold">
+                          <Clock className="w-3.5 h-3.5" /> Pending
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-on-surface-variant text-xs font-semibold">
+                          <XCircle className="w-3.5 h-3.5" /> {b.status}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

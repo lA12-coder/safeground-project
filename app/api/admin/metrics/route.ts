@@ -22,11 +22,28 @@ export async function GET(request: NextRequest) {
 
     const today = new Date().toISOString().split('T')[0]
 
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]
+
     const [{ count: total_users }, { count: panic_today }, { count: active_streaks }] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('habit_logs').select('*', { count: 'exact', head: true }).eq('ai_intervention_triggered', true).gte('log_date', today),
       supabase.from('streaks').select('*', { count: 'exact', head: true }).gt('current_streak', 0),
     ])
+
+    const { count: chat_today } = await supabase
+      .from('anonymous_chat').select('*', { count: 'exact', head: true }).gte('sent_at', today)
+
+    const { count: relapse_last_7 } = await supabase
+      .from('habit_logs').select('*', { count: 'exact', head: true }).eq('relapsed', true).gte('log_date', sevenDaysAgoStr)
+
+    const { count: total_last_7 } = await supabase
+      .from('habit_logs').select('*', { count: 'exact', head: true }).gte('log_date', sevenDaysAgoStr)
+
+    const relapse_rate_7d = total_last_7 && total_last_7 > 0
+      ? Math.round(((relapse_last_7 || 0) / total_last_7) * 100)
+      : 0
 
     const { count: provider_queue } = await supabase
       .from('providers').select('*', { count: 'exact', head: true }).eq('is_verified', false)
@@ -79,8 +96,8 @@ export async function GET(request: NextRequest) {
       active_streaks: active_streaks || 0,
       provider_queue: provider_queue || 0,
       avg_streak,
-      relapse_rate_7d: 0,
-      chat_today: 0,
+      relapse_rate_7d,
+      chat_today: chat_today || 0,
       flagged_messages: flagged_messages || 0,
       activity_30d,
     }
