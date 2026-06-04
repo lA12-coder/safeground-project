@@ -67,6 +67,7 @@ async function seedAuth() {
   const accounts = [
     { email: 'admin@gmail.com', password: 'SafeGroundAdmin123!', role: 'admin' },
     { email: 'demo.student@safeground.test', password: 'SafeGroundStudent123!', role: 'student' },
+    { email: 'demo.user@safeground.test', password: 'SafeGroundDemo123!', role: 'demo' },
     { email: 'provider@safeground.test', password: 'SafeGroundProvider123!', role: 'provider' },
   ]
 
@@ -127,6 +128,24 @@ async function seedAuth() {
         current_streak: 0,
         longest_streak: 0,
         total_clean_days: 0,
+      }, { onConflict: 'user_id' })
+    } else if (acct.role === 'demo') {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        alias: 'Biruk-Eagle-28',
+        language_pref: 'english',
+        support_preference: 'secular',
+        trigger_tags: ['stress', 'late_night'],
+        streak_goal: 30,
+        region: 'Addis Abeba',
+        religion: 'orthodox',
+        onboarding_done: true,
+      }, { onConflict: 'id' })
+      await supabase.from('streaks').upsert({
+        user_id: data.user.id,
+        current_streak: 28,
+        longest_streak: 28,
+        total_clean_days: 30,
       }, { onConflict: 'user_id' })
     }
   }

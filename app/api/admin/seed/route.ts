@@ -429,6 +429,7 @@ export async function POST(request: NextRequest) {
         const accounts = [
           { email: 'admin@gmail.com', password: 'SafeGroundAdmin123!', role: 'admin' },
           { email: 'demo.student@safeground.test', password: 'SafeGroundStudent123!', role: 'student' },
+          { email: 'demo.user@safeground.test', password: 'SafeGroundDemo123!', role: 'demo' },
           { email: 'provider@safeground.test', password: 'SafeGroundProvider123!', role: 'provider' },
         ]
         const results: string[] = []
@@ -446,22 +447,31 @@ export async function POST(request: NextRequest) {
             email_confirm: true,
           })
           if (error) { results.push(`${acct.email}: ${error.message}`); continue }
-          if (acct.role === 'admin' || acct.role === 'provider') {
+          if (acct.role === 'admin' || acct.role === 'provider' || acct.role === 'demo') {
+            const alias = acct.role === 'admin' ? 'Admin-SafeGround-00'
+              : acct.role === 'demo' ? 'Biruk-Eagle-28'
+              : 'Dr-Provider-00'
+            const support = acct.role === 'demo' ? 'secular'
+              : acct.role === 'admin' ? 'secular'
+              : 'clinical'
+            const streak = acct.role === 'demo' ? 28 : 0
+
             await supabase.from('profiles').upsert({
               id: data.user.id,
-              alias: acct.role === 'admin' ? 'Admin-SafeGround-00' : 'Dr-Provider-00',
+              alias,
               language_pref: 'english',
-              support_preference: acct.role === 'admin' ? 'secular' : 'clinical',
-              trigger_tags: [],
+              support_preference: support,
+              trigger_tags: acct.role === 'demo' ? ['stress', 'late_night'] : [],
               streak_goal: 30,
               region: 'Addis Abeba',
+              religion: acct.role === 'demo' ? 'orthodox' : null,
               onboarding_done: true,
             }, { onConflict: 'id' })
             await supabase.from('streaks').upsert({
               user_id: data.user.id,
-              current_streak: 0,
-              longest_streak: 0,
-              total_clean_days: 0,
+              current_streak: streak,
+              longest_streak: streak,
+              total_clean_days: streak + 2,
             }, { onConflict: 'user_id' })
           }
           results.push(`${acct.email} created -> ${data.user.id}`)

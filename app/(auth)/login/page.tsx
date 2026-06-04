@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 const demoAccounts = [
   { label: 'Admin', email: 'admin@gmail.com', password: 'SafeGroundAdmin123!', redirect: '/admin' },
   { label: 'Student', email: 'demo.student@safeground.test', password: 'SafeGroundStudent123!', redirect: '/dashboard' },
+  { label: 'Demo (Biruk-Eagle-28)', email: 'demo.user@safeground.test', password: 'SafeGroundDemo123!', redirect: '/dashboard' },
   { label: 'Provider', email: 'provider@safeground.test', password: 'SafeGroundProvider123!', redirect: '/provider/dashboard' },
 ]
 
