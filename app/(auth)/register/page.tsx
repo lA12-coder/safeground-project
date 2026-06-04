@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Shield, Lock, RotateCw } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 
 const languages = [
   { code: 'en', name: 'English', script: '' },
@@ -48,17 +47,17 @@ export default function RegisterPage() {
       return
     }
 
-    const supabase = createClient()
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { alias, language_pref: selectedLanguage } },
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, alias, language_pref: selectedLanguage }),
     })
 
     setLoading(false)
 
-    if (signUpError) {
-      setError(signUpError.message)
+    if (!res.ok) {
+      const data = await res.json()
+      setError(data.error || 'Registration failed')
       return
     }
 
