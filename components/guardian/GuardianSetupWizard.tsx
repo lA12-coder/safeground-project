@@ -63,10 +63,12 @@ export function GuardianSetupWizard({ onComplete }: GuardianSetupWizardProps) {
         setError(data.error ?? 'Could not create link.');
         return;
       }
-      setUrl(data.url);
-      setShareText(data.shareText);
+      const linkUrl = data.url ?? data.access_url;
+      const text = data.shareText ?? '';
+      setUrl(linkUrl);
+      setShareText(text);
       setStep(3);
-      onComplete({ url: data.url, shareText: data.shareText });
+      onComplete({ url: linkUrl, shareText: text });
     } finally {
       setSubmitting(false);
     }
@@ -199,9 +201,11 @@ export function GuardianSetupWizard({ onComplete }: GuardianSetupWizardProps) {
               </button>
             </div>
           </div>
-          <div className="bg-surface-container-low rounded-lg p-4 text-sm text-on-surface-variant leading-relaxed italic">
-            {shareText}
-          </div>
+          {shareText && (
+            <div className="bg-surface-container-low rounded-lg p-4 text-sm text-on-surface-variant leading-relaxed italic">
+              {shareText}
+            </div>
+          )}
         </div>
       )}
 
