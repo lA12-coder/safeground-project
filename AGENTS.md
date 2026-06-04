@@ -34,12 +34,12 @@ lib/
 scripts/
   seed.ts                       # Standalone seed script (npx tsx scripts/seed.ts)
 
-middleware.ts                   # Route protection (auth + admin email check)
+proxy.ts                        # Route protection (auth + admin email check)
 ```
 
 ---
 
-## Middleware (`middleware.ts`)
+## Proxy (`proxy.ts`)
 
 | Path | Access |
 |---|---|

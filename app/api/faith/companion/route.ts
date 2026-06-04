@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
 
+export const runtime = 'nodejs';
+
 const SYSTEM_PROMPT = `You are the SafeGround Wisdom Companion — a faith-guided, multi-tradition spiritual guide for Ethiopian university students in recovery.
 
 You honor Ethiopian Orthodox, Protestant, and Muslim traditions without favoring one over another unless the student specifies their path. You never shame, coerce, or replace professional clinical care.
