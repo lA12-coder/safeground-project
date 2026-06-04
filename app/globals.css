@@ -1,36 +1,28 @@
 @import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;600;700&family=Geist:wght@400;500;600;700&display=swap');
 
-@theme inline {
+@theme {
   --font-sans: 'Geist', system-ui, sans-serif;
   --font-serif: 'Noto Serif', serif;
   
   --color-primary: #8d4b00;
   --color-primary-container: #b15f00;
   --color-on-primary: #ffffff;
-  --color-primary-fixed: #ffdcc3;
-  --color-primary-fixed-dim: #ffb77d;
   
   --color-secondary: #006d30;
   --color-secondary-container: #92f5a4;
   --color-on-secondary: #ffffff;
-  --color-secondary-fixed: #95f8a7;
-  --color-secondary-fixed-dim: #79db8d;
   --color-on-secondary-container: #007233;
   
   --color-tertiary: #a23917;
   --color-tertiary-container: #c2512d;
   --color-on-tertiary: #ffffff;
-  --color-tertiary-fixed: #ffdbd1;
-  --color-tertiary-fixed-dim: #ffb59f;
   
   --color-error: #ba1a1a;
   --color-on-error: #ffffff;
   --color-error-container: #ffdad6;
   
   --color-surface: #f9f9f8;
-  --color-surface-dim: #dadad9;
-  --color-surface-bright: #f9f9f8;
   --color-surface-container-lowest: #ffffff;
   --color-surface-container-low: #f3f4f3;
   --color-surface-container: #eeeeed;
@@ -51,12 +43,13 @@
 
 @layer base {
   html {
-    @apply scroll-smooth bg-surface;
+    @apply scroll-smooth;
+    background-color: rgb(249 249 248);
     color-scheme: light;
   }
 
   body {
-    @apply text-on-surface font-sans;
+    @apply text-on-surface font-sans bg-surface;
   }
 
   h1, h2, h3, h4, h5, h6 {
