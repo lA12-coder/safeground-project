@@ -425,6 +425,49 @@ export async function POST(request: NextRequest) {
     }
 
     switch (type) {
+      case 'auth': {
+        const accounts = [
+          { email: 'admin@gmail.com', password: 'SafeGroundAdmin123!', role: 'admin' },
+          { email: 'demo.student@safeground.test', password: 'SafeGroundStudent123!', role: 'student' },
+          { email: 'provider@safeground.test', password: 'SafeGroundProvider123!', role: 'provider' },
+        ]
+        const results: string[] = []
+        for (const acct of accounts) {
+          const { data: existing } = await supabase.auth.admin.listUsers()
+          const users = existing?.users as { email?: string; id: string }[] | undefined
+          const found = users?.find(u => u.email === acct.email)
+          if (found) {
+            results.push(`${acct.email} already exists`)
+            continue
+          }
+          const { data, error } = await supabase.auth.admin.createUser({
+            email: acct.email,
+            password: acct.password,
+            email_confirm: true,
+          })
+          if (error) { results.push(`${acct.email}: ${error.message}`); continue }
+          if (acct.role === 'admin' || acct.role === 'provider') {
+            await supabase.from('profiles').upsert({
+              id: data.user.id,
+              alias: acct.role === 'admin' ? 'Admin-SafeGround-00' : 'Dr-Provider-00',
+              language_pref: 'english',
+              support_preference: acct.role === 'admin' ? 'secular' : 'clinical',
+              trigger_tags: [],
+              streak_goal: 30,
+              region: 'Addis Abeba',
+              onboarding_done: true,
+            }, { onConflict: 'id' })
+            await supabase.from('streaks').upsert({
+              user_id: data.user.id,
+              current_streak: 0,
+              longest_streak: 0,
+              total_clean_days: 0,
+            }, { onConflict: 'user_id' })
+          }
+          results.push(`${acct.email} created -> ${data.user.id}`)
+        }
+        return NextResponse.json({ success: true, message: results.join('; ') })
+      }
       case 'users': {
         const result = await seedUsers(supabase)
         return NextResponse.json({ success: true, ...result })

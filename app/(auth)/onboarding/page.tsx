@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Shield, Globe, AlertCircle, Users, Heart, Zap, Lock } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 const languages = [
   { code: 'en', name: 'English', icon: '🌍', script: 'Primary Interface' },
@@ -36,6 +37,18 @@ export default function OnboardingPage() {
   const [selectedSupport, setSelectedSupport] = useState('secular');
   const [guardianOptIn, setGuardianOptIn] = useState<boolean | null>(null);
   const [goal, setGoal] = useState('');
+  const [alias, setAlias] = useState('');
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.user_metadata?.alias) {
+        setAlias(user.user_metadata.alias)
+      } else if (user?.email) {
+        setAlias(user.email.split('@')[0])
+      }
+    })
+  }, [])
 
   const handleTriggerToggle = (triggerId: string) => {
     setSelectedTriggers((prev) =>
@@ -61,7 +74,7 @@ export default function OnboardingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          alias: '',
+          alias,
           language_pref: selectedLanguage === 'en' ? 'english' : selectedLanguage === 'am' ? 'amharic' : 'oromifa',
           support_preference: selectedSupport,
           trigger_tags: selectedTriggers,
