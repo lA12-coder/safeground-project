@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Shield, MapPin, Globe, Monitor, User, Calendar, Search, ChevronRight, X } from 'lucide-react'
+import { Shield, MapPin, Globe, Monitor, User, Calendar, Search, ChevronRight, X, SlidersHorizontal } from 'lucide-react'
 
 interface Provider {
   id: string
@@ -24,6 +24,8 @@ interface Provider {
 const FILTER_TABS = ['All', 'Clinical', 'Faith-Based'] as const
 type FilterTab = typeof FILTER_TABS[number]
 
+const ALL_CITIES = ['Addis Ababa', 'Hawassa', 'Dire Dawa', 'Adama', 'Bahir Dar', 'Mekelle', 'Jimma']
+
 export default function DirectoryPage() {
   const supabase = createClient()
   const [providers, setProviders] = useState<Provider[]>([])
@@ -33,6 +35,10 @@ export default function DirectoryPage() {
   const [bookingModal, setBookingModal] = useState(false)
   const [bookingDate, setBookingDate] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+  const [cityFilter, setCityFilter] = useState('')
+  const [onlineOnly, setOnlineOnly] = useState(false)
+  const [proBonoOnly, setProBonoOnly] = useState(false)
 
   useEffect(() => {
     async function fetchProviders() {
@@ -72,15 +78,22 @@ export default function DirectoryPage() {
     fetchProviders()
   }, [activeTab, supabase])
 
-  const filtered = providers.filter((p) => {
-    if (!searchTerm) return true
-    const term = searchTerm.toLowerCase()
-    return (
-      p.display_name?.toLowerCase().includes(term) ||
-      p.city?.toLowerCase().includes(term) ||
-      p.organization?.toLowerCase().includes(term)
-    )
-  })
+  const filtered = useMemo(() => {
+    return providers.filter((p) => {
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase()
+        const matchesSearch = p.display_name?.toLowerCase().includes(term) ||
+          p.city?.toLowerCase().includes(term) ||
+          p.organization?.toLowerCase().includes(term) ||
+          p.languages?.some(l => l.toLowerCase().includes(term))
+        if (!matchesSearch) return false
+      }
+      if (cityFilter && p.city !== cityFilter) return false
+      if (onlineOnly && !p.online_available) return false
+      if (proBonoOnly && !p.is_pro_bono) return false
+      return true
+    })
+  }, [providers, searchTerm, cityFilter, onlineOnly, proBonoOnly])
 
   const typeLabel = (t: string) => {
     switch (t) {
@@ -130,33 +143,96 @@ export default function DirectoryPage() {
           </p>
         </section>
 
-        {/* Tabs & Search */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex gap-2">
-            {FILTER_TABS.map((tab) => (
+        {/* Tabs, Filters & Search */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex gap-2">
+              {FILTER_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2.5 rounded-full font-semibold text-sm transition ${
+                    activeTab === tab
+                      ? 'bg-primary text-on-primary shadow-md'
+                      : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2.5 rounded-full font-semibold text-sm transition ${
-                  activeTab === tab
-                    ? 'bg-primary text-on-primary shadow-md'
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition ${
+                  showFilters || cityFilter || onlineOnly || proBonoOnly
+                    ? 'bg-primary text-on-primary'
                     : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
                 }`}
               >
-                {tab}
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+                {(cityFilter || onlineOnly || proBonoOnly) && (
+                  <span className="w-2 h-2 rounded-full bg-error" />
+                )}
               </button>
-            ))}
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name, city, language..."
+                  className="w-full rounded-full border border-outline-variant bg-surface-container-lowest pl-10 pr-4 py-2.5 text-sm outline-none focus:border-primary"
+                />
+              </div>
+            </div>
           </div>
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name, city..."
-              className="w-full rounded-full border border-outline-variant bg-surface-container-lowest pl-10 pr-4 py-2.5 text-sm outline-none focus:border-primary"
-            />
-          </div>
+
+          {/* Filter Panel */}
+          {showFilters && (
+            <div className="flex flex-wrap items-center gap-4 p-4 bg-surface-container-low rounded-xl">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-on-surface-variant">City:</span>
+                <select
+                  value={cityFilter}
+                  onChange={e => setCityFilter(e.target.value)}
+                  className="text-sm border border-outline-variant rounded-lg px-3 py-1.5 bg-surface-container-lowest"
+                >
+                  <option value="">All Cities</option>
+                  {ALL_CITIES.map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={onlineOnly}
+                  onChange={e => setOnlineOnly(e.target.checked)}
+                  className="rounded border-outline-variant text-primary"
+                />
+                Online Only
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={proBonoOnly}
+                  onChange={e => setProBonoOnly(e.target.checked)}
+                  className="rounded border-outline-variant text-primary"
+                />
+                Free / Pro-bono
+              </label>
+              {(cityFilter || onlineOnly || proBonoOnly) && (
+                <button
+                  onClick={() => { setCityFilter(''); setOnlineOnly(false); setProBonoOnly(false) }}
+                  className="text-xs text-error font-semibold hover:underline"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Provider Grid */}

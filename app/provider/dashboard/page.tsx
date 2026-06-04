@@ -4,8 +4,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Calendar, Clock, Users, Star, Video, CheckCircle, XCircle,
-  CalendarClock, Stethoscope, ToggleLeft, Sun, Save,
+  CalendarClock, Stethoscope, Save, TrendingUp, BarChart3, FileText,
 } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line,
+} from 'recharts'
 
 interface Booking {
   id: string
@@ -256,6 +259,51 @@ export default function ProviderDashboard() {
           ))}
         </div>
 
+        {/* Booking Trends Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={18} className="text-primary" />
+              <h2 className="text-lg font-semibold text-on-surface">Monthly Booking Trends</h2>
+            </div>
+            <div className="flex items-center gap-3 text-xs text-on-surface-variant">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-primary" /> Sessions</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-secondary" /> Completed</span>
+            </div>
+          </div>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={(() => {
+                  const months: Record<string, { sessions: number; completed: number }> = {}
+                  bookings.forEach(b => {
+                    const m = new Date(b.scheduled_at).toLocaleDateString('en-US', { month: 'short' })
+                    if (!months[m]) months[m] = { sessions: 0, completed: 0 }
+                    months[m].sessions++
+                    if (b.status === 'completed') months[m].completed++
+                  })
+                  return Object.entries(months).map(([month, data]) => ({ month, ...data }))
+                })()}
+                margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant)" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip
+                  contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-outline-variant)', background: 'var(--color-surface-container-lowest)' }}
+                />
+                <Bar dataKey="sessions" fill="var(--color-primary)" radius={[4, 4, 0, 0]} opacity={0.8} />
+                <Bar dataKey="completed" fill="var(--color-secondary)" radius={[4, 4, 0, 0]} opacity={0.9} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
         <div className="grid grid-cols-3 gap-6">
           {/* Today's Schedule — Timeline */}
           <div className="col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6">
@@ -383,15 +431,38 @@ export default function ProviderDashboard() {
               </div>
               {!selectedBooking ? (
                 <div className="text-center py-6">
+                  <FileText className="w-8 h-8 text-on-surface-variant mx-auto mb-2 opacity-50" />
                   <p className="text-sm text-on-surface-variant">Click a session to write notes</p>
                 </div>
               ) : (
                 <>
+                  {/* Quick Templates */}
+                  <div className="flex gap-1.5 mb-3 flex-wrap">
+                    {['SOAP Note', 'Progress Note', 'Crisis Note'].map(template => (
+                      <button
+                        key={template}
+                        onClick={() => {
+                          const templates: Record<string, string> = {
+                            'SOAP Note': 'Subjective:\n- Patient reports\n\nObjective:\n- Observations\n\nAssessment:\n- Clinical impression\n\nPlan:\n- Next steps',
+                            'Progress Note': 'Progress since last session:\n- \n\nCurrent concerns:\n- \n\nGoals for next session:\n- ',
+                            'Crisis Note': 'Crisis type:\n- \n\nInterventions used:\n- \n\nOutcome:\n- \n\nFollow-up plan:\n- ',
+                          }
+                          const booking = bookings.find(b => b.id === selectedBooking)
+                          if (booking) {
+                            setNotes(prev => ({ ...prev, [selectedBooking!]: templates[template] || '' }))
+                          }
+                        }}
+                        className="px-2.5 py-1 text-[10px] font-semibold bg-surface-container-high text-on-surface-variant rounded-lg hover:bg-surface-container-highest transition-colors"
+                      >
+                        {template}
+                      </button>
+                    ))}
+                  </div>
                   <textarea
                     placeholder="Write anonymous session notes... Patients are identified by alias only."
                     value={notes[selectedBooking] || ''}
                     onChange={e => setNotes(prev => ({ ...prev, [selectedBooking!]: e.target.value }))}
-                    className="w-full h-28 p-3 border border-outline-variant/30 rounded-lg text-sm resize-none placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                    className="w-full h-32 p-3 border border-outline-variant/30 rounded-lg text-sm resize-none placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                   <button
                     onClick={() => handleSaveNotes(selectedBooking)}
@@ -400,7 +471,8 @@ export default function ProviderDashboard() {
                     <Save size={14} />
                     Save Notes
                   </button>
-                  <p className="text-xs text-on-surface-variant mt-2">
+                  <p className="text-xs text-on-surface-variant mt-2 flex items-center gap-1">
+                    <FileText size={11} />
                     Notes are encrypted and linked to session only
                   </p>
                 </>

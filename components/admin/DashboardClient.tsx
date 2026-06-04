@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Users, AlertTriangle, Zap, Clock, Shield, Trash2, XCircle,
+  Users, AlertTriangle, Zap, Clock, Shield, Trash2, XCircle, TrendingUp, Activity, MessageCircle, UserPlus, CheckCircle, Flag,
 } from 'lucide-react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area,
 } from 'recharts'
 import { createClient } from '@/lib/supabase/client'
 import type { AdminMetrics, Provider, AnonymousChat } from '@/lib/types'
@@ -155,7 +155,7 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
           </div>
           <div className="flex items-end gap-2">
             <span className="text-3xl font-bold text-on-surface">{metrics.total_users.toLocaleString()}</span>
-            <span className="text-sm font-semibold text-secondary">+12% ↑</span>
+            <span className="text-sm font-semibold text-secondary">+{metrics.new_users_7d} new this week</span>
           </div>
         </motion.div>
 
@@ -215,6 +215,29 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
         </motion.div>
       </div>
 
+      {/* System Health Row */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.4 }}
+        className="grid gap-4 grid-cols-2 md:grid-cols-4"
+      >
+        {[
+          { label: 'Chat Today', value: metrics.chat_today, icon: MessageCircle, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30' },
+          { label: 'Relapse Rate (7d)', value: `${metrics.relapse_rate_7d}%`, icon: Activity, color: metrics.relapse_rate_7d > 20 ? 'text-error' : 'text-secondary', bg: metrics.relapse_rate_7d > 20 ? 'bg-red-50 dark:bg-red-950/30' : 'bg-green-50 dark:bg-green-950/30' },
+          { label: 'New Users (7d)', value: metrics.new_users_7d, icon: UserPlus, color: 'text-secondary', bg: 'bg-green-50 dark:bg-green-950/30' },
+          { label: 'Avg Streak', value: `${metrics.avg_streak}d`, icon: TrendingUp, color: 'text-primary', bg: 'bg-amber-50 dark:bg-amber-950/30' },
+        ].map(({ label, value, icon: Icon, color, bg }, i) => (
+          <div key={label} className={`${bg} rounded-xl border border-outline-variant/30 p-4 flex items-center gap-3`}>
+            <Icon className={`w-8 h-8 ${color}`} />
+            <div>
+              <p className="text-lg font-bold text-on-surface">{value}</p>
+              <p className="text-xs text-on-surface-variant">{label}</p>
+            </div>
+          </div>
+        ))}
+      </motion.div>
+
       {/* Regional Activity + Moderation Queue */}
       <div className="grid gap-6 xl:grid-cols-3">
         <motion.div
@@ -246,12 +269,24 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
           className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6 transition-colors duration-300"
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-on-surface">Moderation Queue</h2>
-            <span className="text-xs text-on-surface-variant">Real-time</span>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-on-surface">Moderation Queue</h2>
+              {messages.length > 0 && (
+                <span className="px-2 py-0.5 text-[10px] font-bold bg-error/10 text-error rounded-full">{messages.length}</span>
+              )}
+            </div>
+            <span className="text-xs text-on-surface-variant flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
+              Live
+            </span>
           </div>
           <div className="space-y-3 max-h-80 overflow-y-auto">
             {messages.length === 0 && (
-              <p className="text-sm text-on-surface-variant text-center py-8">No flagged messages</p>
+              <div className="text-center py-8">
+                <CheckCircle className="w-10 h-10 text-secondary mx-auto mb-2 opacity-50" />
+                <p className="text-sm text-on-surface-variant">No flagged messages</p>
+                <p className="text-xs text-on-surface-variant/60 mt-1">Community is doing well</p>
+              </div>
             )}
             {messages.map(msg => (
               <motion.div
@@ -263,13 +298,14 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
+                    <Flag size={12} className="text-error" />
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${flagColors[msg.flag_reason || 'reported']}`}>
                       {flagLabel(msg.flag_reason)}
                     </span>
                     <span className="text-xs text-on-surface-variant">{timeAgo(msg.created_at)}</span>
                   </div>
                 </div>
-                <p className="text-sm text-on-surface mb-3 italic">
+                <p className="text-sm text-on-surface mb-3 italic leading-relaxed">
                   &ldquo;{msg.message.slice(0, 120)}{msg.message.length > 120 ? '...' : ''}&rdquo;
                 </p>
                 <div className="flex items-center gap-2">
@@ -314,31 +350,33 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-on-surface">30-Day Activity Trends</h2>
           <div className="flex items-center gap-5 text-xs text-on-surface-variant">
-            <span className="flex items-center gap-2"><span className="h-0.5 w-4 bg-primary" /> CHECK-INS</span>
-            <span className="flex items-center gap-2"><span className="h-0.5 w-4 bg-error" /> PANIC</span>
+            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-sm bg-primary" /> CHECK-INS</span>
+            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-sm bg-error" /> PANIC</span>
           </div>
         </div>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={metrics.activity_30d}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant)" />
+            <BarChart data={metrics.activity_30d} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant)" vertical={false} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }}
+                tick={{ fontSize: 10, fill: 'var(--color-on-surface-variant)' }}
                 tickFormatter={(v: string) => {
                   const d = new Date(v)
                   const day = d.getDate()
-                  if (day === 1 || day === 10 || day === 20) return `DAY ${day}`
-                  if (day === new Date().getDate()) return 'TODAY'
+                  if (day === 1 || day === 10 || day === 20) return `${d.getMonth() + 1}/${day}`
+                  if (day === new Date().getDate()) return 'Today'
                   return ''
                 }}
+                axisLine={false}
+                tickLine={false}
               />
               <YAxis hide />
               <Tooltip
-                contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-outline-variant)' }}
+                contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-outline-variant)', background: 'var(--color-surface-container-lowest)' }}
                 labelFormatter={(v: string) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               />
-              <Bar dataKey="checkins" fill="var(--color-surface-container-high)" stroke="var(--color-primary)" strokeWidth={3} radius={[4, 4, 0, 0]} name="CHECK-INS" />
+              <Bar dataKey="checkins" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="CHECK-INS" opacity={0.85} />
               <Bar dataKey="panic" fill="var(--color-error)" radius={[4, 4, 0, 0]} name="PANIC" />
             </BarChart>
           </ResponsiveContainer>
@@ -359,6 +397,7 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
 
         {providers.length === 0 ? (
           <div className="text-center py-12 text-sm text-on-surface-variant">
+            <CheckCircle className="w-10 h-10 text-secondary mx-auto mb-3" />
             No pending provider verifications
           </div>
         ) : (

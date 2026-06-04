@@ -1,10 +1,18 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
-import { motion } from 'framer-motion'
-import { Heart, Shield, Lock, ChevronLeft } from 'lucide-react'
-import { LineChart, Line, ResponsiveContainer, XAxis } from 'recharts'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Heart, Shield, Lock, ChevronLeft, Sparkles, Trophy, Award, Star, TrendingUp } from 'lucide-react'
+import { LineChart, Line, ResponsiveContainer, XAxis, AreaChart, Area } from 'recharts'
 import type { GuardianViewData } from '@/lib/types'
+
+const MILESTONES = [3, 7, 14, 30, 60, 90, 180, 365]
+
+const encouragementHistory = [
+  { type: 'encourage', message: 'I sent a word of encouragement', time: '2h ago' },
+  { type: 'calm', message: 'I sent a calming thought', time: '1d ago' },
+  { type: 'faith', message: 'I sent faith support', time: '3d ago' },
+]
 
 export default function GuardianViewPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params)
@@ -12,6 +20,8 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [sending, setSending] = useState<string | null>(null)
+  const [sentHistory, setSentHistory] = useState<typeof encouragementHistory>([])
+  const [showCelebration, setShowCelebration] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -21,7 +31,13 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
     try {
       const res = await fetch(`/api/guardian/view/${token}`)
       if (!res.ok) { setError(true); return }
-      setData(await res.json())
+      const result = await res.json()
+      setData(result)
+      const milestones = MILESTONES
+      if (milestones.includes(result.current_streak)) {
+        setShowCelebration(true)
+        setTimeout(() => setShowCelebration(false), 5000)
+      }
     } catch {
       setError(true)
     } finally {
@@ -37,6 +53,12 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, message_type: type }),
       })
+      const labels: Record<string, string> = {
+        encourage: 'I sent a word of encouragement',
+        calm: 'I sent a calming thought',
+        faith: 'I sent faith support',
+      }
+      setSentHistory(prev => [{ type, message: labels[type] || 'Sent encouragement', time: 'Just now' }, ...prev])
     } catch {}
     setTimeout(() => setSending(null), 1500)
   }
@@ -90,6 +112,33 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
       </nav>
 
       <div className="max-w-5xl mx-auto px-6 py-12 relative">
+        {/* Milestone Celebration */}
+        <AnimatePresence>
+          {showCelebration && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: -30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -30 }}
+              className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-300 rounded-2xl p-8 text-center shadow-2xl"
+            >
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0], scale: [1, 1.1, 1] }}
+                transition={{ duration: 0.6 }}
+              >
+                <Trophy className="w-16 h-16 text-amber-600 mx-auto mb-2" />
+              </motion.div>
+              <h3 className="text-2xl font-bold text-amber-800">Milestone Reached!</h3>
+              <p className="text-amber-700 mt-1">{data.alias} has reached {data.current_streak} days</p>
+              <button
+                onClick={() => setShowCelebration(false)}
+                className="mt-3 text-xs text-amber-600 underline"
+              >
+                Dismiss
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -110,10 +159,36 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
             transition={{ delay: 0.1 }}
             className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-8 text-center"
           >
-            <p className="text-8xl font-bold text-primary">{data.current_streak}</p>
+            <motion.p
+              animate={showCelebration ? { scale: [1, 1.1, 1] } : {}}
+              transition={{ repeat: showCelebration ? Infinity : 0, duration: 2 }}
+              className="text-8xl font-bold text-primary"
+            >
+              {data.current_streak}
+            </motion.p>
             <p className="text-lg text-on-surface-variant mt-2">Days of Strength</p>
             <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-semibold">
               ✓ Safety Plan Active
+            </div>
+            {/* Mini milestone progress */}
+            <div className="mt-4 pt-4 border-t border-outline-variant/30">
+              <div className="flex items-center justify-between text-xs text-on-surface-variant mb-1.5">
+                <span>Progress to next milestone</span>
+                <span className="font-semibold text-primary">
+                  {(() => {
+                    const next = MILESTONES.find(m => m > data.current_streak) || MILESTONES[MILESTONES.length - 1]
+                    return `${Math.round((data.current_streak / next) * 100)}%`
+                  })()}
+                </span>
+              </div>
+              <div className="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min((data.current_streak / (MILESTONES.find(m => m > data.current_streak) || MILESTONES[MILESTONES.length - 1])) * 100, 100)}%` }}
+                  transition={{ duration: 1, ease: 'easeOut' }}
+                  className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full"
+                />
+              </div>
             </div>
           </motion.div>
 
@@ -125,16 +200,29 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-on-surface">7-Day Mood Flow</h3>
-              <span className="px-2 py-0.5 bg-secondary/10 text-secondary rounded-full text-xs font-semibold">
-                {data.last_7_days_mood.some(d => d.mood > 5) ? 'IMPROVING' : 'STEADY'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                  data.last_7_days_mood.some(d => d.mood > 5)
+                    ? 'bg-secondary/10 text-secondary'
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {data.last_7_days_mood.some(d => d.mood > 5) ? 'IMPROVING' : 'STEADY'}
+                  <TrendingUp size={11} />
+                </span>
+              </div>
             </div>
-            <div className="h-32">
+            <div className="h-36">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data.last_7_days_mood}>
+                <AreaChart data={data.last_7_days_mood}>
+                  <defs>
+                    <linearGradient id="guardianMoodGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
                   <XAxis dataKey="day" tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }} axisLine={false} tickLine={false} />
-                  <Line type="monotone" dataKey="mood" stroke="var(--color-primary)" strokeWidth={2} dot={{ fill: 'var(--color-primary)', r: 4 }} />
-                </LineChart>
+                  <Area type="monotone" dataKey="mood" stroke="var(--color-primary)" strokeWidth={2} fill="url(#guardianMoodGrad)" dot={{ fill: 'var(--color-primary)', r: 4 }} />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
             <p className="text-xs text-on-surface-variant text-center mt-2">
@@ -142,6 +230,37 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
             </p>
           </motion.div>
         </div>
+
+        {/* Encouragement History Feed */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-6"
+        >
+          {sentHistory.length > 0 && (
+            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-6 mb-8">
+              <h3 className="font-semibold text-on-surface mb-3 text-sm flex items-center gap-2">
+                <Heart size={14} className="text-error" />
+                Recent Encouragement Sent
+              </h3>
+              <div className="space-y-2">
+                {sentHistory.slice(0, 5).map((item, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-center justify-between text-sm bg-surface-container-low rounded-lg px-4 py-2.5"
+                  >
+                    <span className="text-on-surface">{item.message}</span>
+                    <span className="text-xs text-on-surface-variant">{item.time}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -154,10 +273,10 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { type: 'encourage', bg: 'bg-pink-50 dark:bg-pink-950/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-800 dark:text-pink-300', subtext: 'text-pink-600 dark:text-pink-400', quote: '"I am so proud of your progress today."', label: 'SEND TAP TO ENCOURAGE' },
-              { type: 'calm', bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-800 dark:text-green-300', subtext: 'text-green-600 dark:text-green-400', quote: '"Take a deep breath. You are safe and loved."', label: 'SEND TAP TO CALM' },
-              { type: 'faith', bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-800 dark:text-yellow-300', subtext: 'text-yellow-600 dark:text-yellow-400', quote: '"I am praying for your peace this evening."', label: 'SEND FAITH SUPPORT' },
-            ].map(({ type, bg, border, text, subtext, quote, label }) => (
+              { type: 'encourage', icon: Heart, bg: 'bg-pink-50 dark:bg-pink-950/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-800 dark:text-pink-300', subtext: 'text-pink-600 dark:text-pink-400', quote: '"I am so proud of your progress today."', label: 'SEND ENCOURAGEMENT' },
+              { type: 'calm', icon: Shield, bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-800 dark:text-green-300', subtext: 'text-green-600 dark:text-green-400', quote: '"Take a deep breath. You are safe and loved."', label: 'SEND CALM' },
+              { type: 'faith', icon: Star, bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-800 dark:text-yellow-300', subtext: 'text-yellow-600 dark:text-yellow-400', quote: '"I am praying for your peace this evening."', label: 'SEND FAITH SUPPORT' },
+            ].map(({ type, icon: Icon, bg, border, text, subtext, quote, label }) => (
               <motion.button
                 key={type}
                 whileHover={{ scale: 1.03 }}
@@ -166,6 +285,7 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
                 disabled={sending !== null}
                 className={`${bg} ${border} rounded-xl p-6 text-center hover:shadow-md transition-all disabled:opacity-50 border`}
               >
+                <Icon className={`w-6 h-6 ${text} mx-auto mb-2`} />
                 <p className={`text-sm ${text} italic mb-3`}>{quote}</p>
                 <span className={`text-xs font-semibold ${subtext}`}>
                   {sending === type ? 'Sent!' : label}
@@ -192,6 +312,10 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
                 <p className="text-sm font-medium text-on-surface">Guardian Support Group</p>
                 <p className="text-xs text-on-surface-variant">Weekly sessions</p>
               </button>
+              <button className="w-full text-left p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
+                <p className="text-sm font-medium text-on-surface">How to Talk About Relapse</p>
+                <p className="text-xs text-on-surface-variant">Compassionate communication</p>
+              </button>
             </div>
           </motion.div>
 
@@ -199,7 +323,7 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-primary/5 rounded-2xl border border-primary/20 p-6 flex items-center"
+            className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-primary/20 p-6 flex items-center"
           >
             <div>
               <p className="text-lg italic text-primary mb-2">

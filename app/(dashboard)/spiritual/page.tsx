@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, BookOpen, Sparkles, Heart, RefreshCw, MessageCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Shield, BookOpen, Sparkles, Heart, RefreshCw, MessageCircle, Wind, Clock, Sun, Moon } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 const fallbackAffirmations = [
   '"The path to healing is not a straight line. Every step you take, no matter how small, is a victory."',
@@ -15,6 +16,167 @@ const fallbackAffirmations = [
   '"Remember your why. The person you love most in this world — be that person for yourself."',
   '"Each morning brings a new chance to begin again. Today is a fresh start."',
 ]
+
+function BreathingExercise() {
+  const [phase, setPhase] = useState<'idle' | 'inhale' | 'hold' | 'exhale'>('idle')
+  const [count, setCount] = useState(0)
+  const [rounds, setRounds] = useState(0)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const startBreathing = () => {
+    setPhase('inhale')
+    setCount(4)
+    setRounds(0)
+  }
+
+  const stopBreathing = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    setPhase('idle')
+    setCount(0)
+  }
+
+  useEffect(() => {
+    if (phase === 'idle') return
+    intervalRef.current = setInterval(() => {
+      setCount(prev => {
+        if (phase === 'inhale') {
+          if (prev <= 1) { setPhase('hold'); return 7 }
+          return prev - 1
+        }
+        if (phase === 'hold') {
+          if (prev <= 1) { setPhase('exhale'); return 8 }
+          return prev - 1
+        }
+        if (phase === 'exhale') {
+          if (prev <= 1) {
+            setRounds(r => {
+              if (r + 1 >= 4) { setPhase('idle'); setCount(0); return 0 }
+              setPhase('inhale'); return r + 1
+            })
+            return 4
+          }
+          return prev - 1
+        }
+        return prev
+      })
+    }, 1000)
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [phase])
+
+  const phaseColors: Record<string, string> = {
+    idle: 'bg-amber-100 text-amber-700',
+    inhale: 'bg-blue-100 text-blue-700',
+    hold: 'bg-purple-100 text-purple-700',
+    exhale: 'bg-green-100 text-green-700',
+  }
+
+  const phaseLabels: Record<string, string> = {
+    idle: 'Begin',
+    inhale: 'Breathe In',
+    hold: 'Hold',
+    exhale: 'Breathe Out',
+  }
+
+  return (
+    <div className="card p-8 space-y-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200/50">
+      <div className="flex items-center gap-2 text-primary">
+        <Wind className="w-5 h-5" />
+        <h2 className="font-serif font-bold text-lg text-on-surface">Breathing Exercise (4-7-8)</h2>
+      </div>
+      <div className="text-center">
+        {phase !== 'idle' ? (
+          <motion.div
+            key={phase}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="space-y-4"
+          >
+            <motion.div
+              animate={{
+                scale: phase === 'inhale' ? 1.3 : phase === 'exhale' ? 0.8 : 1,
+              }}
+              transition={{ duration: 0.5 }}
+              className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center text-3xl font-bold ${phaseColors[phase]}`}
+            >
+              {count}
+            </motion.div>
+            <p className="text-lg font-semibold text-on-surface">{phaseLabels[phase]}</p>
+            <p className="text-sm text-on-surface-variant">Round {rounds + 1} of 4</p>
+            <button
+              onClick={stopBreathing}
+              className="px-6 py-2 bg-error/10 text-error rounded-full text-sm font-semibold hover:bg-error/20 transition"
+            >
+              Stop
+            </button>
+          </motion.div>
+        ) : (
+          <div className="space-y-4 py-4">
+            <p className="text-on-surface-variant text-sm">
+              Calm your nervous system with the 4-7-8 breathing technique. Inhale 4s, Hold 7s, Exhale 8s.
+            </p>
+            <button
+              onClick={startBreathing}
+              className="px-8 py-3 bg-primary text-on-primary rounded-full font-semibold hover:bg-primary/90 transition"
+            >
+              Start Breathing Exercise
+            </button>
+          </div>
+        )}
+        {rounds >= 4 && (
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-secondary font-semibold mt-4"
+          >
+            Exercise complete. Notice how you feel.
+          </motion.p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function PrayerTimes() {
+  const now = new Date()
+  const hours = now.getHours()
+  const isMorning = hours < 12
+  const isEvening = hours >= 17
+
+  const prayers = [
+    { label: 'Morning Reflection', time: '06:00', icon: Sun, active: isMorning },
+    { label: 'Midday Centering', time: '12:00', icon: Clock, active: hours >= 12 && hours < 17 },
+    { label: 'Evening Gratitude', time: '18:00', icon: Moon, active: isEvening },
+    { label: 'Night Peace', time: '21:00', icon: Moon, active: hours >= 21 },
+  ]
+
+  return (
+    <div className="card p-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <Clock className="w-5 h-5 text-primary" />
+        <h3 className="font-semibold text-on-surface">Prayer & Reflection Times</h3>
+      </div>
+      <div className="space-y-2">
+        {prayers.map(p => (
+          <div
+            key={p.label}
+            className={`flex items-center justify-between p-3 rounded-lg text-sm ${
+              p.active ? 'bg-primary/10 border border-primary/20' : 'bg-surface-container-low'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <p.icon className={`w-4 h-4 ${p.active ? 'text-primary' : 'text-on-surface-variant'}`} />
+              <span className={p.active ? 'font-semibold text-primary' : 'text-on-surface-variant'}>{p.label}</span>
+            </div>
+            <span className="text-xs text-on-surface-variant">{p.time}</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-on-surface-variant italic">
+        Align your recovery with moments of stillness throughout the day.
+      </p>
+    </div>
+  )
+}
 
 export default function SpiritualPage() {
   const [affirmation, setAffirmation] = useState(fallbackAffirmations[0])
@@ -178,23 +340,11 @@ export default function SpiritualPage() {
           </div>
         </div>
 
-        {/* Guided Practices */}
-        <div className="card p-8 space-y-6">
-          <div className="flex items-center gap-2 text-primary">
-            <BookOpen className="w-5 h-5" />
-            <h2 className="font-serif font-bold text-lg text-on-surface">Guided Practices</h2>
-          </div>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-5 border border-outline-variant rounded-xl hover:bg-surface-container-low cursor-pointer transition">
-              <p className="font-semibold text-on-surface">Morning Meditation</p>
-              <p className="text-sm text-on-surface-variant mt-1">10 minutes — Start your day with grounded intention</p>
-            </div>
-            <div className="p-5 border border-outline-variant rounded-xl hover:bg-surface-container-low cursor-pointer transition">
-              <p className="font-semibold text-on-surface">Evening Reflection</p>
-              <p className="text-sm text-on-surface-variant mt-1">15 minutes — Release the day and find peace</p>
-            </div>
-          </div>
-        </div>
+        {/* Breathing Exercise */}
+        <BreathingExercise />
+
+        {/* Prayer Times */}
+        <PrayerTimes />
       </main>
     </div>
   )
