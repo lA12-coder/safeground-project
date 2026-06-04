@@ -89,7 +89,7 @@ export default function AdminProvidersPage() {
   async function fetchProviders() {
     setLoading(true)
     try {
-      const status = tab === 'pending' ? 'pending' : tab === 'verified' ? 'verified' : 'pending'
+      const status = tab === 'pending' ? 'pending' : tab === 'verified' ? 'verified' : 'rejected'
       const res = await fetch(`/api/admin/providers?status=${status}&limit=50`)
       if (res.ok) {
         const data = await res.json()
