@@ -1,33 +1,65 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
-    )
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) {
+      return NextResponse.json({
+        currentStreak: 0,
+        longestStreak: 0,
+        totalCleanDays: 0,
+        lastLoggedAt: null,
+        current_streak: 0,
+        longest_streak: 0,
+        total_clean_days: 0,
+        last_clean_date: null,
+      });
+    }
 
     const { data, error } = await supabase
       .from('streaks')
-      .select('current_streak, longest_streak, total_clean_days, last_clean_date')
+      .select('current_streak, longest_streak, total_clean_days, last_clean_date, last_logged_at, updated_at')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') throw error
+    if (error) {
+      console.error('[habits/streak]', error);
+      return NextResponse.json({
+        currentStreak: 0,
+        longestStreak: 0,
+        totalCleanDays: 0,
+        lastLoggedAt: null,
+        current_streak: 0,
+        longest_streak: 0,
+        total_clean_days: 0,
+        last_clean_date: null,
+      });
+    }
+
+    const current = data?.current_streak ?? 0;
+    const longest = data?.longest_streak ?? 0;
+    const total = data?.total_clean_days ?? 0;
+    const lastDate = data?.last_clean_date ?? null;
+    const lastLogged = data?.last_logged_at ?? null;
 
     return NextResponse.json({
-      current_streak: data?.current_streak || 0,
-      longest_streak: data?.longest_streak || 0,
-      total_clean_days: data?.total_clean_days || 0,
-      last_clean_date: data?.last_clean_date || null,
-    })
+      currentStreak: current,
+      longestStreak: longest,
+      totalCleanDays: total,
+      lastLoggedAt: lastLogged,
+      updatedAt: data?.updated_at ?? new Date().toISOString(),
+      current_streak: current,
+      longest_streak: longest,
+      total_clean_days: total,
+      last_clean_date: lastDate,
+    });
   } catch (error) {
-    console.error('[habits/streak] Error:', error)
-    return NextResponse.json({ error: 'Failed to fetch streak' }, { status: 500 })
+    console.error('[habits/streak]', error);
+    return NextResponse.json({ error: 'Failed to fetch streak' }, { status: 500 });
   }
 }

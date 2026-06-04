@@ -1,30 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-const milestoneDays = [3, 7, 14, 30, 60, 90]
+const milestoneDays = [3, 7, 14, 30, 60, 90];
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
-    )
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const { session_id, completed_steps } = await request.json()
+    const { session_id, completed_steps } = await request.json();
 
     const { data: streak } = await supabase
       .from('streaks')
       .select('current_streak')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle();
 
-    const current = streak?.current_streak || 0
+    const current = streak?.current_streak ?? 0;
+    const newMilestones: number[] = [];
 
-    const newMilestones: number[] = []
     for (const day of milestoneDays) {
       if (current >= day) {
         const { data: existing } = await supabase
@@ -32,27 +32,38 @@ export async function POST(request: NextRequest) {
           .select('id')
           .eq('user_id', user.id)
           .eq('days', day)
-          .single()
+          .maybeSingle();
 
         if (!existing) {
           await supabase.from('milestones').insert({
             user_id: user.id,
             days: day,
             achieved_at: new Date().toISOString(),
-          })
-          newMilestones.push(day)
+          });
+          newMilestones.push(day);
         }
       }
     }
 
+    if (session_id && !String(session_id).startsWith('session_')) {
+      await supabase
+        .from('habit_logs')
+        .update({
+          notes: `Completed steps: ${completed_steps ?? 0}`,
+        })
+        .eq('id', session_id)
+        .eq('user_id', user.id);
+    }
+
     return NextResponse.json({
       success: true,
+      message: 'Streak protected and milestone logged',
       streak_protected: true,
       current_streak: current,
       new_milestones: newMilestones,
-    })
+    });
   } catch (error) {
-    console.error('[panic/complete] Error:', error)
-    return NextResponse.json({ error: 'Failed to complete panic session' }, { status: 500 })
+    console.error('[panic/complete] Error:', error);
+    return NextResponse.json({ error: 'Failed to complete panic session' }, { status: 500 });
   }
 }

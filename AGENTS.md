@@ -26,7 +26,7 @@ components/
   guardian/                     # GuardianDashboard, GuardianSetupWizard
 
 lib/
-  ai/claude.ts                  # callClaude(), callClaudeJSON<T>() — Anthropic SDK wrapper
+  ai/gemini.ts                  # generateGeminiText(), generateGeminiJson<T>() — Google Gemini wrapper
   supabase/                     # client.ts (browser), server.ts (RSC), middleware.ts (edge)
   types/index.ts                # All TypeScript types
   utils/                        # aliasGenerator, streakUtils, khatRiskDetector
@@ -34,12 +34,12 @@ lib/
 scripts/
   seed.ts                       # Standalone seed script (npx tsx scripts/seed.ts)
 
-middleware.ts                   # Route protection (auth + admin email check)
+proxy.ts                        # Route protection (auth + admin email check)
 ```
 
 ---
 
-## Middleware (`middleware.ts`)
+## Proxy (`proxy.ts`)
 
 | Path | Access |
 |---|---|
@@ -69,13 +69,13 @@ middleware.ts                   # Route protection (auth + admin email check)
 ### AI
 | Route | Method | Description |
 |---|---|---|
-| `/api/ai/affirmation` | POST | Claude-generated affirmation with 20 hardcoded fallbacks |
+| `/api/ai/affirmation` | POST | Gemini-generated affirmation with 20 hardcoded fallbacks |
 | `/api/faith/companion` | POST | Multi-faith spiritual companion (Ethiopian context) |
 
 ### Panic
 | Route | Method | Description |
 |---|---|---|
-| `/api/panic` | POST | Insert panic habit_log, Claude coping steps, guardian notification |
+| `/api/panic` | POST | Insert panic habit_log, Gemini coping steps, guardian notification |
 | `/api/panic/complete` | POST | Mark streak protected, check milestone (3/7/14/30/60/90 day) |
 
 ### Chat
@@ -101,7 +101,7 @@ middleware.ts                   # Route protection (auth + admin email check)
 ### Guest
 | Route | Method | Description |
 |---|---|---|
-| `/api/guest/chat` | POST | Claude chat, rate-limited to 20 msg/session (in-memory) |
+| `/api/guest/chat` | POST | Gemini chat, rate-limited to 20 msg/session (in-memory) |
 
 ### Admin
 | Route | Method | Description |
@@ -269,7 +269,8 @@ Same functions as the standalone script but accessed via admin API. Requires adm
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here   # Admin operations
-ANTHROPIC_API_KEY=your_anthropic_api_key_here           # Claude AI
+GEMINI_API_KEY=your_gemini_api_key_here                 # Google Gemini AI
+GEMINI_MODEL=gemini-2.0-flash                          # Optional model override
 ADMIN_EMAILS=admin@example.com,superadmin@example.com   # Admin access
 NEXT_PUBLIC_APP_URL=http://localhost:3000               # Guardian links
 ```

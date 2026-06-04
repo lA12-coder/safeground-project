@@ -1,8 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { callClaude } from '@/lib/ai/claude'
+import { NextRequest, NextResponse } from 'next/server';
+import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
 
-const sessionCounts = new Map<string, number>()
-const MAX_MESSAGES = 20
+export const runtime = 'nodejs';
+import { GUEST_WELCOME_MESSAGE } from '@/lib/guest/constants';
+
+const sessionCounts = new Map<string, number>();
+const MAX_MESSAGES = 20;
+
+const SYSTEM_PROMPT = `You are SafeGround AI. A warm, anonymous, non-judgmental recovery support companion for Ethiopian students.
+
+Your first message is: "${GUEST_WELCOME_MESSAGE}"
+
+Keep responses under 100 words. Never mention pornography directly. Focus on grounding, hope, cultural sensitivity, and professional help when appropriate.`;
 
 const fallbackReplies = [
   'Welcome. You are safe and anonymous here. How are you feeling in this moment?',
@@ -15,41 +24,56 @@ const fallbackReplies = [
   'Would you like to try a breathing exercise together?',
   'That sounds difficult. I am here to listen without judgment.',
   'You are doing so much better than you think.',
-]
+];
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, session_id } = await request.json()
+    const body = await request.json();
+    const message = String(body.message ?? '').trim();
+    const history = Array.isArray(body.history) ? body.history : [];
+    const session_id =
+      body.session_id ?? `guest_${request.headers.get('x-forwarded-for') ?? 'anon'}`;
 
-    if (!session_id) {
-      return NextResponse.json({ error: 'session_id required' }, { status: 400 })
+    if (!message) {
+      return NextResponse.json({ error: 'Message is required.' }, { status: 400 });
     }
 
-    const count = sessionCounts.get(session_id) || 0
+    const count = sessionCounts.get(session_id) || 0;
     if (count >= MAX_MESSAGES) {
+      const limitReply =
+        'You have reached the message limit for this session. Consider creating a free account for unlimited support.';
       return NextResponse.json({
-        response: 'You have reached the message limit for this session. Consider creating a free account for unlimited support.',
-      })
+        success: true,
+        reply: limitReply,
+        response: limitReply,
+      });
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      sessionCounts.set(session_id, count + 1)
-      return NextResponse.json({
-        response: fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)],
-      })
+    if (!isGeminiConfigured()) {
+      const reply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      sessionCounts.set(session_id, count + 1);
+      return NextResponse.json({ success: true, reply, response: reply, source: 'fallback' });
     }
 
-    const response = await callClaude(
-      'You are SafeGround AI. A warm, anonymous, non-judgmental recovery support companion for Ethiopian students. Your first message is: "Welcome. You are safe and anonymous here. How are you feeling in this moment?" Keep responses under 100 words. Never mention pornography directly.',
-      message || 'Start conversation',
-      150
-    )
+    const chatHistory = history.slice(-8).map((m: { role: string; content: string }) => ({
+      role: (m.role === 'assistant' ? 'assistant' : 'user') as 'user' | 'assistant',
+      content: String(m.content),
+    }));
 
-    sessionCounts.set(session_id, count + 1)
+    const reply = await generateGeminiText({
+      systemPrompt: SYSTEM_PROMPT,
+      userMessage: message,
+      history: chatHistory.length ? chatHistory : undefined,
+      maxOutputTokens: 200,
+      temperature: 0.7,
+    });
 
-    return NextResponse.json({ response })
+    sessionCounts.set(session_id, count + 1);
+
+    return NextResponse.json({ success: true, reply, response: reply, source: 'gemini' });
   } catch (error) {
-    console.error('[guest/chat] Error:', error)
-    return NextResponse.json({ error: 'Failed to process message' }, { status: 500 })
+    console.error('[guest/chat] Error:', error);
+    const reply = fallbackReplies[0];
+    return NextResponse.json({ success: true, reply, response: reply, source: 'fallback' });
   }
 }
