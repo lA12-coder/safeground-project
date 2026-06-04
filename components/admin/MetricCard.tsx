@@ -19,13 +19,13 @@ export function MetricCard({
   borderColor = 'border-[#d6d3d1]/30', icon,
 }: MetricCardProps) {
   return (
-    <div className={`bg-white rounded-xl border ${borderColor} shadow-sm p-6`}>
+    <div className={`bg-surface-container-lowest rounded-xl border ${borderColor} shadow-sm p-6`}>
       <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-medium text-[#64748B]">{label}</span>
-        <div className="text-[#64748B]">{icon}</div>
+        <span className="text-sm font-medium text-on-surface-variant">{label}</span>
+        <div className="text-on-surface-variant">{icon}</div>
       </div>
       <div className="flex items-end gap-2">
-        <span className="text-3xl font-bold text-[#1c1917]">{value}</span>
+        <span className="text-3xl font-bold text-on-surface">{value}</span>
         {trend && <span className={`text-sm font-semibold ${trendColor}`}>{trend}</span>}
       </div>
       {badge && (

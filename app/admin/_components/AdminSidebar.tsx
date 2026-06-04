@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Cross, Users, Calendar, Shield,
   CalendarCheck, BarChart3, Settings, LogOut, LifeBuoy, AlertTriangle,
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 const navItems = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -22,16 +23,19 @@ export function AdminSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-[#d6d3d1]/30 flex flex-col z-40">
-      <div className="p-6 border-b border-[#d6d3d1]/30">
-        <Link href="/admin" className="text-2xl font-bold text-[#92400E]">
-          SafeGround
-        </Link>
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest border-r border-outline-variant/30 flex flex-col z-40 transition-colors duration-300">
+      <div className="p-6 border-b border-outline-variant/30">
+        <div className="flex items-center justify-between">
+          <Link href="/admin" className="text-2xl font-bold text-primary">
+            SafeGround
+          </Link>
+          <ThemeToggle />
+        </div>
         <div className="relative mt-3">
           <input
             type="text"
             placeholder="Search..."
-            className="w-full py-2 px-3 bg-[#f5f5f4] rounded-lg text-sm text-[#1c1917] placeholder:text-[#64748B]/50 focus:outline-none focus:ring-2 focus:ring-[#92400E]/30"
+            className="w-full py-2 px-3 bg-surface-container-low rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
         </div>
       </div>
@@ -43,10 +47,10 @@ export function AdminSidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-[#92f5a4] text-[#007233]'
-                  : 'text-[#64748B] hover:bg-[#f5f5f4]'
+                  ? 'bg-secondary-container text-on-secondary-container'
+                  : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
               }`}
             >
               <Icon size={18} />
@@ -56,16 +60,16 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#d6d3d1]/30 space-y-2">
-        <button className="w-full py-3 px-4 bg-[#B91C1C] hover:bg-red-700 text-white rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-sm">
+      <div className="p-4 border-t border-outline-variant/30 space-y-2">
+        <button className="w-full py-3 px-4 bg-error hover:bg-red-700 text-on-error rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm">
           <AlertTriangle size={16} />
           <span>PANIC</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[#64748B] hover:bg-[#f5f5f4] rounded-lg text-sm font-medium transition-colors">
+        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg text-sm font-medium transition-colors">
           <LifeBuoy size={18} />
           <span>Support</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-[#64748B] hover:bg-[#f5f5f4] rounded-lg text-sm font-medium transition-colors">
+        <button className="w-full flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg text-sm font-medium transition-colors">
           <LogOut size={18} />
           <span>Logout</span>
         </button>

@@ -97,40 +97,40 @@ export function ProviderReviewCard({
   return (
     <>
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      <div className={`bg-white rounded-xl border border-[#d6d3d1]/30 shadow-sm p-6 transition-all duration-300 ${
+      <div className={`bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6 transition-all duration-300 ${
         loading ? 'opacity-50 scale-[0.97]' : 'opacity-100'
       }`}>
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-[#92400E] font-bold text-lg shrink-0">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
             {name.split(' ').map(n => n[0]).join('').slice(0, 2)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-semibold text-[#1c1917]">{name}</h3>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[type] || 'bg-gray-100 text-gray-700'}`}>
+              <h3 className="font-semibold text-on-surface">{name}</h3>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${typeColors[type] || 'bg-surface-container-high text-on-surface-variant'}`}>
                 {typeLabels[type] || type.toUpperCase()}
               </span>
             </div>
-            <p className="text-sm text-[#64748B] mt-0.5">{org} &middot; {city}</p>
+            <p className="text-sm text-on-surface-variant mt-0.5">{org} &middot; {city}</p>
 
-            <p className="text-sm text-[#1c1917]/80 mt-3 leading-relaxed">{bio}</p>
+            <p className="text-sm text-on-surface/80 mt-3 leading-relaxed">{bio}</p>
 
-            <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-[#64748B]">
+            <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-on-surface-variant">
               <span>{languages.join(', ')}</span>
               <span className="font-semibold">{fee === 0 ? 'Free' : fee ? `$${fee}/session` : 'Fee not set'}</span>
               <span className={`font-semibold ${
-                availabilityLabel === 'Hybrid' ? 'text-blue-600' :
-                availabilityLabel === 'Online' ? 'text-[#166534]' : 'text-[#92400E]'
+                availabilityLabel === 'Hybrid' ? 'text-blue-600 dark:text-blue-400' :
+                availabilityLabel === 'Online' ? 'text-secondary' : 'text-primary'
               }`}>
                 {availabilityLabel}
               </span>
-              {pro_bono && <span className="text-[#166534] font-semibold">Pro-bono</span>}
+              {pro_bono && <span className="text-secondary font-semibold">Pro-bono</span>}
             </div>
 
             {documents && documents.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {documents.map((doc, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 text-xs text-[#166534] bg-green-50 px-2 py-0.5 rounded-full">
+                  <span key={i} className="inline-flex items-center gap-1 text-xs text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">
                     <CheckCircle size={10} />
                     {doc}
                   </span>
@@ -140,11 +140,11 @@ export function ProviderReviewCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-[#d6d3d1]/30">
+        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-outline-variant/30">
           <button
             onClick={handleVerify}
             disabled={loading}
-            className="flex-1 py-2 bg-[#166534] text-white rounded-lg font-semibold text-sm hover:bg-green-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 py-2 bg-secondary text-on-secondary rounded-lg font-semibold text-sm hover:brightness-110 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
           >
             <CheckCircle size={14} />
             {loading ? 'Processing...' : 'Verify'}
@@ -152,7 +152,7 @@ export function ProviderReviewCard({
           <button
             onClick={handleReject}
             disabled={loading}
-            className="flex-1 py-2 border-2 border-red-300 text-[#B91C1C] rounded-lg font-semibold text-sm hover:bg-red-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 py-2 border-2 border-error/30 text-error rounded-lg font-semibold text-sm hover:bg-error/5 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
           >
             <XCircle size={14} />
             Reject

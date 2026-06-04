@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Calendar, Clock, Users, Star, Video, CheckCircle, XCircle,
   CalendarClock, Stethoscope, ToggleLeft, Sun, Save,
@@ -34,7 +35,7 @@ const SESSION_TYPES = ['initial', 'follow_up', 'crisis']
 const STATUS_STYLES: Record<string, string> = {
   confirmed: 'bg-green-100 text-green-700',
   pending: 'bg-amber-100 text-amber-700',
-  completed: 'bg-gray-100 text-gray-600',
+  completed: 'bg-gray-100 text-on-surface-variant',
   cancelled: 'bg-red-100 text-red-600',
 }
 const TYPE_STYLES: Record<string, string> = {
@@ -187,41 +188,49 @@ export default function ProviderDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-[#92400E] border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9]">
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 transition-all ${
-          toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
-        }`}>
-          {toast.type === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
-          {toast.message}
-          <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">×</button>
+      <div className="min-h-screen bg-surface transition-colors duration-300">
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/5 rounded-full blur-3xl" />
         </div>
-      )}
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 ${
+            toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+          }`}>
+            {toast.type === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
+            {toast.message}
+            <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">×</button>
+          </motion.div>
+        )}
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 relative">
 
         {/* Provider Profile Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-[#92400E] font-bold text-xl">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
               {provider?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'DR'}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#1c1917]">{provider?.name || 'Provider'}</h1>
-              <div className="flex items-center gap-2 text-sm text-[#64748B]">
+              <h1 className="text-2xl font-bold text-on-surface">{provider?.name || 'Provider'}</h1>
+              <div className="flex items-center gap-2 text-sm text-on-surface-variant">
                 <Stethoscope size={14} />
                 <span>{provider?.specialization || 'Addiction Psychiatry'}</span>
                 {provider?.is_verified && (
                   <>
                     <span className="w-1 h-1 rounded-full bg-gray-300" />
-                    <span className="flex items-center gap-1 text-[#166534] font-medium">
+                    <span className="flex items-center gap-1 text-secondary font-medium">
                       <CheckCircle size={12} /> Verified
                     </span>
                   </>
@@ -239,18 +248,18 @@ export default function ProviderDashboard() {
             { icon: Users, label: 'Total Sessions', value: stats.total },
             { icon: Star, label: 'Rating', value: stats.rating },
           ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
-              <Icon size={20} className="text-[#92400E] mb-2" />
-              <p className="text-3xl font-bold text-[#1c1917]">{value}</p>
-              <p className="text-sm text-[#64748B]">{label}</p>
+            <div key={label} className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6">
+              <Icon size={20} className="text-primary mb-2" />
+              <p className="text-3xl font-bold text-on-surface">{value}</p>
+              <p className="text-sm text-on-surface-variant">{label}</p>
             </div>
           ))}
         </div>
 
         <div className="grid grid-cols-3 gap-6">
           {/* Today's Schedule — Timeline */}
-          <div className="col-span-2 bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-[#1c1917] mb-4">Today&apos;s Schedule</h2>
+          <div className="col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-on-surface mb-4">Today&apos;s Schedule</h2>
             <div className="space-y-0.5">
               {HOURS.map(hour => {
                 const slotBooking = todayBookings.find(b => {
@@ -262,22 +271,22 @@ export default function ProviderDashboard() {
                   <div
                     key={hour}
                     className={`flex items-center gap-4 py-2 px-3 rounded-lg transition-colors ${
-                      slotBooking ? 'bg-[#92400E]/5' : 'hover:bg-gray-50'
+                      slotBooking ? 'bg-primary/5' : 'hover:bg-surface-container-low'
                     }`}
                   >
-                    <span className="w-16 text-xs text-gray-400 font-medium shrink-0">
+                    <span className="w-16 text-xs text-on-surface-variant font-medium shrink-0">
                       {hour.toString().padStart(2, '0')}:00
                     </span>
                     {slotBooking ? (
-                      <div className="flex-1 flex items-center justify-between bg-white rounded-lg px-4 py-2.5 border border-[#92400E]/30 shadow-sm">
+                      <div className="flex-1 flex items-center justify-between bg-surface-container-lowest rounded-lg px-4 py-2.5 border border-primary/30 shadow-sm">
                         <div className="min-w-0">
-                          <p className="font-medium text-[#1c1917] text-sm truncate">{slotBooking.alias}</p>
+                          <p className="font-medium text-on-surface text-sm truncate">{slotBooking.alias}</p>
                           <div className="flex items-center gap-2 text-xs mt-0.5 flex-wrap">
-                            <span className={`px-1.5 py-0.5 rounded font-medium ${TYPE_STYLES[slotBooking.session_type] || 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`px-1.5 py-0.5 rounded font-medium ${TYPE_STYLES[slotBooking.session_type] || 'bg-gray-100 text-on-surface-variant'}`}>
                               {slotBooking.session_type === 'follow_up' ? 'Follow-up' : slotBooking.session_type.charAt(0).toUpperCase() + slotBooking.session_type.slice(1)}
                             </span>
-                            <span className="text-gray-400">{slotBooking.duration_minutes || 50} min</span>
-                            <span className={`px-1.5 py-0.5 rounded font-medium ${STATUS_STYLES[slotBooking.status] || 'bg-gray-100 text-gray-600'}`}>
+                            <span className="text-on-surface-variant">{slotBooking.duration_minutes || 50} min</span>
+                            <span className={`px-1.5 py-0.5 rounded font-medium ${STATUS_STYLES[slotBooking.status] || 'bg-gray-100 text-on-surface-variant'}`}>
                               {slotBooking.status.charAt(0).toUpperCase() + slotBooking.status.slice(1)}
                             </span>
                           </div>
@@ -291,14 +300,14 @@ export default function ProviderDashboard() {
                             const link = slotBooking.meeting_link || `https://meet.safeground.app/${slotBooking.id}`
                             window.open(link, '_blank')
                           }}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-[#166534] text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors shrink-0"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-secondary text-on-secondary rounded-lg text-xs font-semibold hover:brightness-110 transition-colors shrink-0"
                         >
                           <Video size={13} />
                           Join Session
                         </button>
                       </div>
                     ) : (
-                      <div className="flex-1 text-xs text-gray-300 italic">— Available —</div>
+                      <div className="flex-1 text-xs text-on-surface-variant/50 italic">— Available —</div>
                     )}
                   </div>
                 )
@@ -309,32 +318,32 @@ export default function ProviderDashboard() {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Upcoming Appointments */}
-            <div className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-[#1c1917] mb-4">Upcoming Appointments</h2>
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6">
+              <h2 className="text-lg font-semibold text-on-surface mb-4">Upcoming Appointments</h2>
               {upcomingBookings.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-4">No upcoming appointments</p>
+                <p className="text-sm text-on-surface-variant text-center py-4">No upcoming appointments</p>
               ) : (
                 <div className="space-y-2 max-h-72 overflow-y-auto">
                   {upcomingBookings.slice(0, 10).map(b => (
-                    <div key={b.id} className="p-3 bg-gray-50 rounded-lg">
+                    <div key={b.id} className="p-3 bg-surface-container-low rounded-lg">
                       <div className="flex items-start justify-between">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-[#1c1917] truncate">{b.alias}</p>
-                          <p className="text-xs text-[#64748B] mt-0.5">
+                          <p className="text-sm font-medium text-on-surface truncate">{b.alias}</p>
+                          <p className="text-xs text-on-surface-variant mt-0.5">
                             {new Date(b.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${TYPE_STYLES[b.session_type] || 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${TYPE_STYLES[b.session_type] || 'bg-gray-100 text-on-surface-variant'}`}>
                               {b.session_type === 'follow_up' ? 'Follow-up' : b.session_type.charAt(0).toUpperCase() + b.session_type.slice(1)}
                             </span>
-                            <span className="text-[10px] text-gray-400">{b.duration_minutes || 50}min</span>
+                            <span className="text-[10px] text-on-surface-variant">{b.duration_minutes || 50}min</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           {b.status === 'pending' && (
                             <button
                               onClick={() => handleConfirm(b.id)}
-                              className="px-2 py-1 text-[10px] bg-[#166534] text-white rounded font-semibold hover:bg-green-700"
+                              className="px-2 py-1 text-[10px] bg-secondary text-on-secondary rounded font-semibold hover:brightness-110"
                               title="Confirm"
                             >
                               Confirm
@@ -342,14 +351,14 @@ export default function ProviderDashboard() {
                           )}
                           <button
                             onClick={() => handleReschedule(b.id)}
-                            className="px-2 py-1 text-[10px] bg-[#92400E]/10 text-[#92400E] rounded font-semibold hover:bg-[#92400E]/20"
+                            className="px-2 py-1 text-[10px] bg-primary/10 text-primary rounded font-semibold hover:bg-primary/20"
                             title="Reschedule"
                           >
                             Reschedule
                           </button>
                           <button
                             onClick={() => handleCancel(b.id)}
-                            className="px-2 py-1 text-[10px] bg-red-100 text-[#B91C1C] rounded font-semibold hover:bg-red-200"
+                            className="px-2 py-1 text-[10px] bg-error/10 text-error rounded font-semibold hover:bg-error/20 transition-colors"
                             title="Cancel"
                           >
                             Cancel
@@ -363,18 +372,18 @@ export default function ProviderDashboard() {
             </div>
 
             {/* Session Notes */}
-            <div className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-[#1c1917]">Session Notes</h2>
+                <h2 className="text-lg font-semibold text-on-surface">Session Notes</h2>
                 {selectedBooking && (
-                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                  <span className="text-xs text-on-surface-variant bg-gray-100 px-2 py-0.5 rounded">
                     {bookings.find(b => b.id === selectedBooking)?.alias}
                   </span>
                 )}
               </div>
               {!selectedBooking ? (
                 <div className="text-center py-6">
-                  <p className="text-sm text-gray-400">Click a session to write notes</p>
+                  <p className="text-sm text-on-surface-variant">Click a session to write notes</p>
                 </div>
               ) : (
                 <>
@@ -382,16 +391,16 @@ export default function ProviderDashboard() {
                     placeholder="Write anonymous session notes... Patients are identified by alias only."
                     value={notes[selectedBooking] || ''}
                     onChange={e => setNotes(prev => ({ ...prev, [selectedBooking!]: e.target.value }))}
-                    className="w-full h-28 p-3 border border-[#d6d3d1] rounded-lg text-sm resize-none placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#92400E]/20 focus:border-[#92400E]"
+                    className="w-full h-28 p-3 border border-outline-variant/30 rounded-lg text-sm resize-none placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                   <button
                     onClick={() => handleSaveNotes(selectedBooking)}
-                    className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 bg-[#92400E] text-white rounded-lg text-sm font-semibold hover:bg-[#78350F] transition-colors"
+                    className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:brightness-110 transition-colors"
                   >
                     <Save size={14} />
                     Save Notes
                   </button>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-on-surface-variant mt-2">
                     Notes are encrypted and linked to session only
                   </p>
                 </>
@@ -401,13 +410,13 @@ export default function ProviderDashboard() {
         </div>
 
         {/* Availability Settings */}
-        <div className="bg-white rounded-xl border border-[#d6d3d1] shadow-sm p-6">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-[#1c1917]">Availability Settings</h2>
+            <h2 className="text-lg font-semibold text-on-surface">Availability Settings</h2>
             <button
               onClick={handleSaveAvailability}
               disabled={savingAvail}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#92400E] text-white rounded-lg text-sm font-semibold hover:bg-[#78350F] disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:brightness-110 disabled:opacity-50 transition-colors"
             >
               <Save size={14} />
               {savingAvail ? 'Saving...' : 'Save Availability'}
@@ -417,10 +426,10 @@ export default function ProviderDashboard() {
           <div className="grid grid-cols-2 gap-8">
             {/* Weekly Calendar Grid */}
             <div>
-              <h3 className="text-sm font-semibold text-[#1c1917]/80 mb-3">Weekly Schedule</h3>
+              <h3 className="text-sm font-semibold text-on-surface/80 mb-3">Weekly Schedule</h3>
               <div className="grid grid-cols-6 gap-1">
                 {DAYS.map(day => (
-                  <div key={day} className="text-center text-xs font-semibold text-gray-500 py-2">
+                  <div key={day} className="text-center text-xs font-semibold text-on-surface-variant py-2">
                     {day}
                   </div>
                 ))}
@@ -434,8 +443,8 @@ export default function ProviderDashboard() {
                           onClick={() => toggleSlot(day, hour)}
                           className={`w-full py-1 rounded text-[10px] font-medium transition-colors ${
                             isActive
-                              ? 'bg-green-100 text-[#166534] border border-green-300'
-                              : 'bg-gray-50 text-gray-400 border border-gray-100 hover:border-gray-300'
+                              ? 'bg-secondary/10 text-secondary border border-secondary/30'
+                              : 'bg-surface-container-low text-on-surface-variant/50 border border-surface-container-high hover:border-outline-variant'
                           }`}
                         >
                           {hour.toString().padStart(2, '0')}:00
@@ -445,16 +454,16 @@ export default function ProviderDashboard() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-100 border border-green-300" /> Available</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-50 border border-gray-100" /> Unavailable</span>
+              <div className="flex items-center gap-4 mt-3 text-xs text-on-surface-variant">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-secondary/10 border border-secondary/30" /> Available</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-surface-container-low border border-surface-container-high" /> Unavailable</span>
               </div>
             </div>
 
             {/* Session Types & Mode */}
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-semibold text-[#1c1917]/80 mb-3">Session Types Offered</h3>
+                <h3 className="text-sm font-semibold text-on-surface/80 mb-3">Session Types Offered</h3>
                 <div className="space-y-2">
                   {SESSION_TYPES.map(t => (
                     <label key={t} className="flex items-center gap-2 cursor-pointer">
@@ -466,9 +475,9 @@ export default function ProviderDashboard() {
                             e.target.checked ? [...prev, t] : prev.filter(s => s !== t)
                           )
                         }}
-                        className="rounded border-gray-300 text-[#92400E] focus:ring-[#92400E]"
+                        className="rounded border-outline-variant/30 text-primary focus:ring-primary"
                       />
-                      <span className="text-sm text-[#1c1917]/80">
+                      <span className="text-sm text-on-surface/80">
                         {t === 'initial' ? 'Initial Assessment' : t === 'follow_up' ? 'Follow-up Session' : 'Crisis Intervention'}
                       </span>
                     </label>
@@ -477,30 +486,30 @@ export default function ProviderDashboard() {
               </div>
 
               <div>
-                <h3 className="text-sm font-semibold text-[#1c1917]/80 mb-3">Session Mode</h3>
+                <h3 className="text-sm font-semibold text-on-surface/80 mb-3">Session Mode</h3>
                 <div className="flex items-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={online}
                       onChange={e => setOnline(e.target.checked)}
-                      className="rounded border-gray-300 text-[#92400E] focus:ring-[#92400E]"
+                      className="rounded border-outline-variant/30 text-primary focus:ring-primary"
                     />
-                    <span className="text-sm text-[#1c1917]/80">Online</span>
+                    <span className="text-sm text-on-surface/80">Online</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={inPerson}
                       onChange={e => setInPerson(e.target.checked)}
-                      className="rounded border-gray-300 text-[#92400E] focus:ring-[#92400E]"
+                      className="rounded border-outline-variant/30 text-primary focus:ring-primary"
                     />
-                    <span className="text-sm text-[#1c1917]/80">In-person</span>
+                    <span className="text-sm text-on-surface/80">In-person</span>
                   </label>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                    online && inPerson ? 'bg-blue-100 text-blue-700' :
-                    online ? 'bg-green-100 text-[#166534]' :
-                    inPerson ? 'bg-amber-100 text-[#92400E]' : 'bg-gray-100 text-gray-600'
+                    online && inPerson ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
+                    online ? 'bg-secondary/10 text-secondary' :
+                    inPerson ? 'bg-primary/10 text-primary' : 'bg-surface-container-high text-on-surface-variant'
                   }`}>
                     {online && inPerson ? 'Hybrid' : online ? 'Online Only' : inPerson ? 'In-Person' : 'Unavailable'}
                   </span>

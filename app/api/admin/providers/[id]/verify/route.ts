@@ -14,8 +14,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim())
-    if (!user.email || !adminEmails.includes(user.email)) {
+    const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase())
+    if (!user.email || !adminEmails.includes(user.email.toLowerCase())) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

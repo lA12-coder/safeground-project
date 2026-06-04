@@ -60,25 +60,25 @@ export function FlaggedMessageCard({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-red-200 shadow-sm p-4 transition-all">
+    <div className="bg-surface-container-lowest rounded-lg border border-error/20 shadow-sm p-4 transition-all">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${flagColors[flagReason] || 'bg-gray-100 text-gray-700'}`}>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${flagColors[flagReason] || 'bg-surface-container-high text-on-surface-variant'}`}>
             {flagLabels[flagReason] || flagReason.toUpperCase()}
           </span>
-          <span className="text-xs text-[#64748B]">{timeAgo()}</span>
+          <span className="text-xs text-on-surface-variant">{timeAgo()}</span>
         </div>
-        <span className="text-xs text-[#64748B]">#{roomId}</span>
+        <span className="text-xs text-on-surface-variant">#{roomId}</span>
       </div>
-      <div className="text-xs text-[#64748B] mb-1">
+      <div className="text-xs text-on-surface-variant mb-1">
         <span className="font-medium">{alias}</span>
       </div>
-      <p className="text-sm text-[#1c1917] mb-3 italic">&ldquo;{message.slice(0, 120)}{message.length > 120 ? '...' : ''}&rdquo;</p>
+      <p className="text-sm text-on-surface mb-3 italic">&ldquo;{message.slice(0, 120)}{message.length > 120 ? '...' : ''}&rdquo;</p>
       <div className="flex items-center gap-2">
         <button
           onClick={handleDelete}
           disabled={loading}
-          className="flex items-center gap-1 px-3 py-1.5 bg-[#B91C1C] text-white rounded-lg text-xs font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+          className="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-xs font-semibold hover:brightness-90 disabled:opacity-50 transition-colors"
         >
           <Trash2 size={12} />
           Delete
@@ -86,7 +86,7 @@ export function FlaggedMessageCard({
         <button
           onClick={handleClear}
           disabled={loading}
-          className="flex items-center gap-1 px-3 py-1.5 border border-[#d6d3d1] text-[#64748B] rounded-lg text-xs font-semibold hover:bg-[#f5f5f4] disabled:opacity-50 transition-colors"
+          className="flex items-center gap-1 px-3 py-1.5 border border-outline-variant/30 text-on-surface-variant rounded-lg text-xs font-semibold hover:bg-surface-container-low disabled:opacity-50 transition-colors"
         >
           <CheckCircle size={12} />
           Clear Flag
