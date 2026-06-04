@@ -1,12 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
-
-interface AffirmationRequest {
-  moodScore: number;
-  urgeIntensity: number;
-}
-
-const client = new Anthropic();
+import { NextRequest, NextResponse } from 'next/server'
+import { callClaude } from '@/lib/ai/claude'
 
 const fallbackAffirmations = [
   'Your strength is not measured by your struggles, but by your courage to face them.',
@@ -19,66 +12,44 @@ const fallbackAffirmations = [
   'One breath, one moment, one day. You are doing more than enough.',
   'You deserve to be happy, healthy, and free. Believe it.',
   'Your commitment to yourself today creates the person you want to be tomorrow.',
-];
+  'You are braver than you believe, stronger than you seem, and loved more than you know.',
+  'Every step you take toward healing is a step toward the person you were meant to be.',
+  'The sun rises even after the darkest night. So will you.',
+  'Your worth is not determined by your setbacks, but by your courage to rise again.',
+  'Be gentle with yourself today. You are doing the best you can with what you have.',
+  'You carry within you the strength to overcome any challenge that comes your way.',
+  'Recovery is not about perfection. It is about progress, one day at a time.',
+  'You are not defined by your worst moments. You are defined by how you rise from them.',
+  'There is power in asking for help. It shows courage, not weakness.',
+  'Your journey is your own. Honor it with patience and love.',
+]
 
 export async function POST(request: NextRequest) {
   try {
-    const body: AffirmationRequest = await request.json();
-    const { moodScore = 5, urgeIntensity = 5 } = body;
+    const { mood_score, urge_intensity } = await request.json()
 
-    // Use fallback if API key not configured
-    if (!process.env.ANTHROPIC_API_KEY) {
-      const fallback = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)];
-      return NextResponse.json({
-        success: true,
-        affirmation: fallback,
-        source: 'fallback',
-      });
+    if (process.env.ANTHROPIC_API_KEY) {
+      try {
+        const systemPrompt = 'You are a compassionate recovery companion for Ethiopian university students. Generate daily affirmations that are culturally respectful, non-judgmental, and focused on strength and healing. Output ONLY the affirmation text, nothing else.'
+
+        const userMessage = `The user's current state:
+- Mood Score: ${mood_score ?? 5}/10
+- Urge Intensity: ${urge_intensity ?? 5}/10
+
+Generate a single compassionate, culturally respectful daily affirmation (2-3 sentences) for an Ethiopian university student in recovery from khat addiction. Use metaphors of strength, nature, and academic focus. Do NOT mention religion unless directly relevant.`
+
+        const affirmation = await callClaude(systemPrompt, userMessage, 150)
+        return NextResponse.json({ affirmation })
+      } catch {
+        // Fallthrough to fallback
+      }
     }
 
-    // Build context about the user's state
-    const contextPrompt = `
-The user's current state:
-- Mood Score: ${moodScore}/5 (1=very sad, 5=excellent)
-- Urge Intensity: ${urgeIntensity}/10 (how strongly they're craving)
-
-Generate a single compassionate, culturally respectful daily affirmation (2-3 sentences) for an Ethiopian university student in recovery from khat addiction. 
-Use metaphors of strength, nature, and academic focus. 
-Do NOT mention religion unless directly relevant.
-Output ONLY the affirmation text, nothing else.
-`;
-
-    const response = await client.messages.create({
-      model: 'claude-opus-4-20250514',
-      max_tokens: 150,
-      system: 'You are a compassionate recovery companion for Ethiopian university students. Generate daily affirmations that are culturally respectful, non-judgmental, and focused on strength and healing.',
-      messages: [
-        {
-          role: 'user',
-          content: contextPrompt,
-        },
-      ],
-    });
-
-    // Extract the affirmation text
-    const affirmation = (response.content[0] as { text: string }).text.trim();
-
-    console.log('[v0] Generated affirmation for mood:', moodScore, 'urge:', urgeIntensity);
-
-    return NextResponse.json({
-      success: true,
-      affirmation,
-      source: 'claude',
-    });
+    const affirmation = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)]
+    return NextResponse.json({ affirmation })
   } catch (error) {
-    console.error('[v0] Error generating affirmation:', error);
-
-    // Fallback to static affirmation on any error
-    const fallback = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)];
-    return NextResponse.json({
-      success: true,
-      affirmation: fallback,
-      source: 'fallback',
-    });
+    console.error('[ai/affirmation] Error:', error)
+    const affirmation = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)]
+    return NextResponse.json({ affirmation })
   }
 }

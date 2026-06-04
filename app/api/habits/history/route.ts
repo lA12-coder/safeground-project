@@ -12,22 +12,23 @@ export async function GET(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const days = parseInt(request.nextUrl.searchParams.get('days') || '30')
+
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+
     const { data, error } = await supabase
-      .from('streaks')
-      .select('current_streak, longest_streak, total_clean_days, last_clean_date')
+      .from('habit_logs')
+      .select('*')
       .eq('user_id', user.id)
-      .single()
+      .gte('log_date', startDate.toISOString().split('T')[0])
+      .order('log_date', { ascending: true })
 
-    if (error && error.code !== 'PGRST116') throw error
+    if (error) throw error
 
-    return NextResponse.json({
-      current_streak: data?.current_streak || 0,
-      longest_streak: data?.longest_streak || 0,
-      total_clean_days: data?.total_clean_days || 0,
-      last_clean_date: data?.last_clean_date || null,
-    })
+    return NextResponse.json(data || [])
   } catch (error) {
-    console.error('[habits/streak] Error:', error)
-    return NextResponse.json({ error: 'Failed to fetch streak' }, { status: 500 })
+    console.error('[habits/history] Error:', error)
+    return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 })
   }
 }

@@ -55,6 +55,23 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleComplete = async () => {
+    try {
+      await fetch('/api/auth/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          alias: '',
+          language_pref: selectedLanguage === 'en' ? 'english' : selectedLanguage === 'am' ? 'amharic' : 'oromifa',
+          support_preference: selectedSupport,
+          trigger_tags: selectedTriggers,
+          streak_goal: parseInt(goal) || 30,
+        }),
+      });
+    } catch {}
+    window.location.href = '/dashboard';
+  };
+
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Header */}
@@ -242,13 +259,13 @@ export default function OnboardingPage() {
               </button>
               <div className="flex gap-2">
                 {step === 5 ? (
-                  <Link
-                    href="/dashboard"
+                  <button
+                    onClick={handleComplete}
                     className="btn-primary flex items-center justify-center gap-2"
                   >
                     Enter the Sanctuary
                     <span>→</span>
-                  </Link>
+                  </button>
                 ) : (
                   <button
                     onClick={handleNext}

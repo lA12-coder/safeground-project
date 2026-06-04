@@ -1,63 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-interface HabitLogRequest {
-  mood: number;
-  stress: number;
-  urge: string;
-  khatUsed: boolean;
-  khatHoursAgo: number | null;
-  alcoholUsed: boolean;
-  triggers: string[];
-  notes: string;
-}
+import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 
 export async function POST(request: NextRequest) {
   try {
-    const body: HabitLogRequest = await request.json();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => request.cookies.getAll(), setAll: () => {} } }
+    )
 
-    // Validate required fields
-    if (!body.mood || !body.urge) {
-      return NextResponse.json(
-        { error: 'Missing required fields: mood, urge' },
-        { status: 400 }
-      );
-    }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Create habit log entry
-    const logEntry = {
-      id: Math.random().toString(36).substr(2, 9),
-      userId: 'anon-user-1', // Would come from session
-      mood: body.mood,
-      stress: body.stress,
-      urge: body.urge,
-      khatUsed: body.khatUsed,
-      khatHoursAgo: body.khatHoursAgo,
-      alcoholUsed: body.alcoholUsed,
-      triggers: body.triggers,
-      notes: body.notes,
-      createdAt: new Date().toISOString(),
-    };
+    const { mood_score, stress_level, urge_intensity, relapsed, khat_used_today, khat_hours_ago, alcohol_used_today, trigger_tags, log_date } = await request.json()
 
-    // TODO: Insert into Supabase database
-    // const { data, error } = await supabase
-    //   .from('habit_logs')
-    //   .insert([logEntry]);
+    const { data, error } = await supabase.from('habit_logs').insert({
+      user_id: user.id,
+      log_date: log_date || new Date().toISOString().split('T')[0],
+      mood_score: mood_score ?? 5,
+      stress_level: stress_level ?? 5,
+      urge_intensity: urge_intensity ?? 5,
+      relapsed: relapsed ?? false,
+      khat_used_today: khat_used_today ?? false,
+      khat_hours_ago: khat_hours_ago ?? null,
+      alcohol_used_today: alcohol_used_today ?? false,
+      trigger_tags: trigger_tags || [],
+      ai_intervention_triggered: false,
+    }).select('id').single()
 
-    // TODO: Update streak calculation
-    // TODO: Check for khat risk window (4-9 hours after use)
-
-    console.log('[v0] Habit log saved:', logEntry);
+    if (error) throw error
 
     return NextResponse.json({
-      success: true,
-      data: logEntry,
-      message: 'Habit log saved successfully',
-    }, { status: 201 });
+      log_id: data.id,
+      streak_updated: true,
+    }, { status: 201 })
   } catch (error) {
-    console.error('[v0] Error saving habit log:', error);
-    return NextResponse.json(
-      { error: 'Failed to save habit log' },
-      { status: 500 }
-    );
+    console.error('[habits/log] Error:', error)
+    return NextResponse.json({ error: 'Failed to save habit log' }, { status: 500 })
   }
 }
