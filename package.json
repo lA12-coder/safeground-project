@@ -1,0 +1,14 @@
+{
+	"dependencies": {
+		"@anthropic-ai/sdk": "^0.100.1",
+		"@supabase/ssr": "^0.10.3",
+		"@supabase/supabase-js": "^2.107.0",
+		"framer-motion": "^12.40.0",
+		"lucide-react": "^1.17.0",
+		"next": "^16.2.7",
+		"qrcode.react": "^4.2.0",
+		"react": "^19.2.7",
+		"recharts": "^3.8.1",
+		"tailwindcss": "^4.3.0"
+	}
+}
