@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
 
+export const runtime = 'nodejs';
+
 const SYSTEM_PROMPT =
   'You are a compassionate recovery companion for Ethiopian university students. Generate daily affirmations that are culturally respectful, non-judgmental, and focused on strength and healing. Output ONLY the affirmation text, nothing else.';
 

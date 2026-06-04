@@ -164,18 +164,26 @@ export async function completeOnboarding(
     return { error: error.message };
   }
 
+  const languagePref =
+    language === 'am' ? 'amharic' : language === 'om' ? 'oromifa' : 'english';
+
   await supabase.from('profiles').upsert({
     id: user.id,
     alias: user.user_metadata?.alias ?? user.user_metadata?.display_name ?? 'Anonymous',
-    language,
-    support_mode: supportMode,
-    guardian_opt_in: guardianOptIn,
-    recovery_goal: recoveryGoal,
-    triggers,
+    language_pref: languagePref,
+    support_preference: supportMode,
+    trigger_tags: triggers,
+    streak_goal: parseInt(recoveryGoal, 10) || 30,
+    onboarding_done: true,
     updated_at: new Date().toISOString(),
   });
 
-  await supabase.from('streaks').upsert({ user_id: user.id });
+  await supabase.from('streaks').upsert({
+    user_id: user.id,
+    current_streak: 0,
+    longest_streak: 0,
+    total_clean_days: 0,
+  });
 
   redirect('/dashboard');
 }

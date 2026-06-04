@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
+
+export const runtime = 'nodejs';
 import { GUEST_WELCOME_MESSAGE } from '@/lib/guest/constants';
 
 const sessionCounts = new Map<string, number>();

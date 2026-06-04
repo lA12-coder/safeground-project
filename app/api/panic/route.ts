@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateGeminiJson, isGeminiConfigured } from '@/lib/ai/gemini';
 
+export const runtime = 'nodejs';
+
 type PanicStep = { title: string; instruction: string; duration_seconds: number };
 
 type PanicStepsResult = {
