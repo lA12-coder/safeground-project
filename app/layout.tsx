@@ -1,6 +1,16 @@
 import type { Metadata } from 'next';
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
   title: 'SafeGround - Your Digital Well-being',
@@ -14,10 +24,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans antialiased bg-surface text-on-surface">
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+      <body
+        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-surface text-on-surface`}
+      >
+        {children}
       </body>
     </html>
   );

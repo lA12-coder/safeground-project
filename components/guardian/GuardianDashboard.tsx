@@ -52,13 +52,12 @@ export function GuardianDashboard() {
             guardian_alias: 'Guardian',
             relationship: 'trusted_friend',
             monitoring_level: 'alert_only',
-            token: result.token,
-            access_url: result.access_url ?? `${window.location.origin}/guardian/${result.token}`,
+            token: '',
+            access_url: result.url,
             created_at: new Date().toISOString(),
           })
           setShowWizard(false)
         }}
-        onCancel={() => setShowWizard(false)}
       />
     )
   }

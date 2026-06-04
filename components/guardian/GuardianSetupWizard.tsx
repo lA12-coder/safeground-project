@@ -1,172 +1,259 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Check, Copy, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Copy, Check, ChevronLeft, ChevronRight, Church } from 'lucide-react';
+import type {
+  CreateGuardianPayload,
+  GuardianRelationship,
+  MonitoringLevel,
+} from '@/lib/guardian/types';
 
-interface GuardianSetupWizardProps {
-  onComplete: (result: { token: string; access_url: string }) => void
-  onCancel: () => void
-}
+const RELATIONSHIPS: GuardianRelationship[] = [
+  'Parent',
+  'Sibling',
+  'Spouse',
+  'Mentor',
+  'Trusted Friend',
+];
 
-export function GuardianSetupWizard({ onComplete, onCancel }: GuardianSetupWizardProps) {
-  const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState({
-    guardian_alias: '',
-    relationship: 'trusted_friend',
-    monitoring_level: 'alert_only',
-    notify_on_panic: true,
-    notify_on_relapse: false,
-    notify_streak_break: false,
-  })
+const MONITORING_LEVELS: MonitoringLevel[] = [
+  'Alert Only',
+  'Weekly Summary',
+  'Full View',
+];
 
-  const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }))
+type GuardianSetupWizardProps = {
+  onComplete: (result: { url: string; shareText: string }) => void;
+};
 
-  async function createGuardian() {
-    setLoading(true)
+export function GuardianSetupWizard({ onComplete }: GuardianSetupWizardProps) {
+  const [step, setStep] = useState(1);
+  const [alias, setAlias] = useState('');
+  const [relationship, setRelationship] = useState<GuardianRelationship>('Parent');
+  const [monitoringLevel, setMonitoringLevel] = useState<MonitoringLevel>('Alert Only');
+  const [notifyPanic, setNotifyPanic] = useState(true);
+  const [notifyRelapse, setNotifyRelapse] = useState(false);
+  const [notifyStreakBreak, setNotifyStreakBreak] = useState(false);
+  const [url, setUrl] = useState('');
+  const [shareText, setShareText] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createLink = async () => {
+    setSubmitting(true);
+    setError(null);
     try {
+      const payload: CreateGuardianPayload = {
+        alias,
+        relationship,
+        monitoringLevel,
+        notifyPanic,
+        notifyRelapse,
+        notifyStreakBreak,
+      };
       const res = await fetch('/api/guardian/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        onComplete(data)
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'Could not create link.');
+        return;
       }
-    } catch (e) {
-      console.error('Failed to create guardian:', e)
+      const linkUrl = data.url ?? data.access_url;
+      const text = data.shareText ?? '';
+      setUrl(linkUrl);
+      setShareText(text);
+      setStep(3);
+      onComplete({ url: linkUrl, shareText: text });
     } finally {
-      setLoading(false)
+      setSubmitting(false);
     }
-  }
+  };
+
+  const copyShare = async () => {
+    await navigator.clipboard.writeText(shareText || url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-sm p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-on-surface">Guardian Setup</h2>
-        <span className="text-sm text-on-surface-variant">Step {step} of 3</span>
-      </div>
-
-      <div className="flex gap-2 mb-8">
-        {[1, 2, 3].map(s => (
-          <div key={s} className={`flex-1 h-2 rounded-full ${s <= step ? 'bg-primary' : 'bg-surface-container-high'}`} />
-        ))}
-      </div>
+    <div className="card p-8 space-y-8 parchment-glow">
+      <p className="text-sm text-on-surface-variant">
+        Step {step} of 3 — invite someone you trust without sharing chat or habit logs.
+      </p>
 
       {step === 1 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="text-sm font-medium text-on-surface mb-1 block">Guardian Name/Alias</label>
+            <label htmlFor="guardian-alias" className="label-caps block mb-2">
+              Guardian alias
+            </label>
             <input
-              value={form.guardian_alias}
-              onChange={e => update('guardian_alias', e.target.value)}
-              placeholder="e.g. Mom, Biruk, Sister"
-              className="w-full p-3 border border-outline-variant/30 rounded-lg bg-surface-container-low text-on-surface placeholder:text-on-surface-variant"
+              id="guardian-alias"
+              value={alias}
+              onChange={(e) => setAlias(e.target.value)}
+              placeholder="e.g. Mom, Brother Sam…"
+              className="input-field"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-on-surface mb-1 block">Relationship</label>
-            <select
-              value={form.relationship}
-              onChange={e => update('relationship', e.target.value)}
-              className="w-full p-3 border border-outline-variant/30 rounded-lg bg-surface-container-low text-on-surface"
-            >
-              <option value="parent">Parent</option>
-              <option value="sibling">Sibling</option>
-              <option value="spouse">Spouse</option>
-              <option value="mentor">Mentor</option>
-              <option value="trusted_friend">Trusted Friend</option>
-            </select>
+            <span className="label-caps block mb-3">Relationship</span>
+            <div className="flex flex-wrap gap-2">
+              {RELATIONSHIPS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRelationship(r)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium border-2 ${
+                    relationship === r
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-outline-variant text-on-surface-variant'
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {step === 2 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="text-sm font-medium text-on-surface mb-2 block">Monitoring Level</label>
+            <span className="label-caps block mb-3">Monitoring level</span>
             <div className="space-y-2">
-              {[
-                { value: 'alert_only', label: 'Alert Only', desc: 'Only notified during crises' },
-                { value: 'weekly_summary', label: 'Weekly Summary', desc: 'Receive weekly progress summaries' },
-                { value: 'full_view', label: 'Full View', desc: 'See dashboard with mood trends' },
-              ].map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => update('monitoring_level', opt.value)}
-                  className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                    form.monitoring_level === opt.value
-                      ? 'border-primary bg-primary/10'
-                      : 'border-outline-variant/30 hover:border-outline bg-surface-container-low'
+              {MONITORING_LEVELS.map((level) => (
+                <label
+                  key={level}
+                  className={`flex items-center gap-3 p-4 rounded-lg border-2 cursor-pointer ${
+                    monitoringLevel === level
+                      ? 'border-primary bg-primary/5'
+                      : 'border-outline-variant'
                   }`}
                 >
-                  <span className="font-medium text-sm text-on-surface">{opt.label}</span>
-                  <span className="text-xs text-on-surface-variant ml-2">{opt.desc}</span>
-                </button>
+                  <input
+                    type="radio"
+                    name="monitoring"
+                    checked={monitoringLevel === level}
+                    onChange={() => setMonitoringLevel(level)}
+                    className="accent-primary"
+                  />
+                  <span className="font-medium text-on-surface">{level}</span>
+                </label>
               ))}
             </div>
           </div>
-          <div className="space-y-2 pt-2">
-            <label className="text-sm font-medium text-on-surface">Alert Triggers</label>
-            {[
-              { field: 'notify_on_panic', label: 'Notify on panic' },
-              { field: 'notify_on_relapse', label: 'Notify on relapse' },
-              { field: 'notify_streak_break', label: 'Streak breaks' },
-            ].map(({ field, label }) => (
-              <label key={field} className="flex items-center gap-2 text-sm text-on-surface-variant">
-                <input
-                  type="checkbox"
-                  checked={(form as any)[field]}
-                  onChange={e => update(field, e.target.checked)}
-                  className="rounded border-outline-variant/30"
-                />
-                {label}
-              </label>
-            ))}
+          <div className="space-y-3 pt-2">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifyPanic}
+                onChange={(e) => setNotifyPanic(e.target.checked)}
+                className="w-5 h-5 accent-primary"
+              />
+              <span className="text-sm font-medium">Notify on panic (recommended)</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifyRelapse}
+                onChange={(e) => setNotifyRelapse(e.target.checked)}
+                className="w-5 h-5 accent-primary"
+              />
+              <span className="text-sm font-medium">Notify on relapse</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notifyStreakBreak}
+                onChange={(e) => setNotifyStreakBreak(e.target.checked)}
+                className="w-5 h-5 accent-primary"
+              />
+              <span className="text-sm font-medium">Notify on streak breaks</span>
+            </label>
           </div>
         </div>
       )}
 
-      {step === 3 && (
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <Check size={28} className="text-primary" />
+      {step === 3 && url && (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="p-4 bg-white rounded-xl border border-outline-variant">
+              <QRCodeSVG value={url} size={160} level="M" />
+            </div>
+            <div className="flex-1 space-y-4 w-full">
+              <div>
+                <label className="label-caps block mb-2">Private link</label>
+                <input readOnly value={url} className="input-field text-sm" />
+              </div>
+              <button
+                type="button"
+                onClick={copyShare}
+                className="btn-secondary w-full flex items-center justify-center gap-2"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copied' : 'Copy link & message'}
+              </button>
+            </div>
           </div>
-          <p className="text-on-surface">
-            Share this private link with your guardian. They will see your recovery progress and mood trends.
-          </p>
-          <div className="bg-surface-container-low rounded-lg p-4">
-            <p className="text-xs text-on-surface-variant mb-2">Pre-written message:</p>
-            <p className="text-sm text-on-surface-variant italic">
-              &ldquo;I&apos;m working on something important for my wellbeing.
-              I&apos;ve given you a private link to support me. Thank you.&rdquo;
-            </p>
-          </div>
+          {shareText && (
+            <div className="bg-surface-container-low rounded-lg p-4 text-sm text-on-surface-variant leading-relaxed italic">
+              {shareText}
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && (
+        <p className="text-sm text-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="flex justify-between pt-4 border-t border-outline-variant">
+        {step > 1 && step < 3 ? (
           <button
-            onClick={createGuardian}
-            disabled={loading}
-            className="w-full py-3 bg-primary text-on-primary rounded-lg font-semibold hover:brightness-110 disabled:opacity-50 transition-all"
+            type="button"
+            onClick={() => setStep((s) => s - 1)}
+            className="flex items-center gap-1 text-on-surface-variant font-medium"
           >
-            {loading ? 'Generating...' : 'Generate Guardian Link'}
-          </button>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between mt-8 pt-6 border-t border-outline-variant/30">
-        {step > 1 ? (
-          <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-1 text-sm text-on-surface-variant hover:text-on-surface transition-colors">
-            <ChevronLeft size={16} /> Back
+            <ChevronLeft className="w-4 h-4" /> Back
           </button>
         ) : (
-          <button onClick={onCancel} className="text-sm text-on-surface-variant hover:text-on-surface transition-colors">Cancel</button>
+          <span />
         )}
-        {step < 3 && (
-          <button onClick={() => setStep(s => s + 1)} className="flex items-center gap-1 px-4 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:brightness-110 transition-all">
-            Next <ChevronRight size={16} />
+        {step === 1 && (
+          <button
+            type="button"
+            disabled={!alias.trim()}
+            onClick={() => setStep(2)}
+            className="btn-primary py-2 px-6 disabled:opacity-50 flex items-center gap-1 ml-auto"
+          >
+            Next <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+        {step === 2 && (
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={createLink}
+            className="btn-primary py-2 px-6 disabled:opacity-50 flex items-center gap-2 ml-auto"
+          >
+            <Church className="w-4 h-4" />
+            {submitting ? 'Creating…' : 'Generate link'}
+          </button>
+        )}
+        {step === 3 && (
+          <button type="button" onClick={copyShare} className="btn-primary py-2 px-6 ml-auto">
+            Done
           </button>
         )}
       </div>
     </div>
-  )
+  );
 }

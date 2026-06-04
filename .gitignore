@@ -8,6 +8,8 @@ jspm_packages/
 out/
 dist/
 build/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # TypeScript
 *.tsbuildinfo
@@ -24,7 +26,7 @@ tsconfig.tsbuildinfo
 .DS_Store
 Thumbs.db
 
-# Heavy Log files
+# Log files
 *.log
 npm-debug.log*
 yarn-debug.log*

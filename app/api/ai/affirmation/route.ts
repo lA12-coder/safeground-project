@@ -1,5 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { callClaude } from '@/lib/ai/claude'
+import { NextRequest, NextResponse } from 'next/server';
+import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
+
+export const runtime = 'nodejs';
+
+const SYSTEM_PROMPT =
+  'You are a compassionate recovery companion for Ethiopian university students. Generate daily affirmations that are culturally respectful, non-judgmental, and focused on strength and healing. Output ONLY the affirmation text, nothing else.';
 
 const fallbackAffirmations = [
   'Your strength is not measured by your struggles, but by your courage to face them.',
@@ -22,34 +27,42 @@ const fallbackAffirmations = [
   'You are not defined by your worst moments. You are defined by how you rise from them.',
   'There is power in asking for help. It shows courage, not weakness.',
   'Your journey is your own. Honor it with patience and love.',
-]
+];
 
 export async function POST(request: NextRequest) {
   try {
-    const { mood_score, urge_intensity } = await request.json()
+    const body = await request.json();
+    const mood_score = body.mood_score ?? body.moodScore ?? 5;
+    const urge_intensity = body.urge_intensity ?? body.urgeIntensity ?? 5;
 
-    if (process.env.ANTHROPIC_API_KEY) {
+    if (isGeminiConfigured()) {
       try {
-        const systemPrompt = 'You are a compassionate recovery companion for Ethiopian university students. Generate daily affirmations that are culturally respectful, non-judgmental, and focused on strength and healing. Output ONLY the affirmation text, nothing else.'
-
         const userMessage = `The user's current state:
-- Mood Score: ${mood_score ?? 5}/10
-- Urge Intensity: ${urge_intensity ?? 5}/10
+- Mood Score: ${mood_score}/10
+- Urge Intensity: ${urge_intensity}/10
 
-Generate a single compassionate, culturally respectful daily affirmation (2-3 sentences) for an Ethiopian university student in recovery from khat addiction. Use metaphors of strength, nature, and academic focus. Do NOT mention religion unless directly relevant.`
+Generate a single compassionate, culturally respectful daily affirmation (2-3 sentences) for an Ethiopian university student in recovery from khat addiction. Use metaphors of strength, nature, and academic focus. Do NOT mention religion unless directly relevant.`;
 
-        const affirmation = await callClaude(systemPrompt, userMessage, 150)
-        return NextResponse.json({ affirmation })
-      } catch {
-        // Fallthrough to fallback
+        const affirmation = await generateGeminiText({
+          systemPrompt: SYSTEM_PROMPT,
+          userMessage,
+          maxOutputTokens: 150,
+          temperature: 0.8,
+        });
+
+        return NextResponse.json({ success: true, affirmation, source: 'gemini' });
+      } catch (e) {
+        console.error('[ai/affirmation] Gemini failed:', e);
       }
     }
 
-    const affirmation = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)]
-    return NextResponse.json({ affirmation })
+    const affirmation =
+      fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)];
+    return NextResponse.json({ success: true, affirmation, source: 'fallback' });
   } catch (error) {
-    console.error('[ai/affirmation] Error:', error)
-    const affirmation = fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)]
-    return NextResponse.json({ affirmation })
+    console.error('[ai/affirmation] Error:', error);
+    const affirmation =
+      fallbackAffirmations[Math.floor(Math.random() * fallbackAffirmations.length)];
+    return NextResponse.json({ success: true, affirmation, source: 'fallback' });
   }
 }
