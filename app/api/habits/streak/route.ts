@@ -14,37 +14,49 @@ export async function GET() {
         longestStreak: 0,
         totalCleanDays: 0,
         lastLoggedAt: null,
-        updatedAt: new Date().toISOString(),
+        current_streak: 0,
+        longest_streak: 0,
+        total_clean_days: 0,
+        last_clean_date: null,
       });
     }
 
     const { data, error } = await supabase
       .from('streaks')
-      .select('current_streak, longest_streak, total_clean_days, last_logged_at, updated_at')
+      .select('current_streak, longest_streak, total_clean_days, last_clean_date, last_logged_at, updated_at')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (error) {
       console.error('[habits/streak]', error);
-      return NextResponse.json(
-        {
-          currentStreak: 7,
-          longestStreak: 14,
-          totalCleanDays: 21,
-          lastLoggedAt: null,
-          updatedAt: new Date().toISOString(),
-          _warning: 'streaks table missing — run 00_full_schema.sql',
-        },
-        { status: 200 }
-      );
+      return NextResponse.json({
+        currentStreak: 0,
+        longestStreak: 0,
+        totalCleanDays: 0,
+        lastLoggedAt: null,
+        current_streak: 0,
+        longest_streak: 0,
+        total_clean_days: 0,
+        last_clean_date: null,
+      });
     }
 
+    const current = data?.current_streak ?? 0;
+    const longest = data?.longest_streak ?? 0;
+    const total = data?.total_clean_days ?? 0;
+    const lastDate = data?.last_clean_date ?? null;
+    const lastLogged = data?.last_logged_at ?? null;
+
     return NextResponse.json({
-      currentStreak: data?.current_streak ?? 0,
-      longestStreak: data?.longest_streak ?? 0,
-      totalCleanDays: data?.total_clean_days ?? 0,
-      lastLoggedAt: data?.last_logged_at ?? null,
+      currentStreak: current,
+      longestStreak: longest,
+      totalCleanDays: total,
+      lastLoggedAt: lastLogged,
       updatedAt: data?.updated_at ?? new Date().toISOString(),
+      current_streak: current,
+      longest_streak: longest,
+      total_clean_days: total,
+      last_clean_date: lastDate,
     });
   } catch (error) {
     console.error('[habits/streak]', error);
