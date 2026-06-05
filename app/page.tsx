@@ -2,7 +2,9 @@ import Link from 'next/link';
 import {
   Shield, AlertCircle, Users, Church, BarChart3, HeartHandshake,
   BookOpen, UserRound, ArrowRight, Sparkles, Lock, Eye,
-  Globe, CheckCircle, Star, Activity, Cross,
+  Globe, CheckCircle, Star, Activity, Cross, ShieldCheck,
+  Sun, Moon, Bell, MessageCircle, PhoneCall, Search, MapPin,
+  Award, Target, Compass, Feather,
 } from 'lucide-react';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { PrivacyBadges } from '@/components/layout/PrivacyBadges';
@@ -93,6 +95,87 @@ const trustIndicators = [
   { icon: Globe, label: 'Local Language Support' },
 ];
 
+const approachValues = [
+  {
+    icon: Compass,
+    title: 'Evidence-Based Recovery',
+    desc: 'Our approach combines CBT, mindfulness, and culturally-grounded practices proven effective for Ethiopian youth.',
+  },
+  {
+    icon: Target,
+    title: 'Trauma-Informed Care',
+    desc: 'Every interaction is designed with sensitivity to past trauma, ensuring a safe healing environment.',
+  },
+  {
+    icon: Feather,
+    title: 'Whole-Person Healing',
+    desc: 'We address mental, emotional, social, and spiritual dimensions — honoring the complete human experience.',
+  },
+  {
+    icon: Award,
+    title: 'Peer-Led Community',
+    desc: 'Recovery is strengthened through shared experience. Our moderated peer spaces foster accountability without judgment.',
+  },
+];
+
+const safeguardingPillars = [
+  {
+    icon: Lock,
+    title: 'Zero-Knowledge Architecture',
+    desc: 'We never store passwords, messages are ephemeral, and your identity is protected by 256-bit encryption.',
+  },
+  {
+    icon: Shield,
+    title: 'Anonymous by Default',
+    desc: 'No real names, no phone numbers, no device fingerprinting. You exist only as your chosen alias.',
+  },
+  {
+    icon: Eye,
+    title: 'Moderated & Safe',
+    desc: 'All community spaces are actively moderated. AI flagging protects against harmful content and abuse.',
+  },
+  {
+    icon: Bell,
+    title: '24/7 Crisis Protocol',
+    desc: 'The PANIC button triggers immediate grounding exercises, AI coping support, and optional guardian alerts.',
+  },
+];
+
+const helpHubItems = [
+  {
+    icon: MessageCircle,
+    title: 'AI Companion Chat',
+    desc: 'Talk to our AI recovery companion anytime. Non-judgmental, always available, completely anonymous.',
+    href: '/guest',
+    color: 'text-[#92400E]',
+    bg: 'bg-[#fdf6ed]',
+  },
+  {
+    icon: Users,
+    title: 'Community Rooms',
+    desc: 'Join peer support rooms organized by topic. Share milestones, ask questions, offer encouragement.',
+    href: '/chat',
+    color: 'text-[#16a34a]',
+    bg: 'bg-green-50',
+  },
+  {
+    icon: PhoneCall,
+    title: 'Crisis Hotlines',
+    desc: 'Immediate access to Ethiopian crisis helplines and emergency mental health support services.',
+    href: '/panic',
+    color: 'text-[#dc2626]',
+    bg: 'bg-red-50',
+  },
+  {
+    icon: Search,
+    title: 'Provider Directory',
+    desc: 'Find verified counselors, psychiatrists, and faith-based programs near your university.',
+    href: '/directory',
+    color: 'text-[#2563eb]',
+    bg: 'bg-blue-50',
+  },
+];
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#fafaf9]">
@@ -166,25 +249,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Our Approach Section */}
+      <section className="py-20 md:py-28 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Our Approach</span>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">
+              Healing Rooted in Dignity & Evidence
+            </h2>
+            <p className="text-sm text-[#6f5b4e] max-w-2xl mx-auto leading-relaxed">
+              SafeGround was built from the ground up for Ethiopian students. Our approach honors the cultural,
+              spiritual, and social realities of university life while integrating proven recovery science.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {approachValues.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="bg-[#fafaf9] rounded-xl border border-[#e5e0db] p-6 hover:shadow-md hover:border-[#92400E]/20 transition-all hover:-translate-y-1">
+                  <div className="w-12 h-12 rounded-xl bg-[#fdf6ed] flex items-center justify-center text-[#92400E] mb-4">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-[#2c241f] text-sm mb-2">{item.title}</h3>
+                  <p className="text-xs text-[#6f5b4e] leading-relaxed">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Problem Section */}
-      <section className="py-16 md:py-20 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
+      <section className="py-20 md:py-28 px-4 md:px-10 bg-[#fafaf9]">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-12">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">The Challenge</span>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">
               Many young people struggle silently
             </h2>
             <p className="text-sm text-[#6f5b4e] max-w-xl mx-auto">
               Compulsive behavior, shame cycles, and isolation affect thousands of Ethiopian students. SafeGround helps break the cycle through evidence-based support.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {problems.map((item) => (
-              <div key={item.title} className="bg-[#f6f5f1] rounded-lg p-4 border border-[#e5e0db]/50 hover:border-[#92400E]/20 transition-colors">
-                <div className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-[#dc2626] mb-2.5">
-                  <item.icon className="w-3.5 h-3.5" />
+              <div key={item.title} className="bg-white rounded-xl p-5 border border-[#e5e0db]/50 hover:border-[#92400E]/20 hover:shadow-sm transition-all">
+                <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-[#dc2626] mb-3">
+                  <item.icon className="w-4 h-4" />
                 </div>
-                <h3 className="text-sm font-semibold text-[#2c241f] mb-0.5 leading-tight">{item.title}</h3>
+                <h3 className="text-sm font-semibold text-[#2c241f] mb-1 leading-tight">{item.title}</h3>
                 <p className="text-xs text-[#6f5b4e] leading-relaxed">{item.desc}</p>
               </div>
             ))}
@@ -193,15 +306,15 @@ export default function LandingPage() {
       </section>
 
       {/* Platform Preview — safguard */}
-      <section className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9]">
+      <section className="py-20 md:py-28 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+          <div className="grid md:grid-cols-2 gap-10 lg:gap-14 items-center">
             <div>
               <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Meet SafeGround</span>
-              <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">
+              <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">
                 A place where the soul finds its footing
               </h2>
-              <p className="text-sm text-[#6f5b4e] leading-relaxed mb-4">
+              <p className="text-sm text-[#6f5b4e] leading-relaxed mb-5">
                 Built for Ethiopian university students, SafeGround combines AI-powered recovery tools,
                 anonymous community support, professional counseling, and faith-based programs — all
                 protected by zero-knowledge privacy.
@@ -212,6 +325,7 @@ export default function LandingPage() {
                   { label: 'Anonymous', color: 'bg-green-50 text-[#16a34a] border-[#16a34a]/20' },
                   { label: '24/7 Support', color: 'bg-blue-50 text-[#2563eb] border-[#2563eb]/20' },
                   { label: 'Streak Tracking', color: 'bg-purple-50 text-[#9333ea] border-[#9333ea]/20' },
+                  { label: 'Faith-Integrated', color: 'bg-amber-50 text-[#92400E] border-[#92400E]/20' },
                 ].map((tag) => (
                   <span key={tag.label} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${tag.color}`}>
                     {tag.label}
@@ -231,24 +345,118 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Services */}
-      <section id="services" className="py-16 md:py-20 px-4 md:px-10 bg-white scroll-mt-16">
+      {/* Safeguarding Section */}
+      <section className="py-20 md:py-28 px-4 md:px-10 bg-[#fafaf9]">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="text-center mb-12">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Safeguarding</span>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">
+              Your Safety is Our Foundation
+            </h2>
+            <p className="text-sm text-[#6f5b4e] max-w-2xl mx-auto leading-relaxed">
+              Every aspect of SafeGround is designed with your privacy and safety as the highest priority.
+              We earn your trust through transparency, encryption, and zero-compromise security.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {safeguardingPillars.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="bg-white rounded-xl border border-[#e5e0db] p-6 hover:shadow-md hover:border-[#16a34a]/20 transition-all hover:-translate-y-1">
+                  <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-[#16a34a] mb-4">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-[#2c241f] text-sm mb-2">{item.title}</h3>
+                  <p className="text-xs text-[#6f5b4e] leading-relaxed">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-10 bg-gradient-to-r from-[#fdf6ed] to-[#f0f9ee] rounded-xl border border-[#e5e0db] p-6 md:p-8 text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <ShieldCheck className="w-5 h-5 text-[#16a34a]" />
+              <span className="text-sm font-semibold text-[#2c241f]">Verified by University Partners</span>
+            </div>
+            <p className="text-xs text-[#6f5b4e] max-w-xl mx-auto">
+              SafeGround undergoes regular security audits and complies with Ethiopian data protection standards.
+              Our zero-log policy means we have nothing to share — even if asked.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Help & Support Hub */}
+      <section className="py-20 md:py-28 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Help & Support Hub</span>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">
+              Support When You Need It Most
+            </h2>
+            <p className="text-sm text-[#6f5b4e] max-w-2xl mx-auto leading-relaxed">
+              Whether you're in crisis, need someone to talk to, or want professional guidance,
+              our support hub connects you to the right help — instantly and anonymously.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {helpHubItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className="group bg-[#fafaf9] rounded-xl border border-[#e5e0db] p-6 hover:shadow-md hover:border-[#92400E]/20 transition-all hover:-translate-y-1"
+                >
+                  <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center ${item.color} mb-4`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-[#2c241f] text-sm mb-2 group-hover:text-[#92400E] transition-colors">{item.title}</h3>
+                  <p className="text-xs text-[#6f5b4e] leading-relaxed">{item.desc}</p>
+                </Link>
+              );
+            })}
+          </div>
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <FullPageLink
+              href="/guest"
+              className="inline-flex items-center gap-1.5 bg-[#92400E] text-white font-semibold px-6 py-2.5 rounded-md hover:bg-[#a04e14] transition-colors shadow-sm text-sm"
+            >
+              Talk to AI Companion <ArrowRight size={15} />
+            </FullPageLink>
+            <FullPageLink
+              href="/chat"
+              className="inline-flex items-center gap-1.5 border border-[#e5e0db] text-[#6f5b4e] font-medium px-6 py-2.5 rounded-md hover:bg-[#f6f5f1] transition-colors text-sm"
+            >
+              Join Community Chat
+            </FullPageLink>
+            <FullPageLink
+              href="/panic"
+              className="inline-flex items-center gap-1.5 bg-[#dc2626] text-white font-semibold px-6 py-2.5 rounded-md hover:bg-[#b91c1c] transition-colors shadow-sm text-sm"
+            >
+              <AlertCircle className="w-3.5 h-3.5" /> Emergency
+            </FullPageLink>
+          </div>
+        </div>
+      </section>
+
+      {/* Services */}
+      <section id="services" className="py-20 md:py-28 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Everything You Need</span>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">
               Complete Recovery Platform
             </h2>
             <p className="text-sm text-[#6f5b4e]">
               Integrated tools designed for every stage of your healing journey.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {services.slice(0, 3).map(({ icon: Icon, title, desc, href, color, bg }) => (
               <Link
                 key={title}
                 href={href}
-                className="group bg-white rounded-lg border border-[#e5e0db] p-5 hover:shadow-sm hover:border-[#92400E]/20 transition-all hover:-translate-y-0.5"
+                className="group bg-white rounded-xl border border-[#e5e0db] p-6 hover:shadow-md hover:border-[#92400E]/20 transition-all hover:-translate-y-1"
               >
                 <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center ${color} mb-3`}>
                   <Icon size={20} />
@@ -257,12 +465,12 @@ export default function LandingPage() {
                 <p className="text-xs text-[#6f5b4e] leading-relaxed">{desc}</p>
               </Link>
             ))}
-            <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-4">
               {services.slice(3).map(({ icon: Icon, title, desc, href, color, bg }) => (
                 <Link
                   key={title}
                   href={href}
-                  className="group bg-white rounded-lg border border-[#e5e0db] p-5 hover:shadow-sm hover:border-[#92400E]/20 transition-all hover:-translate-y-0.5"
+                  className="group bg-white rounded-xl border border-[#e5e0db] p-6 hover:shadow-md hover:border-[#92400E]/20 transition-all hover:-translate-y-1"
                 >
                   <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center ${color} mb-3`}>
                     <Icon size={20} />
@@ -271,7 +479,7 @@ export default function LandingPage() {
                   <p className="text-xs text-[#6f5b4e] leading-relaxed">{desc}</p>
                 </Link>
               ))}
-              <div className="rounded-lg overflow-hidden border border-[#e5e0db] bg-white">
+              <div className="rounded-xl overflow-hidden border border-[#e5e0db] bg-white">
                 <img src="/health.png" alt="Health dashboard preview" className="w-full h-full object-cover" />
               </div>
             </div>
@@ -280,21 +488,21 @@ export default function LandingPage() {
       </section>
 
       {/* Stats */}
-      <section className="py-12 md:py-16 px-4 md:px-10 bg-[#fafaf9] border-y border-[#e5e0db]/50">
+      <section className="py-16 md:py-24 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-xl md:text-2xl font-serif font-bold text-[#2c241f] text-center mb-8">
+          <h2 className="text-xl md:text-2xl font-serif font-bold text-[#2c241f] text-center mb-10">
             Community Impact in Ethiopia
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <div className="md:col-span-1 rounded-lg overflow-hidden border border-[#e5e0db] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="md:col-span-1 rounded-xl overflow-hidden border border-[#e5e0db] bg-white">
               <img src="/organ1.png" alt="Organization impact" className="w-full h-full object-cover" />
             </div>
-            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-5">
               {stats.map((stat) => (
-                <div key={stat.label} className="bg-white rounded-lg border border-[#e5e0db] p-6 text-center hover:shadow-sm transition-shadow">
-                  <div className={`text-4xl md:text-5xl font-serif font-bold ${stat.color} mb-1`}>{stat.value}</div>
+                <div key={stat.label} className="bg-[#fafaf9] rounded-xl border border-[#e5e0db] p-8 text-center hover:shadow-md transition-all hover:-translate-y-1">
+                  <div className={`text-5xl md:text-6xl font-serif font-bold ${stat.color} mb-2`}>{stat.value}</div>
                   <div className="text-sm font-semibold text-[#2c241f]">{stat.label}</div>
-                  <div className="text-xs text-[#9a8a7d] mt-0.5">{stat.desc}</div>
+                  <div className="text-xs text-[#9a8a7d] mt-1">{stat.desc}</div>
                 </div>
               ))}
             </div>
@@ -303,23 +511,23 @@ export default function LandingPage() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-16 md:py-20 px-4 md:px-10 bg-white scroll-mt-16">
+      <section id="features" className="py-20 md:py-28 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
         <div className="max-w-5xl mx-auto">
-          <div className="mb-10">
+          <div className="mb-12">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Core Features</span>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">
               Support Built Around You
             </h2>
             <p className="text-sm text-[#6f5b4e] max-w-xl">
               Integrated care that respects your privacy, your faith, and your urgent needs.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:auto-rows-[240px]">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:auto-rows-[240px]">
             {features.map((feature) => {
               const Icon = feature.icon;
               const gradientClass = feature.gradient ? `bg-gradient-to-br ${feature.gradient}` : '';
               const bgClass = feature.bgColor || `${gradientClass} bg-white border border-[#e5e0db]`;
-              const className = `${bgClass} p-6 rounded-lg flex flex-col justify-between ${feature.span} overflow-hidden group relative hover:shadow-md transition-all`;
+              const className = `${bgClass} p-6 rounded-xl flex flex-col justify-between ${feature.span} overflow-hidden group relative hover:shadow-md transition-all`;
               const textClass = feature.bgColor?.includes('text-white') ? 'text-white/90' : 'text-[#6f5b4e]';
               const textTitle = feature.bgColor?.includes('text-white') ? 'text-white' : 'text-[#2c241f]';
               const linkClass = feature.bgColor?.includes('text-white') ? 'text-white/80 hover:text-white' : 'text-[#92400E]';
@@ -348,14 +556,14 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
+      <section id="how-it-works" className="py-20 md:py-28 px-4 md:px-10 bg-white scroll-mt-16">
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-12">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Your Journey</span>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">How SafeGround Works</h2>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">How SafeGround Works</h2>
             <p className="text-sm text-[#6f5b4e]">Six simple steps to start and sustain your recovery.</p>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {[
               { step: '1', title: 'Create Anonymous Identity', body: 'Register with an email, choose a generated alias like Eagle-Biruk-28 — no real name needed.' },
               { step: '2', title: 'Complete Recovery Setup', body: 'Select your language, triggers, support preference, and recovery goal in a private 5-step onboarding.' },
@@ -364,18 +572,18 @@ export default function LandingPage() {
               { step: '5', title: 'Build Recovery Streaks', body: 'Celebrate milestones at 3, 7, 14, 30, 60, and 90 days with streak protection.' },
               { step: '6', title: 'Access Support When Needed', body: 'Join anonymous chat, book a provider, connect with faith programs, or invite a guardian.' },
             ].map((item) => (
-              <div key={item.step} className="flex gap-4 bg-white border border-[#e5e0db] rounded-lg p-4 hover:border-[#92400E]/20 transition-colors">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#92400E] to-[#d97706] text-white flex items-center justify-center font-bold shrink-0 text-sm shadow-sm">
+              <div key={item.step} className="flex gap-4 bg-[#fafaf9] border border-[#e5e0db] rounded-xl p-5 hover:border-[#92400E]/20 hover:shadow-sm transition-all">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#92400E] to-[#d97706] text-white flex items-center justify-center font-bold shrink-0 text-sm shadow-sm">
                   {item.step}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-[#2c241f] text-sm mb-0.5">{item.title}</h3>
+                  <h3 className="font-semibold text-[#2c241f] text-sm mb-1">{item.title}</h3>
                   <p className="text-xs text-[#6f5b4e] leading-relaxed">{item.body}</p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="text-center mt-8">
+          <div className="text-center mt-10">
             <FullPageLink
               href="/register"
               className="inline-flex items-center gap-1.5 bg-[#92400E] text-white font-semibold px-6 py-2.5 rounded-md hover:bg-[#a04e14] transition-colors shadow-sm text-sm"
@@ -387,16 +595,16 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 md:py-20 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
+      <section className="py-20 md:py-28 px-4 md:px-10 bg-[#fafaf9] border-y border-[#e5e0db]/50">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
+          <div className="text-center mb-12">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Testimonials</span>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">Voices of Healing</h2>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">Voices of Healing</h2>
             <p className="text-sm text-[#6f5b4e]">Real stories from the SafeGround community.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {testimonials.map((t) => (
-              <div key={t.initials} className="bg-white border border-[#e5e0db] rounded-lg p-5 flex flex-col hover:shadow-sm transition-shadow">
+              <div key={t.initials} className="bg-white border border-[#e5e0db] rounded-xl p-6 flex flex-col hover:shadow-md transition-all hover:-translate-y-1">
                 <div className="flex gap-0.5 mb-3">
                   {Array.from({ length: t.rating }).map((_, i) => (
                     <Star key={i} className="w-3.5 h-3.5 fill-[#d97706] text-[#d97706]" />
@@ -419,10 +627,10 @@ export default function LandingPage() {
       </section>
 
       {/* Trusted By */}
-      <section className="py-12 px-4 md:px-10 bg-[#fafaf9]">
+      <section className="py-16 md:py-20 px-4 md:px-10 bg-white">
         <div className="max-w-5xl mx-auto text-center">
           <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9a8a7d]">Trusted by Leading Institutions</span>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-14 mt-6">
+          <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16 mt-8">
             {[
               { name: 'AAU', full: 'Addis Ababa University' },
               { name: 'ASTU', full: 'Adama Science & Tech' },
@@ -440,18 +648,18 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 md:py-20 px-4 md:px-10 bg-gradient-to-br from-[#fdf6ed] to-white border-y border-[#e5e0db]/50">
+      <section className="py-20 md:py-28 px-4 md:px-10 bg-gradient-to-br from-[#fdf6ed] to-white border-y border-[#e5e0db]/50">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#92400E] to-[#d97706] flex items-center justify-center mx-auto mb-5 shadow-lg shadow-[#92400E]/20">
-            <Shield className="w-7 h-7 text-white" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#92400E] to-[#d97706] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#92400E]/20">
+            <Shield className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mb-3">
+          <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mb-4">
             Start Your Recovery Today
           </h2>
-          <p className="text-sm text-[#6f5b4e] max-w-lg mx-auto mb-6">
+          <p className="text-sm text-[#6f5b4e] max-w-lg mx-auto mb-8">
             Join thousands of Ethiopian students who have taken the first step toward healing. Completely anonymous, completely private.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <FullPageLink
               href="/register"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-[#92400E] text-white font-semibold px-6 py-2.5 rounded-md hover:bg-[#a04e14] transition-colors shadow-sm text-sm"
@@ -469,26 +677,26 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
+      <section id="faq" className="py-20 md:py-28 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
         <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
+          <div className="text-center mb-10">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">FAQ</span>
-            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">Privacy & Safety</h2>
+            <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-3 mb-4">Privacy & Safety</h2>
             <p className="text-sm text-[#6f5b4e]">Your trust is our most valuable asset.</p>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {[
               { q: 'Is my identity really anonymous?', a: 'You interact using an encrypted alias. Your legal name and student ID are never required for daily use.' },
               { q: 'Can the university see my data?', a: 'Partners receive only anonymized aggregate reports. Individual logs and chats remain private.' },
               { q: 'What happens in a crisis?', a: 'PANIC connects you to grounding tools and crisis lines. Optional guardian alerts never expose your chat history.' },
               { q: 'Is there a cost to use SafeGround?', a: 'SafeGround is completely free for students. All core features including AI support, chat, and panic tools are available at no cost.' },
             ].map((faq) => (
-              <details key={faq.q} className="group bg-white border border-[#e5e0db] rounded-lg overflow-hidden">
-                <summary className="flex justify-between items-center px-4 py-3 font-semibold text-[#2c241f] text-sm cursor-pointer list-none hover:bg-[#f6f5f1] transition-colors">
+              <details key={faq.q} className="group bg-white border border-[#e5e0db] rounded-xl overflow-hidden">
+                <summary className="flex justify-between items-center px-5 py-4 font-semibold text-[#2c241f] text-sm cursor-pointer list-none hover:bg-[#f6f5f1] transition-colors">
                   {faq.q}
                   <span className="transition-transform group-open:rotate-180 text-[#92400E] text-xs">▼</span>
                 </summary>
-                <div className="px-4 pb-3">
+                <div className="px-5 pb-4">
                   <p className="text-xs text-[#6f5b4e] leading-relaxed">{faq.a}</p>
                 </div>
               </details>
@@ -498,10 +706,10 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer id="about" className="bg-[#2c241f] text-white/80 py-12 px-4 md:px-10">
+      <footer id="about" className="bg-[#2c241f] text-white/80 py-16 px-4 md:px-10">
         <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="space-y-3 md:col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+            <div className="space-y-4 md:col-span-1">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[#d97706]" />
                 <span className="font-serif font-bold text-lg text-white">SafeGround</span>
@@ -517,7 +725,7 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#d97706]">Platform</h4>
               <Link href="/#features" className="block text-xs text-white/60 hover:text-white transition-colors">Recovery Tools</Link>
               <Link href="/chat" className="block text-xs text-white/60 hover:text-white transition-colors">Community Chat</Link>
@@ -525,7 +733,7 @@ export default function LandingPage() {
               <Link href="/spiritual" className="block text-xs text-white/60 hover:text-white transition-colors">Faith Support</Link>
               <Link href="/#how-it-works" className="block text-xs text-white/60 hover:text-white transition-colors">How It Works</Link>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#d97706]">Support</h4>
               <FullPageLink href="/register" className="block text-xs text-white/60 hover:text-white transition-colors">Create Account</FullPageLink>
               <FullPageLink href="/login" className="block text-xs text-white/60 hover:text-white transition-colors">Sign In</FullPageLink>
@@ -533,7 +741,7 @@ export default function LandingPage() {
               <Link href="/settings/guardian" className="block text-xs text-white/60 hover:text-white transition-colors">Guardian Setup</Link>
               <Link href="/panic" className="block text-xs text-white/60 hover:text-white transition-colors">Panic Support</Link>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#d97706]">Privacy</h4>
               <p className="text-xs text-white/60">No Tracking</p>
               <p className="text-xs text-white/60">No Device Fingerprinting</p>
@@ -542,7 +750,7 @@ export default function LandingPage() {
               <p className="text-xs text-white/60">Zero-Log Policy</p>
             </div>
           </div>
-          <div className="border-t border-white/10 mt-8 pt-6 text-center">
+          <div className="border-t border-white/10 mt-10 pt-8 text-center">
             <p className="text-[10px] text-white/40">SafeGround © 2026 — A secure space for healing.</p>
           </div>
         </div>

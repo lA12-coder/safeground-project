@@ -20,8 +20,8 @@ export function LoginPageContent() {
         subtitle="Your private recovery journey continues here. Sign in to pick up where you left off."
         features={loginFeatures}
       />
-      <div className="lg:col-span-7 w-full min-h-full bg-white flex items-center justify-center p-8">
-        <div style={{ width: '100%', maxWidth: '420px' }}>
+      <div className="lg:col-span-7 w-full min-h-full bg-white flex items-center justify-center p-6 lg:p-10">
+        <div style={{ width: '100%', maxWidth: '420px' }} className="space-y-8">
           <Suspense fallback={
             <div className="flex items-center justify-center py-20">
               <div className="w-8 h-8 border-2 border-[#8B3A0F]/30 border-t-[#8B3A0F] rounded-full animate-spin" />
