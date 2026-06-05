@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState, use, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Shield, Lock, ChevronLeft, Sparkles, Trophy, Award, Star, TrendingUp } from 'lucide-react'
-import { LineChart, Line, ResponsiveContainer, XAxis, AreaChart, Area } from 'recharts'
+import { Heart, Shield, Lock, ChevronLeft, Trophy, Star, TrendingUp, TrendingDown, Minus, Clock, CheckCircle2, Target, Calendar, FileDown, Inbox, AlertTriangle } from 'lucide-react'
+import { LineChart, Line, ResponsiveContainer, XAxis, AreaChart, Area, BarChart, Bar, Tooltip } from 'recharts'
 import type { GuardianViewData } from '@/lib/types'
 
 const MILESTONES = [3, 7, 14, 30, 60, 90, 180, 365]
@@ -14,6 +14,57 @@ const encouragementHistory = [
   { type: 'faith', message: 'I sent faith support', time: '3d ago' },
 ]
 
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+}
+
+function getRecoveryPhase(streak: number): { label: string; color: string } {
+  if (streak >= 90) return { label: 'Sustained Recovery', color: 'text-green-600 bg-green-50 border-green-200' }
+  if (streak >= 30) return { label: 'Strong Progress', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' }
+  if (streak >= 7) return { label: 'Building Momentum', color: 'text-amber-700 bg-amber-50 border-amber-200' }
+  return { label: 'Early Recovery', color: 'text-blue-600 bg-blue-50 border-blue-200' }
+}
+
+function getMoodTrend(moods: { mood: number }[]): { label: string; color: string; icon: typeof TrendingUp } {
+  if (moods.length < 2) return { label: 'Stable', color: 'text-amber-700 bg-amber-50', icon: Minus }
+  const recent = moods.slice(-3).reduce((a, b) => a + b.mood, 0) / 3
+  const earlier = moods.slice(0, 3).reduce((a, b) => a + b.mood, 0) / 3
+  if (recent > earlier + 0.5) return { label: 'Improving', color: 'text-green-600 bg-green-50', icon: TrendingUp }
+  if (recent < earlier - 0.5) return { label: 'Declining', color: 'text-red-600 bg-red-50', icon: TrendingDown }
+  return { label: 'Stable', color: 'text-amber-700 bg-amber-50', icon: Minus }
+}
+
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffHours < 1) return 'Just now'
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays < 30) return `${diffDays}d ago`
+  return date.toLocaleDateString()
+}
+
+function getAlertIcon(type: string) {
+  switch (type) {
+    case 'panic_alert': return AlertTriangle
+    case 'milestone': return Trophy
+    case 'relapse': return AlertTriangle
+    default: return Inbox
+  }
+}
+
+function getAlertColor(type: string) {
+  switch (type) {
+    case 'panic_alert': return 'text-red-500 bg-red-50'
+    case 'milestone': return 'text-amber-600 bg-amber-50'
+    case 'relapse': return 'text-orange-600 bg-orange-50'
+    default: return 'text-blue-500 bg-blue-50'
+  }
+}
+
 export default function GuardianViewPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params)
   const [data, setData] = useState<GuardianViewData | null>(null)
@@ -22,6 +73,23 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
   const [sending, setSending] = useState<string | null>(null)
   const [sentHistory, setSentHistory] = useState<typeof encouragementHistory>([])
   const [showCelebration, setShowCelebration] = useState(false)
+  const [language, setLanguage] = useState<'en' | 'am'>('en')
+
+  const t = (en: string, am: string) => language === 'am' ? am : en
+
+  const moodScores = useMemo(() => data?.last_7_days_mood.map(d => d.mood) || [], [data])
+  const avgMood = moodScores.length ? (moodScores.reduce((a, b) => a + b, 0) / moodScores.length).toFixed(1) : '0'
+  const maxMood = moodScores.length ? Math.max(...moodScores) : 0
+  const minMood = moodScores.length ? Math.min(...moodScores) : 0
+
+  const phase = data ? getRecoveryPhase(data.current_streak) : { label: '', color: '' }
+  const trend = data ? getMoodTrend(data.last_7_days_mood) : { label: '', color: '', icon: Minus }
+
+  const encouragementCounts = useMemo(() => {
+    const counts: Record<string, number> = { encourage: 0, calm: 0, faith: 0 }
+    sentHistory.forEach(h => { counts[h.type] = (counts[h.type] || 0) + 1 })
+    return counts
+  }, [sentHistory])
 
   useEffect(() => {
     fetchData()
@@ -65,8 +133,22 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-surface">
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-outline-variant/30 rounded w-48 mx-auto" />
+            <div className="h-6 bg-outline-variant/20 rounded w-64 mx-auto" />
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="h-64 bg-outline-variant/20 rounded-2xl" />
+              <div className="h-64 bg-outline-variant/20 rounded-2xl" />
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="h-40 bg-outline-variant/20 rounded-xl" />
+              <div className="h-40 bg-outline-variant/20 rounded-xl" />
+              <div className="h-40 bg-outline-variant/20 rounded-xl" />
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -99,11 +181,19 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
           <div className="flex items-center gap-3">
             <ChevronLeft size={20} className="text-on-surface-variant" />
             <span className="text-xl font-bold text-primary">SafeGround</span>
+            <span className="text-xs text-on-surface-variant hidden sm:inline">/</span>
+            <span className="text-xs text-on-surface-variant hidden sm:inline">Guardian</span>
+            <span className="text-xs text-on-surface-variant hidden sm:inline">/</span>
+            <span className="text-xs text-primary font-medium hidden sm:inline">{data.alias}</span>
           </div>
           <div className="flex items-center gap-4">
-            <select className="text-sm border border-outline-variant rounded-lg px-3 py-1.5 bg-surface-container-low text-on-surface">
-              <option>English</option>
-              <option>አማርኛ</option>
+            <select
+              value={language}
+              onChange={e => setLanguage(e.target.value as 'en' | 'am')}
+              className="text-sm border border-outline-variant rounded-lg px-3 py-1.5 bg-surface-container-low text-on-surface"
+            >
+              <option value="en">English</option>
+              <option value="am">አማርኛ</option>
             </select>
             <button className="px-4 py-1.5 bg-error text-on-error rounded-full font-bold text-sm hover:opacity-90 transition-opacity">PANIC</button>
             <div className="w-8 h-8 rounded-full bg-surface-container-high" />
@@ -139,41 +229,80 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
           )}
         </AnimatePresence>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
+        {/* Hero */}
+        <motion.div {...fadeUp} className="text-center mb-12">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${phase.color}`}>
+              {phase.label}
+            </span>
+          </div>
           <h1 className="text-4xl font-bold text-on-surface mb-2">
-            Supporting <span className="text-primary">{data.alias}</span>
+            {t('Supporting', 'እየደገፍኩ')} <span className="text-primary">{data.alias}</span>
           </h1>
           <p className="text-lg text-on-surface-variant max-w-xl mx-auto">
-            Your presence is their strength. Today, they are choosing recovery one step at a time.
+            {t(
+              'Your presence is their strength. Today, they are choosing recovery one step at a time.',
+              'መገኘትህ ጥንካሬያቸው ነው። ዛሬ፣ ወደ ማገገም እየመረጡ ነው።'
+            )}
           </p>
         </motion.div>
 
+        {/* Stats Row */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-8 text-center"
-          >
+          {/* LEFT: Streak Display */}
+          <motion.div {...fadeUp} transition={{ delay: 0.1 }} className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-8 text-center">
             <motion.p
               animate={showCelebration ? { scale: [1, 1.1, 1] } : {}}
               transition={{ repeat: showCelebration ? Infinity : 0, duration: 2 }}
-              className="text-8xl font-bold text-primary"
+              className="text-8xl font-bold text-primary font-mono tabular-nums"
             >
               {data.current_streak}
             </motion.p>
-            <p className="text-lg text-on-surface-variant mt-2">Days of Strength</p>
+            <p className="text-lg text-on-surface-variant mt-2">
+              {t('Days of Strength', 'የጥንካሬ ቀናት')}
+            </p>
             <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-semibold">
-              ✓ Safety Plan Active
+              <CheckCircle2 size={13} />
+              {t('Safety Plan Active', 'የደህንነት እቅድ ንቁ')}
             </div>
-            {/* Mini milestone progress */}
+
+            {/* Goal Progress */}
             <div className="mt-4 pt-4 border-t border-outline-variant/30">
+              <div className="flex items-center justify-between text-xs text-on-surface-variant mb-2">
+                <span className="flex items-center gap-1">
+                  <Target size={12} />
+                  {t('Goal Progress', 'የግብ እድገት')}
+                </span>
+                <span className="font-semibold text-primary">{data.current_streak} / {data.longest_streak || data.current_streak}d</span>
+              </div>
+              <div className="relative pt-1">
+                <div className="flex mb-2 items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold inline-block text-primary">
+                      {t('Current', 'አሁን')}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold inline-block text-on-surface-variant">
+                      {t('Best', 'ምርጥ')}: {data.longest_streak}d
+                    </span>
+                  </div>
+                </div>
+                <div className="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((data.current_streak / Math.max(data.longest_streak, 1)) * 100, 100)}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Progress to next milestone */}
+            <div className="mt-3 pt-3 border-t border-outline-variant/30">
               <div className="flex items-center justify-between text-xs text-on-surface-variant mb-1.5">
-                <span>Progress to next milestone</span>
+                <span>{t('Progress to next milestone', 'እስከ ሚልስቶን ድረስ ያለው እድገት')}</span>
                 <span className="font-semibold text-primary">
                   {(() => {
                     const next = MILESTONES.find(m => m > data.current_streak) || MILESTONES[MILESTONES.length - 1]
@@ -190,25 +319,35 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
                 />
               </div>
             </div>
+
+            {/* Milestone Badges */}
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {MILESTONES.map(m => {
+                const reached = data.current_streak >= m
+                return (
+                  <div
+                    key={m}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                      reached
+                        ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                        : 'bg-surface-container-high text-on-surface-variant/50 border border-outline-variant/30'
+                    }`}
+                    title={`${m} days${reached ? ' - Reached!' : ''}`}
+                  >
+                    {reached ? <CheckCircle2 size={14} className="text-amber-600" /> : `${m}`}
+                  </div>
+                )
+              })}
+            </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-8"
-          >
+          {/* RIGHT: Mood Flow */}
+          <motion.div {...fadeUp} transition={{ delay: 0.2 }} className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-8">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-on-surface">7-Day Mood Flow</h3>
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
-                  data.last_7_days_mood.some(d => d.mood > 5)
-                    ? 'bg-secondary/10 text-secondary'
-                    : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {data.last_7_days_mood.some(d => d.mood > 5) ? 'IMPROVING' : 'STEADY'}
-                  <TrendingUp size={11} />
-                </span>
+              <h3 className="font-semibold text-on-surface">{t('7-Day Mood Flow', 'የ7 ቀን ስሜት ፍሰት')}</h3>
+              <div className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${trend.color}`}>
+                <trend.icon size={11} />
+                {trend.label}
               </div>
             </div>
             <div className="h-36">
@@ -225,118 +364,276 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-xs text-on-surface-variant text-center mt-2">
-              High points indicate times of calm and connection.
+
+            {/* Mini Mood Stats */}
+            <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="bg-surface-container-low rounded-lg p-3 text-center">
+                <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">{t('Highest', 'ከፍተኛ')}</p>
+                <p className="text-xl font-bold text-green-600 font-mono">{maxMood}</p>
+              </div>
+              <div className="bg-surface-container-low rounded-lg p-3 text-center">
+                <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">{t('Lowest', 'ዝቅተኛ')}</p>
+                <p className="text-xl font-bold text-red-500 font-mono">{minMood}</p>
+              </div>
+              <div className="bg-surface-container-low rounded-lg p-3 text-center">
+                <p className="text-[10px] text-on-surface-variant uppercase tracking-wider">{t('Average', 'አማካይ')}</p>
+                <p className="text-xl font-bold text-primary font-mono">{avgMood}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-on-surface-variant text-center mt-4">
+              {t('High points indicate times of calm and connection.', 'ከፍተኛ ነጥቦች የመረጋጋት እና የግንኙነት ጊዜዎችን ያመለክታሉ።')}
             </p>
           </motion.div>
         </div>
 
-        {/* Encouragement History Feed */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mb-6"
-        >
-          {sentHistory.length > 0 && (
-            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-6 mb-8">
-              <h3 className="font-semibold text-on-surface mb-3 text-sm flex items-center gap-2">
-                <Heart size={14} className="text-error" />
-                Recent Encouragement Sent
-              </h3>
-              <div className="space-y-2">
-                {sentHistory.slice(0, 5).map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex items-center justify-between text-sm bg-surface-container-low rounded-lg px-4 py-2.5"
+        {/* Encouragement + Recent Activity */}
+        <div className="grid md:grid-cols-5 gap-6 mb-12">
+          {/* Encouragement Cards - 3 cols */}
+          <motion.div {...fadeUp} transition={{ delay: 0.3 }} className="md:col-span-3">
+            <h2 className="text-xl font-semibold text-on-surface text-center mb-6">
+              {t('Send Encouragement', 'ማበረታቻ ላክ')}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { type: 'encourage', icon: Heart, bg: 'bg-pink-50 dark:bg-pink-950/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-800 dark:text-pink-300', subtext: 'text-pink-600 dark:text-pink-400', quote: t('"I am so proud of your progress today."', '"ዛሬ ባሳየኸው እድገት በጣም እኮራለሁ።"'), label: t('SEND ENCOURAGEMENT', 'ማበረታቻ ላክ') },
+                { type: 'calm', icon: Shield, bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-800 dark:text-green-300', subtext: 'text-green-600 dark:text-green-400', quote: t('"Take a deep breath. You are safe and loved."', '"ጥልቅ ትንፋሽ ውሰድ። ደህና ነህ እና ተወዳጅ ነህ።"'), label: t('SEND CALM', 'መረጋጋት ላክ') },
+                { type: 'faith', icon: Star, bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-800 dark:text-yellow-300', subtext: 'text-yellow-600 dark:text-yellow-400', quote: t('"I am praying for your peace this evening."', '"ለሰላምህ ዛሬ ማታ እጸልያለሁ።"'), label: t('SEND FAITH SUPPORT', 'የእምነት ድጋፍ ላክ') },
+              ].map(({ type, icon: Icon, bg, border, text, subtext, quote, label }) => {
+                const count = encouragementCounts[type] || 0
+                return (
+                  <motion.button
+                    key={type}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => sendEncouragement(type)}
+                    disabled={sending !== null}
+                    className={`${bg} ${border} rounded-xl p-6 text-center hover:shadow-md transition-all disabled:opacity-50 border relative`}
                   >
-                    <span className="text-on-surface">{item.message}</span>
-                    <span className="text-xs text-on-surface-variant">{item.time}</span>
-                  </motion.div>
-                ))}
+                    <Icon className={`w-6 h-6 ${text} mx-auto mb-2`} />
+                    <p className={`text-sm ${text} italic mb-3`}>{quote}</p>
+                    <span className={`text-xs font-semibold ${subtext}`}>
+                      {sending === type ? t('Sent!', 'ተልኳል!') : label}
+                    </span>
+                    {count > 0 && (
+                      <span className={`absolute -top-2 -right-2 w-5 h-5 rounded-full ${text.replace('text-', 'bg-').replace('800', '200').replace('300', '200')} text-[10px] font-bold flex items-center justify-center border ${border}`}>
+                        {count}
+                      </span>
+                    )}
+                    {sending === type && (
+                      <div className="mt-2">
+                        <div className="w-full bg-surface-container-high rounded-full h-1 overflow-hidden">
+                          <motion.div
+                            initial={{ width: '100%' }}
+                            animate={{ width: 0 }}
+                            transition={{ duration: 1.5, ease: 'linear' }}
+                            className="h-full bg-current rounded-full"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </div>
+
+            {/* Sent History Feed */}
+            {sentHistory.length > 0 && (
+              <motion.div {...fadeUp} transition={{ delay: 0.35 }} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-5 mt-6">
+                <h3 className="font-semibold text-on-surface mb-3 text-sm flex items-center gap-2">
+                  <Heart size={14} className="text-error" />
+                  {t('Recent Encouragement Sent', 'የቅርብ ጊዜ ማበረታቻ ተልኳል')}
+                </h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                  {sentHistory.slice(0, 10).map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      className="flex items-center justify-between text-sm bg-surface-container-low rounded-lg px-4 py-2.5"
+                    >
+                      <span className="text-on-surface">{item.message}</span>
+                      <span className="text-xs text-on-surface-variant">{item.time}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+
+          {/* Recent Activity - 2 cols */}
+          <motion.div {...fadeUp} transition={{ delay: 0.4 }} className="md:col-span-2">
+            <h3 className="font-semibold text-on-surface mb-4 text-sm flex items-center gap-2">
+              <Clock size={14} className="text-primary" />
+              {t('Recent Activity', 'የቅርብ ጊዜ እንቅስቃሴ')}
+            </h3>
+            <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-5">
+              {data.recent_alerts.length > 0 ? (
+                <div className="space-y-3">
+                  {data.recent_alerts.map((alert, i) => {
+                    const Icon = getAlertIcon(alert.type)
+                    const color = getAlertColor(alert.type)
+                    return (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        className="flex items-center gap-3 text-sm"
+                      >
+                        <div className={`w-8 h-8 rounded-full ${color} flex items-center justify-center flex-shrink-0`}>
+                          <Icon size={14} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-on-surface font-medium truncate">
+                            {alert.type === 'panic_alert' ? t('Panic event', 'የአስቸኳይ ክስተት') :
+                             alert.type === 'milestone' ? t('Milestone reached', 'ምዕራፍ ላይ ደርሰዋል') :
+                             t('Alert', 'ማስጠንቀቂያ')}
+                          </p>
+                          <p className="text-xs text-on-surface-variant">{formatRelativeDate(alert.date)}</p>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-3">
+                    <Shield size={20} className="text-green-500" />
+                  </div>
+                  <p className="text-sm text-on-surface-variant">
+                    {t('No recent alerts.', 'ምንም የቅርብ ጊዜ ማስጠንቀቂያ የለም።')}
+                  </p>
+                  <p className="text-xs text-on-surface-variant mt-1">
+                    {t('{alias} is doing well.', '{alias} ጥሩ እየሰሩ ነው።').replace('{alias}', data.alias)}
+                  </p>
+                </div>
+              )}
+
+              {/* Last Panic Event */}
+              {data.last_panic_event_date && (
+                <div className="mt-4 pt-4 border-t border-outline-variant/30">
+                  <div className="flex items-center gap-2 text-xs text-on-surface-variant">
+                    <AlertTriangle size={12} />
+                    <span>
+                      {t('Last panic event:', 'የመጨረሻው የአስቸኳይ ክስተት:')} {formatRelativeDate(data.last_panic_event_date)}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Learning Resources + Support Impact */}
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* LEFT: Learning + Weekly Summary */}
+          <motion.div {...fadeUp} transition={{ delay: 0.45 }}>
+            <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-6 mb-6">
+              <h3 className="font-semibold text-on-surface mb-3">
+                {t('Learning to Support', 'ለመደገፍ መማር')}
+              </h3>
+              <div className="space-y-3">
+                <button className="w-full text-left p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
+                  <p className="text-sm font-medium text-on-surface">{t('Understanding Khat Recovery', 'የቃት ማገገምን መረዳት')}</p>
+                  <p className="text-xs text-on-surface-variant">{t('5-min guide', 'የ5 ደቂቃ መመሪያ')}</p>
+                </button>
+                <button className="w-full text-left p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
+                  <p className="text-sm font-medium text-on-surface">{t('Guardian Support Group', 'የአሳዳጊ ድጋፍ ቡድን')}</p>
+                  <p className="text-xs text-on-surface-variant">{t('Weekly sessions', 'ሳምንታዊ ክፍለ ጊዜዎች')}</p>
+                </button>
+                <button className="w-full text-left p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
+                  <p className="text-sm font-medium text-on-surface">{t('How to Talk About Relapse', 'ስለ መልሶ መውደቅ እንዴት መነጋገር እንደሚቻል')}</p>
+                  <p className="text-xs text-on-surface-variant">{t('Compassionate communication', 'ርህሩህ ግንኙነት')}</p>
+                </button>
               </div>
             </div>
-          )}
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-12"
-        >
-          <h2 className="text-xl font-semibold text-on-surface text-center mb-6">
-            Send Encouragement
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { type: 'encourage', icon: Heart, bg: 'bg-pink-50 dark:bg-pink-950/30', border: 'border-pink-200 dark:border-pink-800', text: 'text-pink-800 dark:text-pink-300', subtext: 'text-pink-600 dark:text-pink-400', quote: '"I am so proud of your progress today."', label: 'SEND ENCOURAGEMENT' },
-              { type: 'calm', icon: Shield, bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-800', text: 'text-green-800 dark:text-green-300', subtext: 'text-green-600 dark:text-green-400', quote: '"Take a deep breath. You are safe and loved."', label: 'SEND CALM' },
-              { type: 'faith', icon: Star, bg: 'bg-yellow-50 dark:bg-yellow-950/30', border: 'border-yellow-200 dark:border-yellow-800', text: 'text-yellow-800 dark:text-yellow-300', subtext: 'text-yellow-600 dark:text-yellow-400', quote: '"I am praying for your peace this evening."', label: 'SEND FAITH SUPPORT' },
-            ].map(({ type, icon: Icon, bg, border, text, subtext, quote, label }) => (
-              <motion.button
-                key={type}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => sendEncouragement(type)}
-                disabled={sending !== null}
-                className={`${bg} ${border} rounded-xl p-6 text-center hover:shadow-md transition-all disabled:opacity-50 border`}
-              >
-                <Icon className={`w-6 h-6 ${text} mx-auto mb-2`} />
-                <p className={`text-sm ${text} italic mb-3`}>{quote}</p>
-                <span className={`text-xs font-semibold ${subtext}`}>
-                  {sending === type ? 'Sent!' : label}
-                </span>
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-6"
-          >
-            <h3 className="font-semibold text-on-surface mb-3">Learning to Support</h3>
-            <div className="space-y-3">
-              <button className="w-full text-left p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
-                <p className="text-sm font-medium text-on-surface">Understanding Khat Recovery</p>
-                <p className="text-xs text-on-surface-variant">5-min guide</p>
-              </button>
-              <button className="w-full text-left p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
-                <p className="text-sm font-medium text-on-surface">Guardian Support Group</p>
-                <p className="text-xs text-on-surface-variant">Weekly sessions</p>
-              </button>
-              <button className="w-full text-left p-3 bg-surface-container-low rounded-lg hover:bg-surface-container transition-colors">
-                <p className="text-sm font-medium text-on-surface">How to Talk About Relapse</p>
-                <p className="text-xs text-on-surface-variant">Compassionate communication</p>
-              </button>
+            {/* Weekly Summary */}
+            <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-6">
+              <h3 className="font-semibold text-on-surface mb-3 flex items-center gap-2">
+                <Calendar size={14} className="text-primary" />
+                {t('Weekly Summary', 'ሳምንታዊ ማጠቃለያ')}
+              </h3>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-3 bg-surface-container-low rounded-lg">
+                  <p className="text-xs text-on-surface-variant">{t('Days Since Panic', 'ከድንጋጤ ቀናት')}</p>
+                  <p className="text-xl font-bold text-green-600 font-mono">
+                    {data.last_panic_event_date
+                      ? Math.floor((Date.now() - new Date(data.last_panic_event_date).getTime()) / (1000 * 60 * 60 * 24))
+                      : '—'}
+                  </p>
+                </div>
+                <div className="text-center p-3 bg-surface-container-low rounded-lg">
+                  <p className="text-xs text-on-surface-variant">{t('Encouragement Sent', 'ማበረታቻ ተልኳል')}</p>
+                  <p className="text-xl font-bold text-primary font-mono">{sentHistory.length}</p>
+                </div>
+                <div className="text-center p-3 bg-surface-container-low rounded-lg">
+                  <p className="text-xs text-on-surface-variant">{t('Goal Progress', 'የግብ እድገት')}</p>
+                  <p className="text-xl font-bold text-amber-600 font-mono">
+                    {data.longest_streak > 0 ? `${Math.round((data.current_streak / data.longest_streak) * 100)}%` : '—'}
+                  </p>
+                </div>
+              </div>
             </div>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-primary/20 p-6 flex items-center"
-          >
-            <div>
-              <p className="text-lg italic text-primary mb-2">
-                &ldquo;The greatest gift you can give is your quiet presence.&rdquo;
-              </p>
-              <div className="flex items-center gap-2 text-xs text-primary">
-                <Heart size={14} />
-                <span>Your support matters more than you know</span>
+          {/* RIGHT: Quote + Support Impact */}
+          <motion.div {...fadeUp} transition={{ delay: 0.55 }}>
+            <div className="bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-primary/20 p-6 mb-6">
+              <div>
+                <p className="text-lg italic text-primary mb-2 font-serif">
+                  &ldquo;{t('The greatest gift you can give is your quiet presence.', 'ልትሰጠው የምትችለው ታላቁ ስጦታ ዝምታህ ነው።')}&rdquo;
+                </p>
+                <div className="flex items-center gap-2 text-xs text-primary">
+                  <Heart size={14} />
+                  <span>{t('Your support matters more than you know', 'ድጋፍህ ከምታስበው በላይ ጠቃሚ ነው')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Your Support Impact */}
+            <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 p-6">
+              <h3 className="font-semibold text-on-surface mb-4 flex items-center gap-2">
+                <Star size={14} className="text-amber-500" />
+                {t('Your Support Impact', 'የእርስዎ ድጋፍ ተጽእኖ')}
+              </h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 bg-surface-container-low rounded-lg p-3">
+                  <div className="w-9 h-9 rounded-full bg-pink-100 flex items-center justify-center">
+                    <Heart size={16} className="text-pink-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-on-surface">
+                      {t('You\'ve sent {N} encouragements', '{N} ማበረታቻዎችን ልከዋል').replace('{N}', String(sentHistory.length))}
+                    </p>
+                    <p className="text-xs text-on-surface-variant">
+                      {sentHistory.length === 0
+                        ? t('Send your first encouragement today', 'የመጀመሪያ ማበረታቻህን ዛሬ ላክ')
+                        : t('Keep supporting consistently', 'በቋሚነት መደገፍህን ቀጥል')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 bg-surface-container-low rounded-lg p-3">
+                  <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Calendar size={16} className="text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-on-surface">
+                      {t('Current streak: {N} days', 'አሁን ያለው ተከታታይ: {N} ቀናት').replace('{N}', String(data.current_streak))}
+                    </p>
+                    <p className="text-xs text-on-surface-variant">
+                      {t('Longest streak', 'ረጅሙ ተከታታይ')}: {data.longest_streak}d
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
 
+        {/* Footer */}
         <motion.footer
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -346,12 +643,16 @@ export default function GuardianViewPage({ params }: { params: Promise<{ token: 
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4 text-sm text-on-surface-variant">
               <span>© 2024 SafeGround</span>
-              <span>Privacy Policy</span>
-              <span>Terms</span>
+              <span>{t('Privacy Policy', 'የግላዊነት ፖሊሲ')}</span>
+              <span>{t('Terms', 'ውሎች')}</span>
             </div>
             <div className="flex items-center gap-3">
+              <button className="px-3 py-1.5 bg-surface-container-low text-on-surface-variant border border-outline-variant rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors flex items-center gap-1.5">
+                <FileDown size={13} />
+                {t('Download Weekly Report', 'ሳምንታዊ ሪፖርት አውርድ')}
+              </button>
               <button className="px-4 py-2 bg-primary text-on-primary rounded-full text-sm font-semibold hover:brightness-110 transition-all">
-                Emergency Support
+                {t('Emergency Support', 'የአስቸኳይ ድጋፍ')}
               </button>
               <Shield size={16} className="text-on-surface-variant" />
               <Lock size={16} className="text-on-surface-variant" />
