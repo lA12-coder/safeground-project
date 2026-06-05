@@ -3,10 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard, Cross, Users, Calendar, Shield,
-  CalendarCheck, BarChart3, Settings, LogOut, LifeBuoy,
-  Building2, Handshake, Church, UserCheck, BookOpen,
-  AlertTriangle, PieChart, FileText, Crown,
+  LayoutDashboard, Users, Shield,
+  Calendar, BarChart3, Settings, LogOut, LifeBuoy,
+  Building2, BookOpen, AlertTriangle,
 } from 'lucide-react'
 import { PanicButton } from '@/components/layout/PanicButton'
 import { signOut } from '@/lib/auth/actions'
@@ -16,39 +15,16 @@ const navGroups = [
     label: 'Overview',
     items: [
       { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: 'Verification',
-    items: [
-      { label: 'Organizations', href: '/admin/providers', icon: Building2 },
-      { label: 'Faith Orgs', href: '/admin/faith-organizations', icon: Church },
-      { label: 'Partnerships', href: '/admin/partnerships', icon: Handshake },
+      { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     ],
   },
   {
     label: 'Management',
     items: [
-      { label: 'Users', href: '/admin/users', icon: Users },
-      { label: 'Guardians', href: '/admin/guardians', icon: UserCheck },
-      { label: 'Bookings', href: '/admin/bookings', icon: Calendar },
-      { label: 'Programs', href: '/admin/programs', icon: BookOpen },
-    ],
-  },
-  {
-    label: 'Monitoring',
-    items: [
+      { label: 'Providers', href: '/admin/providers', icon: Building2 },
       { label: 'Moderation', href: '/admin/moderation', icon: Shield },
-      { label: 'Panic Monitor', href: '/admin/panic-monitor', icon: AlertTriangle },
-      { label: 'Analytics', href: '/admin/analytics', icon: PieChart },
-    ],
-  },
-  {
-    label: 'System',
-    items: [
-      { label: 'Content', href: '/admin/content', icon: FileText },
-      { label: 'Settings', href: '/admin/settings', icon: Settings },
-      { label: 'Super Admin', href: '/admin/super', icon: Crown },
+      { label: 'Programs', href: '/admin/programs', icon: BookOpen },
+      { label: 'Seed Data', href: '/admin/seed', icon: AlertTriangle },
     ],
   },
 ]
