@@ -23,11 +23,17 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'pending'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
+    const typeFilter = searchParams.get('type')
 
     const from = (page - 1) * limit
     const to = from + limit - 1
 
     let query = supabase.from('providers').select('*', { count: 'exact' })
+
+    if (typeFilter) {
+      const types = typeFilter.split(',').map(t => t.trim())
+      query = query.in('type', types)
+    }
 
     if (status === 'pending') {
       query = query.eq('is_verified', false).eq('is_active', false)
