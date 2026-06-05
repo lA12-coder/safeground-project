@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f6f5f1"/>
+  <rect x="0" y="0" width="500" height="630" fill="#5c2d13"/>
+  <circle cx="200" cy="200" r="180" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="350" cy="400" r="120" fill="rgba(255,255,255,0.03)"/>
+  <text x="80" y="240" font-family="Georgia, serif" font-size="48" font-weight="600" fill="white">SafeGround</text>
+  <text x="80" y="290" font-family="sans-serif" font-size="22" fill="rgba(255,255,255,0.7)">Anonymous Recovery Platform</text>
+  <text x="80" y="340" font-family="sans-serif" font-size="16" fill="rgba(255,255,255,0.5)">For Ethiopian University Students</text>
+  <rect x="520" y="0" width="680" height="630" fill="white"/>
+  <text x="580" y="200" font-family="sans-serif" font-size="36" font-weight="700" fill="#2c241f">Start Your Journey</text>
+  <text x="580" y="250" font-family="sans-serif" font-size="18" fill="#6f5b4e">Private · Anonymous · Supported</text>
+  <rect x="580" y="300" width="200" height="50" rx="8" fill="#92400E"/>
+  <text x="680" y="332" font-family="sans-serif" font-size="16" fill="white" text-anchor="middle">Get Started</text>
+</svg>
