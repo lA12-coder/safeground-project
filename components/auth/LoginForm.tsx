@@ -30,6 +30,7 @@ export function LoginForm({ defaultRedirectTo = '/onboarding', mode = 'user' }: 
   const emailFromUrl = searchParams.get('email') ?? '';
   const [email, setEmail] = useState(emailFromUrl);
   const [state, formAction, pending] = useActionState(signInWithEmail, initialState);
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -140,18 +141,16 @@ export function LoginForm({ defaultRedirectTo = '/onboarding', mode = 'user' }: 
             </button>
           </div>
           <div className="relative">
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              autoComplete="current-password"
-              value=""
-              onChange={(e) => {
-                // We'll handle password in the form action
-              }}
-              className="w-full h-[44px] rounded-[9px] border border-[1px] border-[#DDD0C2] bg-white px-4 pl-10 pr-10 focus:outline-none focus:border-[#8B3A0F] focus:ring-0 focus:ring-offset-0 focus:ring-[#8B3A0F]/20"
-              placeholder="Enter your password"
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full h-[44px] rounded-[9px] border border-[1px] border-[#DDD0C2] bg-white px-4 pl-10 pr-10 focus:outline-none focus:border-[#8B3A0F] focus:ring-0 focus:ring-offset-0 focus:ring-[#8B3A0F]/20"
+                placeholder="Enter your password"
               onFocus={(e) => {
                 e.target.style.borderColor = '#8B3A0F';
                 e.target.style.boxShadow = '0 0 0 3px rgba(139,58,15,0.1)';
