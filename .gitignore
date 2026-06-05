@@ -23,6 +23,7 @@ tsconfig.tsbuildinfo
 .env.production
 .env.staging
 .env.test
+.env.local.example
 
 # Supabase local development
 .supabase/
