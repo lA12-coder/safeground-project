@@ -2,13 +2,12 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Loader2, LogIn, ArrowRight, ShieldCheck } from 'lucide-react';
 import { signInWithEmail, type AuthActionResult } from '@/lib/auth/actions';
 import { sanitizeRedirectTo } from '@/lib/auth/paths';
-import { FullPageLink } from '@/components/ui/FullPageLink';
 import { GoogleSignInButton } from './GoogleSignInButton';
 import { ConfirmEmailPanel } from './ConfirmEmailPanel';
+import { FullPageLink } from '@/components/ui/FullPageLink';
+import { Shield, LogIn, ArrowRight, Eye, EyeOff, Loader2, AlertCircle, Building2 } from 'lucide-react';
 
 const initialState: AuthActionResult = {};
 
@@ -16,34 +15,6 @@ function needsEmailConfirmation(error: string | undefined): boolean {
   if (!error) return false;
   const msg = error.toLowerCase();
   return msg.includes('confirm') || msg.includes('verified') || msg.includes('not confirmed');
-}
-
-function PasswordInput({ id, name, placeholder, autoComplete }: {
-  id: string; name: string; placeholder: string; autoComplete: string;
-}) {
-  const [show, setShow] = useState(false);
-  return (
-    <div className="relative">
-      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60 pointer-events-none" />
-      <input
-        id={id}
-        name={name}
-        type={show ? 'text' : 'password'}
-        required
-        autoComplete={autoComplete}
-        className="w-full pl-10 pr-12 py-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/60 transition-all duration-200"
-        placeholder={placeholder}
-      />
-      <button
-        type="button"
-        onClick={() => setShow(!show)}
-        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant/60 hover:text-on-surface-variant transition-colors"
-        tabIndex={-1}
-      >
-        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-      </button>
-    </div>
-  );
 }
 
 type LoginFormProps = {
@@ -59,6 +30,7 @@ export function LoginForm({ defaultRedirectTo = '/onboarding', mode = 'user' }: 
   const emailFromUrl = searchParams.get('email') ?? '';
   const [email, setEmail] = useState(emailFromUrl);
   const [state, formAction, pending] = useActionState(signInWithEmail, initialState);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (emailFromUrl) setEmail(emailFromUrl);
@@ -71,161 +43,205 @@ export function LoginForm({ defaultRedirectTo = '/onboarding', mode = 'user' }: 
   const isAdmin = mode === 'admin';
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        <div className="relative overflow-hidden rounded-2xl border border-outline-variant bg-surface-container-lowest shadow-xl shadow-primary/5">
-          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-primary via-primary-container to-secondary" />
-
-          <div className="p-8 md:p-10 space-y-7">
-            <div className="text-center space-y-2">
-              <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.15, type: 'spring', stiffness: 200 }}
-              >
-                <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <ShieldCheck className="w-7 h-7 text-primary" />
-                </div>
-              </motion.div>
-              <h1 className="text-2xl font-serif font-bold text-on-surface">
-                {isAdmin ? 'Admin login' : 'Welcome back'}
-              </h1>
-              <p className="text-sm text-on-surface-variant">
-                {isAdmin
-                  ? 'Use an email listed in ADMIN_EMAILS to access the SafeGround command center.'
-                  : 'Sign in to continue your private recovery journey.'}
-              </p>
+    <div className="w-full max-w-[380px]">
+      {/* Confirm email panel */}
+      {showResend && (
+        <div className="mb-6">
+          <div className="flex items-start gap-3">
+            <div className="w-5 h-5 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+              <AlertCircle className="w-3 h-3 text-amber-600" />
             </div>
-
-            <AnimatePresence mode="wait">
-              {showResend && (
-                <motion.div
-                  key="confirm"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-                    <p className="font-medium mb-1">Check your inbox</p>
-                    <p className="text-amber-700">We sent a confirmation link to <strong>{email}</strong>. Please click it to activate your account.</p>
-                  </div>
-                  <ConfirmEmailPanel email={email} />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence mode="wait">
-              {showGenericError && (
-                <motion.div
-                  key="error"
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700"
-                  role="alert"
-                >
-                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="text-xs font-bold text-red-600">!</span>
-                  </div>
-                  <span>{state.error ?? urlError}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <GoogleSignInButton redirectPath={`/auth/callback?next=${encodeURIComponent(redirectTo)}`} />
-
-            <div className="flex items-center gap-4">
-              <div className="grow h-px bg-gradient-to-r from-transparent via-outline-variant to-transparent" />
-              <span className="text-xs text-on-surface-variant font-semibold uppercase tracking-widest">or</span>
-              <div className="grow h-px bg-gradient-to-r from-transparent via-outline-variant to-transparent" />
+            <div>
+              <p className="font-medium mb-0.5">Check your inbox</p>
+              <p className="text-amber-700/80">We sent a confirmation link to <strong>{email}</strong>.</p>
             </div>
+          </div>
+          <ConfirmEmailPanel email={email} />
+        </div>
+      )}
 
-            <form action={formAction} className="space-y-5">
-              <input type="hidden" name="redirectTo" value={redirectTo} />
-              
-              <div className="space-y-1.5">
-                <label htmlFor="email" className="text-xs font-semibold uppercase tracking-widest text-primary">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant/60 pointer-events-none" />
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/60 transition-all duration-200"
-                    placeholder={isAdmin ? 'admin@safeground.app' : 'you@university.edu.et'}
-                  />
-                </div>
-              </div>
+      {/* Error */}
+      {showGenericError && (
+        <div className="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700" role="alert">
+          <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+            <span className="text-[10px] font-bold text-red-600">!</span>
+          </div>
+          <span>{state.error ?? urlError}</span>
+        </div>
+      )}
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-xs font-semibold uppercase tracking-widest text-primary">
-                    Password
-                  </label>
-                </div>
-                <PasswordInput
-                  id="password"
-                  name="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              <motion.button
-                type="submit"
-                disabled={pending}
-                whileHover={{ scale: pending ? 1 : 1.01 }}
-                whileTap={{ scale: pending ? 1 : 0.98 }}
-                className="w-full relative overflow-hidden group bg-gradient-to-r from-primary to-primary-container text-on-primary font-semibold py-3.5 rounded-xl shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  {pending ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
-                  ) : (
-                    <><LogIn className="w-4 h-4" /> {isAdmin ? 'Enter Admin Portal' : 'Sign In'}</>
-                  )}
-                </span>
-                <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              </motion.button>
-            </form>
-
-            {isAdmin ? (
-              <div className="text-center space-y-3 pt-1">
-                <FullPageLink href="/login" className="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors">
-                  Student login <ArrowRight className="w-3.5 h-3.5" />
-                </FullPageLink>
-              </div>
-            ) : (
-              <div className="text-center space-y-3 pt-1">
-                <p className="text-sm text-on-surface-variant">
-                  New here?{' '}
-                  <FullPageLink href="/register" className="text-primary font-semibold hover:text-primary-container transition-colors">
-                    Create an account
-                  </FullPageLink>
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-                  <FullPageLink href="/guest" className="inline-flex items-center gap-1 text-sm text-on-surface-variant hover:text-primary transition-colors">
-                    Continue as guest <ArrowRight className="w-3.5 h-3.5" />
-                  </FullPageLink>
-                  <FullPageLink href="/admin-login" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:text-primary-container transition-colors">
-                    Admin portal <ShieldCheck className="w-3.5 h-3.5" />
-                  </FullPageLink>
-                </div>
-              </div>
-            )}
+      {/* Title */}
+      <div className="mb-6">
+        <div className="flex items-center justify-center mb-4">
+          <div className="w-[52px] h-[52px] bg-[#FDF0E8] rounded-[14px] flex items-center justify-center">
+            <Shield className="w-[24px] h-[24px] text-[#8B3A0F]" />
           </div>
         </div>
-      </motion.div>
+        <h1 className="text-[22px] font-playfair font-bold text-[#2c241f] mb-2">
+          {isAdmin ? 'Admin Portal' : 'Sign in to SafeGround'}
+        </h1>
+        <p className="text-[13.5px] text-[#7A5740]">
+          {isAdmin ? 'Access the SafeGround admin portal to monitor, manage, and support the community.' : 'Your private recovery journey continues here. We protect your identity while you heal.'}
+        </p>
+      </div>
+
+      {/* Google button */}
+      <GoogleSignInButton
+        redirectPath={`/auth/callback?next=${encodeURIComponent(redirectTo)}`}
+      />
+
+      {/* OR divider */}
+      <div className="flex items-center my-6">
+        <hr className="flex-1 border-[#E2D5C8]" />
+        <span className="text-[#9a8a7d] uppercase shrink-0 text-[12px]">or</span>
+        <hr className="flex-1 border-[#E2D5C8]" />
+      </div>
+
+      {/* Form */}
+      <form action={formAction} className="space-y-5">
+        <input type="hidden" name="redirectTo" value={redirectTo} />
+
+        {/* Email field */}
+        <div>
+          <label htmlFor="email" className="mb-2 block text-[11.5px] uppercase letter-spacing-[0.6px] font-medium text-[#5C3D1E]">
+            Email address
+          </label>
+          <div className="relative">
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full h-[44px] rounded-[9px] border border-[1px] border-[#DDD0C2] bg-white px-4 pl-10 focus:outline-none focus:border-[#8B3A0F] focus:ring-0 focus:ring-offset-0 focus:ring-[#8B3A0F]/20"
+              placeholder={isAdmin ? 'admin@safeground.app' : 'you@university.edu.et'}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#8B3A0F';
+                e.target.style.boxShadow = '0 0 0 3px rgba(139,58,15,0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(139,90,43,0.25)';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Password field */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="password" className="block text-[11.5px] uppercase letter-spacing-[0.6px] font-medium text-[#5C3D1E]">
+              Password
+            </label>
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-[12px] font-medium text-[#8B3A0F] hover:underline p-0">
+              Forgot password?
+            </button>
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              autoComplete="current-password"
+              value=""
+              onChange={(e) => {
+                // We'll handle password in the form action
+              }}
+              className="w-full h-[44px] rounded-[9px] border border-[1px] border-[#DDD0C2] bg-white px-4 pl-10 pr-10 focus:outline-none focus:border-[#8B3A0F] focus:ring-0 focus:ring-offset-0 focus:ring-[#8B3A0F]/20"
+              placeholder="Enter your password"
+              onFocus={(e) => {
+                e.target.style.borderColor = '#8B3A0F';
+                e.target.style.boxShadow = '0 0 0 3px rgba(139,58,15,0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(139,90,43,0.25)';
+                e.target.style.boxShadow = 'none';
+              }}
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9a8a7d] hover:text-[#6f5b4e] transition-colors p-1"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label="Toggle password visibility"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Remember me */}
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="remember"
+            name="remember"
+            className="w-4 h-4 rounded accent-[#8B3A0F]"
+          />
+          <label htmlFor="remember" className="text-[13px] text-[#7A5740] select-none">
+            Remember me
+          </label>
+        </div>
+
+        {/* Submit button */}
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full h-[48px] rounded-[10px] bg-[#8B3A0F] text-white font-medium text-[15px] flex items-center justify-center gap-2 hover:bg-[#6F2D0A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {pending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Signing in…
+            </>
+          ) : (
+            <>
+              <LogIn className="w-4 h-4" />
+              {isAdmin ? 'Enter Admin Portal' : 'Sign In'}
+            </>
+          )}
+        </button>
+      </form>
+
+      {/* Bottom links */}
+      {isAdmin ? (
+        <div className="text-center mt-6">
+          <FullPageLink href="/login" className="inline-flex items-center gap-1 text-[13.5px] text-[#6f5b4e] font-medium hover:text-[#92400E] transition-colors">
+            Student login <ArrowRight className="w-3.5 h-3.5" />
+          </FullPageLink>
+        </div>
+      ) : (
+        <div className="text-center mt-6">
+          <p className="text-[13.5px] text-[#6f5b4e] mb-4">
+            New here?{' '}
+            <FullPageLink href="/register" className="text-[#8B3A0F] font-bold hover:underline">
+              Create an account
+            </FullPageLink>
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <FullPageLink
+              href="/guest"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f6f5f1] text-[12px] font-medium text-[#6f5b4e] hover:bg-[#ede6dd] hover:text-[#2c241f] transition-colors border border-[#e5e0db]"
+            >
+              Continue as guest
+            </FullPageLink>
+            <FullPageLink
+              href="/admin-login"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f6f5f1] text-[12px] font-medium text-[#6f5b4e] hover:bg-[#ede6dd] hover:text-[#2c241f] transition-colors border border-[#e5e0db]"
+            >
+              <Shield className="w-3 h-3" /> Admin
+            </FullPageLink>
+            <FullPageLink
+              href="/org/register"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f6f5f1] text-[12px] font-medium text-[#6f5b4e] hover:bg-[#ede6dd] hover:text-[#2c241f] transition-colors border border-[#e5e0db]"
+            >
+              <Building2 className="w-3 h-3" /> Register Org
+            </FullPageLink>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

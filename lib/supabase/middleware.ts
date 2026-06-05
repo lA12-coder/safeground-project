@@ -156,7 +156,7 @@ export async function updateSession(request: NextRequest) {
       const { data: provider } = await supabase
         .from('providers')
         .select('id')
-        .eq('id', user.id)
+        .or(`id.eq.${user.id},user_id.eq.${user.id}`)
         .maybeSingle();
       if (!provider) {
         return redirectWithSession(request, '/dashboard', supabaseResponse);
@@ -172,7 +172,7 @@ export async function updateSession(request: NextRequest) {
       const { data: org } = await supabase
         .from('providers')
         .select('id')
-        .eq('id', user.id)
+        .or(`id.eq.${user.id},user_id.eq.${user.id}`)
         .in('type', ['religious_org', 'ngo', 'university', 'healthcare'])
         .maybeSingle();
       if (!org) {

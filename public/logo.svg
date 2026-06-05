@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32">
+  <rect width="28" height="28" x="2" y="2" rx="6" fill="#92400E"/>
+  <path d="M16 6 L18 10.5 L23 11.5 L19.5 15 L20.5 20 L16 18 L11.5 20 L12.5 15 L9 11.5 L14 10.5 Z" fill="white" opacity="0.9"/>
+  <text x="36" y="22" font-family="Georgia, serif" font-weight="700" font-size="18" fill="#2c241f">Safe<span fill="#92400E">Ground</span></text>
+</svg>

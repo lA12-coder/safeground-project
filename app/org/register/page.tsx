@@ -273,8 +273,9 @@ export default function OrgRegistrationPage() {
                       className="w-full resize-none rounded-lg border border-[#d9b7a4] px-4 py-4 outline-none focus:border-[#9a4f00] transition-colors" />
                   </label>
                 </div>
-                <aside className="relative min-h-80 overflow-hidden rounded-lg bg-[url('https://images.unsplash.com/photo-1528538090384-1b5bb505bf4e?auto=format&fit=crop&w=900&q=80')] bg-cover bg-center">
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#5a2700] via-[#5a2700]/35 to-transparent" />
+                <aside className="relative min-h-80 overflow-hidden rounded-lg">
+                  <img src="/org-hero.svg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#5a2700]/60 via-transparent to-transparent" />
                   <p className="absolute bottom-8 left-7 max-w-xs font-serif text-xl font-bold italic text-white">
                     "A place where the soul finds its footing."
                   </p>

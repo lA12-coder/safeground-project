@@ -1,21 +1,14 @@
 import { Suspense } from 'react';
-import { LoginForm } from '@/components/auth/LoginForm';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { ShieldCheck } from 'lucide-react';
+import { LoginPageContent } from '@/components/auth/LoginPageContent';
 
 export default function LoginPage() {
   return (
-    <AuthLayout
-      title="Welcome back"
-      icon={<ShieldCheck className="w-5 h-5" />}
-    >
-      <Suspense fallback={
-        <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-        </div>
-      }>
-        <LoginForm />
-      </Suspense>
-    </AuthLayout>
+    <Suspense fallback={
+      <div className="w-full min-h-[calc(100vh-64px)] flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-[#8B3A0F]/30 border-t-[#8B3A0F] rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
