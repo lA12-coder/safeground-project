@@ -5,22 +5,52 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Cross, Users, Calendar, Shield,
   CalendarCheck, BarChart3, Settings, LogOut, LifeBuoy,
-  Building2, Handshake,
+  Building2, Handshake, Church, UserCheck, BookOpen,
+  AlertTriangle, PieChart, FileText, Crown,
 } from 'lucide-react'
 import { PanicButton } from '@/components/layout/PanicButton'
 import { signOut } from '@/lib/auth/actions'
 
-const navItems = [
-  { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { label: 'Organizations', href: '/admin/providers', icon: Building2 },
-  { label: 'Partnerships', href: '/admin/partnerships', icon: Handshake },
-  { label: 'Recovery', href: '/admin/recovery', icon: Cross },
-  { label: 'Community', href: '/admin/community', icon: Users },
-  { label: 'Telehealth', href: '/admin/telehealth', icon: Calendar },
-  { label: 'Moderation', href: '/admin/moderation', icon: Shield },
-  { label: 'Appointments', href: '/admin/appointments', icon: CalendarCheck },
-  { label: 'Programs', href: '/admin/programs', icon: BarChart3 },
-  { label: 'Settings', href: '/admin/settings', icon: Settings },
+const navGroups = [
+  {
+    label: 'Overview',
+    items: [
+      { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Verification',
+    items: [
+      { label: 'Organizations', href: '/admin/providers', icon: Building2 },
+      { label: 'Faith Orgs', href: '/admin/faith-organizations', icon: Church },
+      { label: 'Partnerships', href: '/admin/partnerships', icon: Handshake },
+    ],
+  },
+  {
+    label: 'Management',
+    items: [
+      { label: 'Users', href: '/admin/users', icon: Users },
+      { label: 'Guardians', href: '/admin/guardians', icon: UserCheck },
+      { label: 'Bookings', href: '/admin/bookings', icon: Calendar },
+      { label: 'Programs', href: '/admin/programs', icon: BookOpen },
+    ],
+  },
+  {
+    label: 'Monitoring',
+    items: [
+      { label: 'Moderation', href: '/admin/moderation', icon: Shield },
+      { label: 'Panic Monitor', href: '/admin/panic-monitor', icon: AlertTriangle },
+      { label: 'Analytics', href: '/admin/analytics', icon: PieChart },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Content', href: '/admin/content', icon: FileText },
+      { label: 'Settings', href: '/admin/settings', icon: Settings },
+      { label: 'Super Admin', href: '/admin/super', icon: Crown },
+    ],
+  },
 ]
 
 export function AdminSidebar() {
@@ -41,24 +71,33 @@ export function AdminSidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const isActive = pathname === href
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-md text-base font-medium transition-all duration-200 ${
-                isActive
-                  ? 'bg-[#8a3d08]/10 text-[#8a3d08] font-semibold'
-                  : 'text-[#6f5b4e] hover:bg-[#f8f7f3] hover:text-[#2c241f]'
-              }`}
-            >
-              <Icon size={18} className={isActive ? 'text-[#8a3d08]' : ''} />
-              <span>{label}</span>
-            </Link>
-          )
-        })}
+      <nav className="flex-1 px-3 py-3 overflow-y-auto custom-scrollbar space-y-4">
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            <p className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-[#9a8a7d]">
+              {group.label}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map(({ label, href, icon: Icon }) => {
+                const isActive = pathname === href
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'bg-[#8a3d08]/10 text-[#8a3d08] font-semibold'
+                        : 'text-[#6f5b4e] hover:bg-[#f8f7f3] hover:text-[#2c241f]'
+                    }`}
+                  >
+                    <Icon size={16} className={isActive ? 'text-[#8a3d08]' : ''} />
+                    <span>{label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="px-3 py-3 border-t border-[#e5e0db] space-y-2">

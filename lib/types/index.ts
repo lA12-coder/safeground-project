@@ -161,3 +161,98 @@ export type GuardianViewData = {
 export type AdminSeedRequest = {
   type: 'users' | 'logs' | 'providers' | 'chat' | 'demo' | 'clear'
 }
+
+// == New Types for Complete Admin System ==
+
+export type FaithOrganization = {
+  id: string
+  org_name: string
+  faith_tradition: 'orthodox' | 'protestant' | 'muslim' | 'traditional'
+  rep_name: string
+  rep_phone: string
+  rep_email: string
+  program_name: string
+  description: string
+  recovery_activities: string[]
+  weekly_structure: string
+  city: string
+  region: string
+  verification_docs: string[]
+  is_verified: boolean
+  is_active: boolean
+  created_at: string
+}
+
+export type AdminUser = {
+  id: string
+  email: string
+  alias: string
+  role: 'super_admin' | 'platform_admin' | 'moderator' | 'provider_reviewer' | 'analytics_manager'
+  created_at: string
+}
+
+export type PanicEvent = {
+  id: string
+  user_id: string
+  alias: string
+  triggered_at: string
+  status: 'active' | 'resolved'
+  coping_steps_completed: number
+  completed_at: string | null
+}
+
+export type ModerationAction = 'delete' | 'restore' | 'warn' | 'mute' | 'ban'
+
+export type ContentItem = {
+  id: string
+  type: 'affirmation' | 'article' | 'emergency_message' | 'faith_resource' | 'professional_resource'
+  title: string
+  body: string
+  language: string
+  tags: string[]
+  is_published: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type FeatureFlags = {
+  chat: boolean
+  guardian: boolean
+  faith_programs: boolean
+  ai_coach: boolean
+}
+
+export type SystemHealth = {
+  database: 'healthy' | 'degraded' | 'down'
+  api: 'healthy' | 'degraded' | 'down'
+  realtime: 'healthy' | 'degraded' | 'down'
+  sms: 'healthy' | 'degraded' | 'down'
+  ai: 'healthy' | 'degraded' | 'down'
+}
+
+export type AnalyticsData = {
+  user_growth: { month: string; count: number }[]
+  recovery_success: { label: string; rate: number }[]
+  avg_streak_distribution: { label: string; value: number }[]
+  common_triggers: { trigger: string; count: number }[]
+  active_regions: { region: string; count: number }[]
+}
+
+export type BookingMetrics = {
+  upcoming: number
+  completed: number
+  cancelled: number
+  no_show: number
+}
+
+export type GuardianMetrics = {
+  active_links: number
+  guardian_types: { type: string; count: number }[]
+  monitoring_levels: { level: string; count: number }[]
+}
+
+export type UserProfile = Profile & {
+  streak?: Streak
+  guardian?: GuardianControl
+  last_checkin?: string
+}

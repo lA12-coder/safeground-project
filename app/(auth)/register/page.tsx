@@ -1,14 +1,9 @@
-import { RegisterForm } from '@/components/auth/RegisterForm';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { Sparkles } from 'lucide-react';
+import { MultiStepRegister } from '@/components/auth/MultiStepRegister';
 
 export default function RegisterPage() {
   return (
-    <AuthLayout
-      title="Begin your healing"
-      icon={<Sparkles className="w-5 h-5" />}
-    >
-      <RegisterForm />
-    </AuthLayout>
+    <div className="min-h-screen bg-[#f6f5f1]">
+      <MultiStepRegister />
+    </div>
   );
 }
