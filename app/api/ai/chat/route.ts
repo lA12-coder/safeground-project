@@ -28,7 +28,7 @@ const fallbackReplies = [
   'Would you like to explore a grounding exercise together? It can help bring calm when thoughts feel overwhelming.',
   'What you are experiencing is part of the healing process. Recovery has ups and downs, and each day is a new opportunity.',
   'I am here to listen without judgment. Tell me what is on your mind, and we can work through it together.',
-  'Remember that your ancestors' strength runs through your veins. You have the resilience to overcome this challenge.',
+  'Remember that your ancestors\u2019 strength runs through your veins. You have the resilience to overcome this challenge.',
   'Sometimes the bravest thing we can do is ask for help. You are doing that right now, and that takes real courage.',
 ];
 

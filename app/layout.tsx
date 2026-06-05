@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { RootClientWrapper } from '@/components/layout/RootClientWrapper';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,7 +29,9 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased bg-surface text-on-surface`}
       >
-        {children}
+        <RootClientWrapper>
+          {children}
+        </RootClientWrapper>
       </body>
     </html>
   );
