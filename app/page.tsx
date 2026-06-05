@@ -103,7 +103,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#fdf6ed]/40 via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-[#92400E]/5 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-4 md:px-10">
-          <div className="grid md:grid-cols-2 gap-10 items-center min-h-[520px]">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[520px]">
             <div className="pt-16 md:pt-20 pb-10 md:pb-16">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#16a34a]/10 text-[#16a34a] text-[11px] font-semibold border border-[#16a34a]/20 mb-4">
                 <Sparkles size={12} />
@@ -148,18 +148,18 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <div className="hidden md:block relative h-[480px] rounded-xl overflow-hidden bg-gradient-to-br from-[#fdf6ed] to-white">
-              <img
-                src="/hero-illustration.svg"
-                alt="SafeGround recovery illustration"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2c241f]/20 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-white/20">
-                  <p className="text-xs font-semibold text-[#2c241f]">Begin your journey</p>
-                  <p className="text-[10px] text-[#6f5b4e]">Private recovery support</p>
-                </div>
+            {/* Hero Right Image — A Place Where the Soul Finds Its Footing */}
+            <div className="hidden md:flex items-center justify-end pt-16 md:pt-20 pb-10 md:pb-16">
+              <div className="relative w-full max-w-[520px]">
+                <div className="absolute -inset-4 bg-gradient-to-br from-[#92400E]/10 via-[#d97706]/5 to-transparent rounded-2xl blur-2xl pointer-events-none" />
+                <img
+                  src="/soul-footing.png"
+                  alt="A place where the soul finds its footing — SafeGround recovery platform"
+                  className="relative w-full h-auto rounded-xl shadow-lg border border-[#e5e0db]"
+                  loading="eager"
+                />
+                <div className="absolute -bottom-3 -left-3 w-20 h-20 bg-[#ffedd5] rounded-full blur-xl opacity-60 pointer-events-none" />
+                <div className="absolute -top-3 -right-3 w-16 h-16 bg-[#92400E]/10 rounded-full blur-xl opacity-60 pointer-events-none" />
               </div>
             </div>
           </div>
@@ -192,8 +192,47 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Platform Preview — safguard */}
+      <section className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Meet SafeGround</span>
+              <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f] mt-2 mb-3">
+                A place where the soul finds its footing
+              </h2>
+              <p className="text-sm text-[#6f5b4e] leading-relaxed mb-4">
+                Built for Ethiopian university students, SafeGround combines AI-powered recovery tools,
+                anonymous community support, professional counseling, and faith-based programs — all
+                protected by zero-knowledge privacy.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: 'AI-Powered', color: 'bg-[#fdf6ed] text-[#92400E] border-[#92400E]/20' },
+                  { label: 'Anonymous', color: 'bg-green-50 text-[#16a34a] border-[#16a34a]/20' },
+                  { label: '24/7 Support', color: 'bg-blue-50 text-[#2563eb] border-[#2563eb]/20' },
+                  { label: 'Streak Tracking', color: 'bg-purple-50 text-[#9333ea] border-[#9333ea]/20' },
+                ].map((tag) => (
+                  <span key={tag.label} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${tag.color}`}>
+                    {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl overflow-hidden border border-[#e5e0db] shadow-lg">
+              <img
+                src="/safguard.png"
+                alt="SafeGround platform dashboard preview — recovery tools at a glance"
+                className="w-full h-auto"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Services */}
-      <section id="services" className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
+      <section id="services" className="py-16 md:py-20 px-4 md:px-10 bg-white scroll-mt-16">
         <div className="max-w-6xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Everything You Need</span>
@@ -205,7 +244,7 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {services.map(({ icon: Icon, title, desc, href, color, bg }) => (
+            {services.slice(0, 3).map(({ icon: Icon, title, desc, href, color, bg }) => (
               <Link
                 key={title}
                 href={href}
@@ -218,30 +257,52 @@ export default function LandingPage() {
                 <p className="text-xs text-[#6f5b4e] leading-relaxed">{desc}</p>
               </Link>
             ))}
+            <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {services.slice(3).map(({ icon: Icon, title, desc, href, color, bg }) => (
+                <Link
+                  key={title}
+                  href={href}
+                  className="group bg-white rounded-lg border border-[#e5e0db] p-5 hover:shadow-sm hover:border-[#92400E]/20 transition-all hover:-translate-y-0.5"
+                >
+                  <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center ${color} mb-3`}>
+                    <Icon size={20} />
+                  </div>
+                  <h3 className="font-semibold text-[#2c241f] text-sm mb-1">{title}</h3>
+                  <p className="text-xs text-[#6f5b4e] leading-relaxed">{desc}</p>
+                </Link>
+              ))}
+              <div className="rounded-lg overflow-hidden border border-[#e5e0db] bg-white">
+                <img src="/health.png" alt="Health dashboard preview" className="w-full h-full object-cover" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="py-12 md:py-16 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
+      <section className="py-12 md:py-16 px-4 md:px-10 bg-[#fafaf9] border-y border-[#e5e0db]/50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-xl md:text-2xl font-serif font-bold text-[#2c241f] text-center mb-8">
             Community Impact in Ethiopia
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {stats.map((stat) => (
-              <div key={stat.label} className="bg-[#fafaf9] rounded-lg border border-[#e5e0db] p-6 text-center hover:shadow-sm transition-shadow">
-                <div className={`text-4xl md:text-5xl font-serif font-bold ${stat.color} mb-1`}>{stat.value}</div>
-                <div className="text-sm font-semibold text-[#2c241f]">{stat.label}</div>
-                <div className="text-xs text-[#9a8a7d] mt-0.5">{stat.desc}</div>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="md:col-span-1 rounded-lg overflow-hidden border border-[#e5e0db] bg-white">
+              <img src="/organ1.png" alt="Organization impact" className="w-full h-full object-cover" />
+            </div>
+            <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {stats.map((stat) => (
+                <div key={stat.label} className="bg-white rounded-lg border border-[#e5e0db] p-6 text-center hover:shadow-sm transition-shadow">
+                  <div className={`text-4xl md:text-5xl font-serif font-bold ${stat.color} mb-1`}>{stat.value}</div>
+                  <div className="text-sm font-semibold text-[#2c241f]">{stat.label}</div>
+                  <div className="text-xs text-[#9a8a7d] mt-0.5">{stat.desc}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
+      <section id="features" className="py-16 md:py-20 px-4 md:px-10 bg-white scroll-mt-16">
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Core Features</span>
@@ -286,7 +347,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-16 md:py-20 px-4 md:px-10 bg-white scroll-mt-16">
+      <section id="how-it-works" className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9] scroll-mt-16">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Your Journey</span>
@@ -302,7 +363,7 @@ export default function LandingPage() {
               { step: '5', title: 'Build Recovery Streaks', body: 'Celebrate milestones at 3, 7, 14, 30, 60, and 90 days with streak protection.' },
               { step: '6', title: 'Access Support When Needed', body: 'Join anonymous chat, book a provider, connect with faith programs, or invite a guardian.' },
             ].map((item) => (
-              <div key={item.step} className="flex gap-4 bg-[#fafaf9] border border-[#e5e0db] rounded-lg p-4 hover:border-[#92400E]/20 transition-colors">
+              <div key={item.step} className="flex gap-4 bg-white border border-[#e5e0db] rounded-lg p-4 hover:border-[#92400E]/20 transition-colors">
                 <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#92400E] to-[#d97706] text-white flex items-center justify-center font-bold shrink-0 text-sm shadow-sm">
                   {item.step}
                 </div>
@@ -325,7 +386,7 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 md:py-20 px-4 md:px-10 bg-[#fafaf9] border-y border-[#e5e0db]/50">
+      <section className="py-16 md:py-20 px-4 md:px-10 bg-white border-y border-[#e5e0db]/50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <span className="text-[10px] font-semibold uppercase tracking-widest text-[#92400E]">Testimonials</span>
@@ -357,7 +418,7 @@ export default function LandingPage() {
       </section>
 
       {/* Trusted By */}
-      <section className="py-12 px-4 md:px-10 bg-white">
+      <section className="py-12 px-4 md:px-10 bg-[#fafaf9]">
         <div className="max-w-5xl mx-auto text-center">
           <span className="text-[10px] font-semibold uppercase tracking-widest text-[#9a8a7d]">Trusted by Leading Institutions</span>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-14 mt-6">

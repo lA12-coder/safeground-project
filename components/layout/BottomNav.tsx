@@ -6,11 +6,10 @@ import { Home, BookOpen, MessageCircle, Users, Sparkles, Shield } from 'lucide-r
 
 const menuItems = [
   { label: 'Home', href: '/dashboard', icon: Home },
-  { label: 'Log', href: '/log', icon: BookOpen },
+  { label: 'Check-In', href: '/checkin', icon: BookOpen },
+  { label: 'Panic', href: '/panic', icon: Shield },
   { label: 'Chat', href: '/chat', icon: MessageCircle },
-  { label: 'Care', href: '/directory', icon: Users },
-  { label: 'Faith', href: '/spiritual', icon: Sparkles },
-  { label: 'Guardian', href: '/settings/guardian', icon: Shield },
+  { label: 'Profile', href: '/profile', icon: Users },
 ] as const;
 
 export function BottomNav() {

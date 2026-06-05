@@ -274,7 +274,7 @@ export default function OrgRegistrationPage() {
                   </label>
                 </div>
                 <aside className="relative min-h-80 overflow-hidden rounded-lg">
-                  <img src="/org-hero.svg" alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src="/soul-footing.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#5a2700]/60 via-transparent to-transparent" />
                   <p className="absolute bottom-8 left-7 max-w-xs font-serif text-xl font-bold italic text-white">
                     "A place where the soul finds its footing."

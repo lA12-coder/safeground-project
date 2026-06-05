@@ -7,7 +7,7 @@ import {
   Flame, Shield, Trophy, Calendar, Sparkles, Clock,
   CheckCircle, Target, AlertCircle, MessageCircle,
   Globe, UserCheck, Zap, TrendingUp, TrendingDown, Minus,
-  Lightbulb, ArrowRight, ChevronRight, BookOpen
+  Lightbulb, ArrowRight, BookOpen, Gem, BarChart3,
 } from 'lucide-react';
 import { StreakCard } from '@/components/dashboard/StreakCard';
 import { MoodChart } from '@/components/dashboard/MoodChart';
@@ -15,8 +15,11 @@ import { AffirmationCard } from '@/components/dashboard/AffirmationCard';
 import { KhatRiskBanner } from '@/components/dashboard/KhatRiskBanner';
 import { ImmediateRelief } from '@/components/dashboard/ImmediateRelief';
 import { EchoesOfSupport } from '@/components/dashboard/EchoesOfSupport';
-import { PanicButton } from '@/components/layout/PanicButton';
 import { STREAK_MILESTONES } from '@/lib/utils/streakUtils';
+import { KpiCard } from '@/components/ui/KpiCard';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 16 },
@@ -201,40 +204,8 @@ export default function DashboardPage() {
   const trendColor = insights?.trend === 'improving' ? 'text-green-600' : insights?.trend === 'declining' ? 'text-red-600' : 'text-amber-600';
 
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-outline-variant/50">
-        <div className="px-4 sm:px-6 md:px-12 py-3 flex justify-between items-center max-w-6xl mx-auto">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="font-serif text-xl font-bold text-primary">SafeGround</span>
-            <span className="hidden sm:inline-flex items-center gap-1.5 ml-3 px-3 py-1 bg-primary-container/20 text-primary rounded-full border border-primary/20">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Recovery Intelligence Center</span>
-            </span>
-          </motion.div>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-xs text-on-surface-variant">
-              <Flame className="w-3.5 h-3.5 text-primary" />
-              <span className="font-semibold">{streakData.currentStreak}d</span>
-              <span className="mx-1">·</span>
-              <span>Total: {streakData.totalCleanDays}</span>
-            </div>
-            <div className="flex items-center gap-1.5 bg-secondary-container/40 text-on-secondary-container px-3 py-1.5 rounded-full border border-secondary/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider">Privacy Active</span>
-            </div>
-            <Link
-              href="/log"
-              className="hidden md:inline-flex items-center gap-1.5 bg-primary text-on-primary px-4 py-1.5 rounded-full text-xs font-semibold hover:opacity-90 transition-all active:scale-95"
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              Log Day
-            </Link>
-          </motion.div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-12 py-6 md:py-8 space-y-8">
+    <div className="min-h-screen bg-[#f6f5f1]">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 md:px-12 py-6 md:py-8 space-y-6">
         <AnimatePresence>
           {error && (
             <motion.div
@@ -250,90 +221,136 @@ export default function DashboardPage() {
         </AnimatePresence>
 
         {loading ? (
-          <div className="space-y-8">
+          <div className="space-y-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-5 animate-pulse">
-                  <div className="h-4 bg-surface-container-high rounded w-1/2 mb-3" />
-                  <div className="h-8 bg-surface-container-high rounded w-1/3 mb-2" />
-                  <div className="h-3 bg-surface-container-high rounded w-2/3" />
+                <div key={i} className="bg-white rounded-xl border border-[#e5e0db]/30 p-5 animate-pulse">
+                  <div className="h-4 bg-[#e5e0db] rounded w-1/2 mb-3" />
+                  <div className="h-8 bg-[#e5e0db] rounded w-1/3 mb-2" />
+                  <div className="h-3 bg-[#e5e0db] rounded w-2/3" />
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-              <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-6 animate-pulse">
-                    <div className="h-5 bg-surface-container-high rounded w-1/3 mb-4" />
-                    <div className="h-32 bg-surface-container-high rounded" />
+                  <div key={i} className="bg-white rounded-xl border border-[#e5e0db]/30 p-6 animate-pulse">
+                    <div className="h-5 bg-[#e5e0db] rounded w-1/3 mb-4" />
+                    <div className="h-32 bg-[#e5e0db] rounded" />
                   </div>
                 ))}
               </div>
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-6 animate-pulse">
-                    <div className="h-5 bg-surface-container-high rounded w-1/2 mb-4" />
-                    <div className="h-20 bg-surface-container-high rounded" />
+                  <div key={i} className="bg-white rounded-xl border border-[#e5e0db]/30 p-6 animate-pulse">
+                    <div className="h-5 bg-[#e5e0db] rounded w-1/2 mb-4" />
+                    <div className="h-20 bg-[#e5e0db] rounded" />
                   </div>
                 ))}
               </div>
             </div>
           </div>
         ) : isDataEmpty ? (
-          <motion.div {...fadeInUp} className="card p-12 text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center mx-auto">
-              <BookOpen className="w-8 h-8 text-primary" />
-            </div>
-            <h2 className="heading-lg">Start Your Recovery Journey</h2>
-            <p className="body-md max-w-md mx-auto">
-              Begin by logging your first daily check-in. Each entry helps you track patterns and build momentum toward your goals.
-            </p>
-            <Link href="/log" className="inline-flex items-center gap-2 btn-primary">
-              Log Your First Day
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
+          <EmptyState
+            icon={<BookOpen className="w-16 h-16" />}
+            title="Start Your Recovery Journey"
+            description="Begin by logging your first daily check-in. Each entry helps you track patterns and build momentum toward your goals."
+            action={
+              <Link href="/log" className="inline-flex items-center gap-2 bg-[#92400E] text-white rounded-lg px-5 py-2.5 text-sm font-semibold hover:bg-[#a04e14] transition-colors">
+                Log Your First Day <ArrowRight className="w-4 h-4" />
+              </Link>
+            }
+          />
         ) : (
           <>
-            <motion.div {...fadeInUp} transition={{ duration: 0.4 }} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-4 border-l-4 border-l-primary">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Current Streak</span>
-                  <Flame className="w-4 h-4 text-primary" />
+            {/* Hero Recovery Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-[#fdf6ed] to-white border border-[#e5e0db] rounded-xl shadow-sm p-6 md:p-8"
+            >
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Flame className="w-6 h-6 text-[#92400E]" />
+                    <h1 className="text-2xl md:text-3xl font-serif font-bold text-[#2c241f]">
+                      {streakData.currentStreak} days of strength
+                    </h1>
+                  </div>
+                  <p className="text-[#6f5b4e]">You&apos;re closer to your {nextMilestone}-day goal. Keep going.</p>
+                  <div className="flex items-center gap-4 mt-4">
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <Gem className="w-4 h-4 text-[#92400E]" />
+                      <span className="font-semibold text-[#2c241f]">Recovery Score</span>
+                      <span className="text-[#92400E] font-bold">{recoveryScore}%</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <Target className="w-4 h-4 text-[#16a34a]" />
+                      <span className="text-[#6f5b4e]">{streakData.currentStreak} / {nextMilestone} days</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 max-w-xs">
+                    <ProgressBar value={recoveryScore} color="amber" size="md" showLabel />
+                  </div>
                 </div>
-                <div className="text-3xl font-serif font-bold text-primary">{streakData.currentStreak}</div>
-                <p className="text-[11px] text-on-surface-variant mt-0.5">days of strength</p>
-              </div>
-              <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-4 border-l-4 border-l-green-600">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Clean Days</span>
-                  <Shield className="w-4 h-4 text-green-600" />
+                <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                  <div className="text-center px-4 py-3 bg-white rounded-xl border border-[#e5e0db] shadow-sm">
+                    <div className="text-2xl font-bold text-[#92400E]">{streakData.currentStreak}</div>
+                    <div className="text-[10px] text-[#6f5b4e] font-medium">Current</div>
+                  </div>
+                  <div className="text-center px-4 py-3 bg-white rounded-xl border border-[#e5e0db] shadow-sm">
+                    <div className="text-2xl font-bold text-[#16a34a]">{streakData.longestStreak}</div>
+                    <div className="text-[10px] text-[#6f5b4e] font-medium">Best</div>
+                  </div>
+                  <div className="text-center px-4 py-3 bg-white rounded-xl border border-[#e5e0db] shadow-sm">
+                    <div className="text-2xl font-bold text-[#2563eb]">{streakData.totalCleanDays}</div>
+                    <div className="text-[10px] text-[#6f5b4e] font-medium">Total</div>
+                  </div>
                 </div>
-                <div className="text-3xl font-serif font-bold text-green-700">{streakData.totalCleanDays}</div>
-                <p className="text-[11px] text-on-surface-variant mt-0.5">total recovered</p>
-              </div>
-              <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-4 border-l-4 border-l-primary">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Best Streak</span>
-                  <Trophy className="w-4 h-4 text-primary" />
-                </div>
-                <div className="text-3xl font-serif font-bold text-primary">{streakData.longestStreak}</div>
-                <p className="text-[11px] text-on-surface-variant mt-0.5">personal best</p>
-              </div>
-              <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-4 border-l-4 border-l-blue-600">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">Days Logged</span>
-                  <Calendar className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="text-3xl font-serif font-bold text-blue-700">{daysLogged}</div>
-                <p className="text-[11px] text-on-surface-variant mt-0.5">of last 30 days</p>
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-              <div className="lg:col-span-2 space-y-8">
+            {/* KPI Cards */}
+            <motion.div {...fadeInUp} transition={{ duration: 0.4 }} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <KpiCard
+                label="Current Streak"
+                value={`${streakData.currentStreak}d`}
+                icon={<Flame className="w-4 h-4" />}
+                accentColor="amber"
+                subtitle="days of strength"
+              />
+              <KpiCard
+                label="Clean Days"
+                value={streakData.totalCleanDays}
+                icon={<Shield className="w-4 h-4" />}
+                accentColor="green"
+                subtitle="total recovered"
+              />
+              <KpiCard
+                label="Best Streak"
+                value={`${streakData.longestStreak}d`}
+                icon={<Trophy className="w-4 h-4" />}
+                accentColor="amber"
+                subtitle="personal best"
+              />
+              <KpiCard
+                label="Days Logged"
+                value={daysLogged}
+                icon={<Calendar className="w-4 h-4" />}
+                accentColor="blue"
+                subtitle="of last 30 days"
+              />
+            </motion.div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
                 <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.05 }}>
-                  <StreakCard {...streakData} />
+                  <StreakCard
+                    currentStreak={streakData.currentStreak}
+                    longestStreak={streakData.longestStreak}
+                    totalCleanDays={streakData.totalCleanDays}
+                  />
                 </motion.div>
 
                 <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.1 }}>
@@ -341,104 +358,110 @@ export default function DashboardPage() {
                 </motion.div>
 
                 {insights && (
-                  <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.15 }} className="card p-6 space-y-5">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-primary" />
-                      <h3 className="font-serif text-lg font-semibold text-on-surface">Today&apos;s Insights</h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-surface-container-low rounded-lg p-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Lightbulb className="w-4 h-4 text-primary" />
-                          <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Best Day</span>
-                        </div>
-                        <p className="text-sm font-semibold text-on-surface">{insights.bestDay}</p>
-                        <p className="text-[11px] text-on-surface-variant">Highest average mood ({insights.bestAvg}/10)</p>
-                      </div>
-                      <div className="bg-surface-container-low rounded-lg p-4 space-y-2">
-                        <div className="flex items-center gap-2">
-                          <TrendIcon className={`w-4 h-4 ${trendColor}`} />
-                          <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Mood Trend</span>
-                        </div>
-                        <p className={`text-sm font-semibold capitalize ${trendColor}`}>{insights.trend}</p>
-                        <p className="text-[11px] text-on-surface-variant">Compared to previous period</p>
-                      </div>
-                      {insights.worstUrgeDay && (
-                        <div className="bg-surface-container-low rounded-lg p-4 space-y-2">
+                  <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.15 }}>
+                    <SectionCard
+                      title="Today's Insights"
+                      subtitle="AI-powered pattern analysis from your data"
+                      padding="lg"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-[#f6f5f1] rounded-lg p-4 space-y-2">
                           <div className="flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4 text-error" />
-                            <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Urge Pattern</span>
+                            <Lightbulb className="w-4 h-4 text-[#92400E]" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#6f5b4e]">Best Day</span>
                           </div>
-                          <p className="text-sm font-semibold text-on-surface">{insights.worstUrgeDay}</p>
-                          <p className="text-[11px] text-on-surface-variant">Highest urges avg ({insights.worstUrgeAvg}/10)</p>
+                          <p className="text-sm font-semibold text-[#2c241f]">{insights.bestDay}</p>
+                          <p className="text-[11px] text-[#6f5b4e]">Highest average mood ({insights.bestAvg}/10)</p>
                         </div>
-                      )}
-                    </div>
-                    <div className="bg-primary-container/10 border border-primary/20 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <Lightbulb className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">Recommendation</p>
-                          <p className="text-sm text-on-surface leading-relaxed">{insights.recommendation}</p>
+                        <div className="bg-[#f6f5f1] rounded-lg p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <TrendIcon className={`w-4 h-4 ${trendColor}`} />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-[#6f5b4e]">Mood Trend</span>
+                          </div>
+                          <p className={`text-sm font-semibold capitalize ${trendColor}`}>{insights.trend}</p>
+                          <p className="text-[11px] text-[#6f5b4e]">Compared to previous period</p>
+                        </div>
+                        {insights.worstUrgeDay && (
+                          <div className="bg-[#f6f5f1] rounded-lg p-4 space-y-2 sm:col-span-2">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-[#dc2626]" />
+                              <span className="text-xs font-semibold uppercase tracking-wider text-[#6f5b4e]">Urge Pattern</span>
+                            </div>
+                            <p className="text-sm font-semibold text-[#2c241f]">{insights.worstUrgeDay}s — {insights.worstUrgeAvg}/10 avg</p>
+                            <p className="text-[11px] text-[#6f5b4e]">Highest urge day. Plan extra support.</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="bg-[#fdf6ed] border border-[#92400E]/20 rounded-lg p-4 mt-4">
+                        <div className="flex items-start gap-3">
+                          <Sparkles className="w-5 h-5 text-[#92400E] shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[#92400E] mb-1">Recommendation</p>
+                            <p className="text-sm text-[#2c241f] leading-relaxed">{insights.recommendation}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </SectionCard>
                   </motion.div>
                 )}
 
                 {loggedToday && latestEntry ? (
-                  <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.2 }} className="card p-6 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <h3 className="font-serif text-lg font-semibold text-on-surface">Today&apos;s Summary</h3>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-surface-container-low rounded-lg p-4 text-center">
-                        <div className="text-2xl font-bold text-primary">{latestEntry.mood_score}</div>
-                        <div className="text-xs text-on-surface-variant mt-1">Mood</div>
+                  <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.2 }}>
+                    <SectionCard title="Today's Summary" padding="lg">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="bg-[#f6f5f1] rounded-lg p-4 text-center">
+                          <div className="text-2xl font-bold text-[#92400E]">{latestEntry.mood_score}</div>
+                          <div className="text-xs text-[#6f5b4e] mt-1">Mood</div>
+                        </div>
+                        <div className="bg-[#f6f5f1] rounded-lg p-4 text-center">
+                          <div className="text-2xl font-bold text-[#2563eb]">{latestEntry.urge_intensity}</div>
+                          <div className="text-xs text-[#6f5b4e] mt-1">Urge</div>
+                        </div>
+                        <div className="bg-[#f6f5f1] rounded-lg p-4 text-center">
+                          <div className="text-2xl font-bold text-[#d97706]">{latestEntry.stress_level ?? '-'}</div>
+                          <div className="text-xs text-[#6f5b4e] mt-1">Stress</div>
+                        </div>
                       </div>
-                      <div className="bg-surface-container-low rounded-lg p-4 text-center">
-                        <div className="text-2xl font-bold text-blue-600">{latestEntry.urge_intensity}</div>
-                        <div className="text-xs text-on-surface-variant mt-1">Urge</div>
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {latestEntry.khat_used_today && (
+                          <span className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-1.5 border border-amber-200">
+                            Khat logged — {latestEntry.khat_hours_ago ?? '?'}h ago
+                          </span>
+                        )}
+                        {latestEntry.relapsed && (
+                          <span className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-1.5 border border-red-200">
+                            Relapse logged. Support available.
+                          </span>
+                        )}
                       </div>
-                      <div className="bg-surface-container-low rounded-lg p-4 text-center">
-                        <div className="text-2xl font-bold text-amber-600">{latestEntry.stress_level ?? '-'}</div>
-                        <div className="text-xs text-on-surface-variant mt-1">Stress</div>
-                      </div>
-                    </div>
-                    {latestEntry.khat_used_today && (
-                      <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
-                        Khat logged — {latestEntry.khat_hours_ago ?? '?'} hours ago
-                      </p>
-                    )}
-                    {latestEntry.relapsed && (
-                      <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">
-                        Relapse logged today. Reach out for support.
-                      </p>
-                    )}
+                    </SectionCard>
                   </motion.div>
                 ) : (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="card p-8 bg-primary-container/10 border-primary/30 space-y-4 parchment-glow"
                   >
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-primary" />
-                      <h3 className="heading-md text-on-surface">Haven&apos;t logged today yet?</h3>
-                    </div>
-                    <p className="body-md opacity-90">
-                      Your daily check-in helps us understand your patterns and support you better.
-                    </p>
-                    <Link href="/log" className="inline-flex items-center gap-2 btn-primary">
-                      <BookOpen className="w-4 h-4" />
-                      Log Your Day
-                    </Link>
+                    <SectionCard padding="lg" className="bg-[#fdf6ed] border-[#92400E]/30">
+                      <div className="flex items-center gap-3 mb-3">
+                        <AlertCircle className="w-5 h-5 text-[#92400E]" />
+                        <h3 className="text-base font-semibold text-[#2c241f]">Haven&apos;t logged today yet?</h3>
+                      </div>
+                      <p className="text-sm text-[#6f5b4e] mb-4">
+                        Your daily check-in helps us understand your patterns and support you better.
+                      </p>
+                      <Link
+                        href="/log"
+                        className="inline-flex items-center gap-2 bg-[#92400E] text-white rounded-lg px-5 py-2.5 text-sm font-semibold hover:bg-[#a04e14] transition-colors"
+                      >
+                        <BookOpen className="w-4 h-4" />
+                        Log Your Day
+                      </Link>
+                    </SectionCard>
                   </motion.div>
                 )}
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-6">
                 <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.1 }}>
                   <AffirmationCard
                     moodScore={latestEntry?.mood_score ?? 7}
@@ -454,154 +477,137 @@ export default function DashboardPage() {
                   <EchoesOfSupport />
                 </motion.div>
 
-                <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.25 }} className="card p-5 space-y-3">
-                  <h3 className="label-caps">Quick Actions</h3>
-                  <div className="space-y-2">
-                    <Link href="/log" className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <BookOpen className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-medium text-on-surface">Log Day</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                    <Link href="/chat" className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <MessageCircle className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium text-on-surface">Chat Room</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                    <Link href="/support/professional" className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <Globe className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-on-surface">Directory</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                    <Link href="/guardian" className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <UserCheck className="w-4 h-4 text-amber-600" />
-                        <span className="text-sm font-medium text-on-surface">Guardian</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                    <Link href="/panic" className="flex items-center justify-between p-3 rounded-lg bg-error/10 hover:bg-error/20 transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <Zap className="w-4 h-4 text-error" />
-                        <span className="text-sm font-medium text-error">Panic Support</span>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-error group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                  </div>
+                <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.25 }}>
+                  <SectionCard title="Quick Actions" padding="md">
+                    <div className="space-y-1">
+                      {[
+                        { href: '/log', icon: BookOpen, label: 'Log Day', color: 'text-[#92400E]' },
+                        { href: '/chat', icon: MessageCircle, label: 'Chat Room', color: 'text-[#2563eb]' },
+                        { href: '/directory', icon: Globe, label: 'Directory', color: 'text-[#16a34a]' },
+                        { href: '/settings/guardian', icon: UserCheck, label: 'Guardian', color: 'text-[#9333ea]' },
+                      ].map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="flex items-center justify-between p-3 rounded-lg hover:bg-[#f6f5f1] transition-colors group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <item.icon className={`w-4 h-4 ${item.color}`} />
+                            <span className="text-sm font-medium text-[#2c241f]">{item.label}</span>
+                          </div>
+                          <ArrowRight className="w-3.5 h-3.5 text-[#9a8a7d] opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </Link>
+                      ))}
+                      <Link
+                        href="/panic"
+                        className="flex items-center justify-between p-3 rounded-lg bg-red-50 hover:bg-red-100 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Zap className="w-4 h-4 text-[#dc2626]" />
+                          <span className="text-sm font-medium text-[#dc2626]">Panic Support</span>
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#dc2626] opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    </div>
+                  </SectionCard>
                 </motion.div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-              <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.25 }} className="card p-6 space-y-5">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" />
-                  <h3 className="font-serif text-lg font-semibold text-on-surface">Recent Activity</h3>
-                </div>
-                {recentActivity.length > 0 ? (
-                  <div className="space-y-0">
-                    {recentActivity.map((entry, idx) => {
-                      const date = new Date(entry.log_date);
-                      const isToday = date.toDateString() === new Date().toDateString();
-                      return (
-                        <div key={entry.log_date} className="flex gap-4 pb-5 relative last:pb-0">
-                          {idx < recentActivity.length - 1 && (
-                            <div className="absolute left-[7px] top-5 bottom-0 w-px bg-outline-variant" />
-                          )}
-                          <div className={`w-3.5 h-3.5 rounded-full mt-1 shrink-0 border-2 ${
-                            entry.relapsed
-                              ? 'bg-error border-error'
-                              : entry.mood_score >= 7
-                              ? 'bg-green-500 border-green-500'
-                              : entry.mood_score >= 4
-                              ? 'bg-primary border-primary'
-                              : 'bg-amber-500 border-amber-500'
-                          }`} />
-                          <div className="flex-grow min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-on-surface">
-                                {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                              </span>
-                              {entry.relapsed && (
-                                <span className="text-[10px] font-semibold bg-error/10 text-error px-1.5 py-0.5 rounded">Relapse</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-on-surface-variant">
-                              <span>Mood: {entry.mood_score}</span>
-                              <span>Urge: {entry.urge_intensity}</span>
-                              {entry.stress_level != null && <span>Stress: {entry.stress_level}</span>}
+            {/* Activity + Milestones Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.25 }}>
+                <SectionCard title="Recent Activity" padding="lg">
+                  {recentActivity.length > 0 ? (
+                    <div className="space-y-0">
+                      {recentActivity.map((entry, idx) => {
+                        const date = new Date(entry.log_date);
+                        const isToday = date.toDateString() === new Date().toDateString();
+                        return (
+                          <div key={entry.log_date} className="flex gap-4 pb-5 relative last:pb-0">
+                            {idx < recentActivity.length - 1 && (
+                              <div className="absolute left-[7px] top-5 bottom-0 w-px bg-[#e5e0db]" />
+                            )}
+                            <div className={`w-3.5 h-3.5 rounded-full mt-1 shrink-0 border-2 ${
+                              entry.relapsed
+                                ? 'bg-[#dc2626] border-[#dc2626]'
+                                : entry.mood_score >= 7
+                                ? 'bg-[#16a34a] border-[#16a34a]'
+                                : entry.mood_score >= 4
+                                ? 'bg-[#92400E] border-[#92400E]'
+                                : 'bg-[#d97706] border-[#d97706]'
+                            }`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-[#2c241f]">
+                                  {isToday ? 'Today' : date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                </span>
+                                {entry.relapsed && (
+                                  <span className="text-[10px] font-semibold bg-red-50 text-[#dc2626] px-1.5 py-0.5 rounded">Relapse</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 mt-1 text-xs text-[#6f5b4e]">
+                                <span>Mood: {entry.mood_score}</span>
+                                <span>Urge: {entry.urge_intensity}</span>
+                                {entry.stress_level != null && <span>Stress: {entry.stress_level}</span>}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-on-surface-variant text-center py-6">No activity recorded yet.</p>
-                )}
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[#6f5b4e] text-center py-6">No activity recorded yet.</p>
+                  )}
+                </SectionCard>
               </motion.div>
 
-              <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.3 }} className="card p-6 space-y-5">
-                <div className="flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
-                  <h3 className="font-serif text-lg font-semibold text-on-surface">Milestones</h3>
-                </div>
+              <motion.div {...fadeInUp} transition={{ duration: 0.4, delay: 0.3 }}>
+                <SectionCard title="Milestones" padding="lg">
+                  <div className="bg-[#f6f5f1] rounded-lg p-4 space-y-2 mb-5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#6f5b4e]">Recovery Score</span>
+                      <span className="text-lg font-bold text-[#92400E]">{recoveryScore}%</span>
+                    </div>
+                    <ProgressBar value={recoveryScore} color="amber" size="md" />
+                    <p className="text-[11px] text-[#6f5b4e]">
+                      {streakData.currentStreak} of {nextMilestone} days toward next milestone
+                    </p>
+                  </div>
 
-                <div className="bg-surface-container-low rounded-lg p-4 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Recovery Score</span>
-                    <span className="text-lg font-bold text-primary">{recoveryScore}%</span>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#6f5b4e]">Achieved</span>
+                      <span className="text-[11px] text-[#6f5b4e]">{achievedMilestones.length}/{STREAK_MILESTONES.length}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {STREAK_MILESTONES.map((milestone) => {
+                        const achieved = achievedMilestones.includes(milestone);
+                        return (
+                          <div
+                            key={milestone}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                              achieved
+                                ? 'bg-green-100 text-green-700 border border-green-300'
+                                : streakData.currentStreak < milestone && milestone === nextMilestone
+                                ? 'bg-[#fdf6ed] text-[#92400E] border border-[#92400E]/30'
+                                : 'bg-[#f6f5f1] text-[#6f5b4e] border border-[#e5e0db]'
+                            }`}
+                          >
+                            {achieved ? (
+                              <CheckCircle className="w-3 h-3" />
+                            ) : streakData.currentStreak < milestone && milestone === nextMilestone ? (
+                              <Target className="w-3 h-3" />
+                            ) : (
+                              <span className="w-3 h-3 rounded-full border border-[#6f5b4e]/40" />
+                            )}
+                            {milestone}d
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="w-full bg-surface-container-lowest rounded-full h-2 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${recoveryScore}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full bg-gradient-to-r from-primary to-primary-container rounded-full"
-                    />
-                  </div>
-                  <p className="text-[11px] text-on-surface-variant">
-                    {streakData.currentStreak} of {nextMilestone} days toward next milestone
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Achieved</span>
-                    <span className="text-[11px] text-on-surface-variant">{achievedMilestones.length}/{STREAK_MILESTONES.length}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {STREAK_MILESTONES.map((milestone) => {
-                      const achieved = achievedMilestones.includes(milestone);
-                      return (
-                        <div
-                          key={milestone}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                            achieved
-                              ? 'bg-green-100 text-green-700 border border-green-300'
-                              : streakData.currentStreak < milestone && milestone === nextMilestone
-                              ? 'bg-primary-container/10 text-primary border border-primary/30'
-                              : 'bg-surface-container-low text-on-surface-variant border border-outline-variant'
-                          }`}
-                        >
-                          {achieved ? (
-                            <CheckCircle className="w-3 h-3" />
-                          ) : streakData.currentStreak < milestone && milestone === nextMilestone ? (
-                            <Target className="w-3 h-3" />
-                          ) : (
-                            <span className="w-3 h-3 rounded-full border border-on-surface-variant/40" />
-                          )}
-                          {milestone}d
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                </SectionCard>
               </motion.div>
             </div>
 
@@ -611,8 +617,6 @@ export default function DashboardPage() {
           </>
         )}
       </main>
-
-      <PanicButton variant="fab" onActivate={handlePanic} />
     </div>
   );
 }
