@@ -23,16 +23,16 @@ const avgStreakDistribution = [
 ]
 
 const commonTriggers = [
-  { trigger: 'Friends using khat', count: 87 },
-  { trigger: 'Evening boredom', count: 72 },
-  { trigger: 'Exam stress', count: 65 },
-  { trigger: 'Social pressure', count: 58 },
+  { trigger: 'Late night phone use', count: 92 },
+  { trigger: 'Stress & anxiety', count: 85 },
+  { trigger: 'Boredom & isolation', count: 74 },
+  { trigger: 'Social media scrolling', count: 68 },
+  { trigger: 'Exam pressure', count: 61 },
+  { trigger: 'Peer influence', count: 55 },
   { trigger: 'Financial stress', count: 44 },
   { trigger: 'Family conflict', count: 38 },
-  { trigger: 'Morning routine', count: 31 },
-  { trigger: 'Workplace availability', count: 27 },
-  { trigger: 'Post-meal craving', count: 22 },
-  { trigger: 'Habitual tea time', count: 18 },
+  { trigger: 'Post-substance craving', count: 31 },
+  { trigger: 'Relationship difficulties', count: 27 },
 ]
 
 const activeRegions = [

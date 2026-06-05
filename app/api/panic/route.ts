@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateGeminiJson, isGeminiConfigured } from '@/lib/ai/gemini';
+import { PANIC_SYSTEM_PROMPT, FALLBACK_PANIC_STEPS, FALLBACK_PANIC_AFFIRMATION } from '@/lib/ai/prompts';
 
 export const runtime = 'nodejs';
 
@@ -10,42 +11,6 @@ type PanicStepsResult = {
   steps: PanicStep[];
   affirmation: string;
 };
-
-const FALLBACK_STEPS: PanicStep[] = [
-  {
-    title: 'Grounding',
-    instruction: 'Name five things you can see around you right now.',
-    duration_seconds: 90,
-  },
-  {
-    title: 'Breathing',
-    instruction: 'Breathe in for 4 seconds, hold for 4, exhale for 4.',
-    duration_seconds: 90,
-  },
-  {
-    title: 'Distraction',
-    instruction: 'Wiggle your toes and focus entirely on how that feels.',
-    duration_seconds: 90,
-  },
-  {
-    title: 'Connection',
-    instruction: 'Think of someone you care about deeply.',
-    duration_seconds: 90,
-  },
-  {
-    title: 'Affirmation',
-    instruction: "Repeat: 'I am safe and this feeling will pass.'",
-    duration_seconds: 90,
-  },
-];
-
-const FALLBACK_AFFIRMATION =
-  'You have survived every difficult moment so far. This too shall pass.';
-
-const PANIC_SYSTEM_PROMPT = `You are a CBT urge-surfing coach for Ethiopian students in recovery from khat addiction.
-Generate 5 grounding steps for immediate crisis intervention.
-Return JSON ONLY with this shape:
-{ "steps": [{"title": "string", "instruction": "string", "duration_seconds": number}], "affirmation": "string" }`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,8 +40,8 @@ export async function POST(request: NextRequest) {
       .select('id')
       .single();
 
-    let steps = FALLBACK_STEPS;
-    let affirmation = FALLBACK_AFFIRMATION;
+    let steps = FALLBACK_PANIC_STEPS;
+    let affirmation = FALLBACK_PANIC_AFFIRMATION;
 
     if (isGeminiConfigured()) {
       try {
