@@ -12,8 +12,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               SafeGround Admin
             </Link>
             <div className="flex items-center gap-3 text-sm font-semibold text-[#6f5b4e]">
-              <Link href="/admin/providers" className="hover:text-[#8a3d08]">Providers</Link>
-              <Link href="/admin/moderation" className="hover:text-[#8a3d08]">Moderation</Link>
+              <Link href="/admin/providers" className="hover:text-[#8a3d08]">Orgs</Link>
+              <Link href="/admin/moderation" className="hover:text-[#8a3d08]">Chat</Link>
+              <Link href="/admin/users" className="hover:text-[#8a3d08]">Users</Link>
+              <Link href="/admin/bookings" className="hover:text-[#8a3d08]">Bookings</Link>
             </div>
           </div>
         </div>

@@ -361,14 +361,4 @@ All dashboards (admin, provider, org portal) share a common design language.
 - Migration: `supabase/migrations/01_add_provider_auth_columns.sql`
 
 ### Org Auth Flow
-1. Org registers at `/org/register` (public, 4-step form)
-2. POST `/api/directory` → stores in `providers` with `is_verified=false, is_active=false`
-3. Admin approves in `/admin/providers` → sets `is_verified=true, is_active=true`
-4. Admin clicks "Grant Portal Access" → creates auth user, links provider via `user_id`
-5. Org logs in with their email + generated password → accesses `/org/portal`
-
-### New API Routes
-| Route | Method | Description |
-|---|---|---|
-| `/api/org/portal` | GET | Org portal metrics + appointments (auth-required, matches by email then user_id) |
-| `/api/admin/providers/[id]/grant-access` | POST | Create auth user + link to provider (admin-only) |
+1. Org registers at
