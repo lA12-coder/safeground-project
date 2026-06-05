@@ -1,7 +1,7 @@
 {
   "name": "safeground",
   "version": "1.0.0",
-  "description": "A safe space for recovery from khat addiction with community support, habit tracking, and spiritual guidance",
+  "description": "Anonymous recovery & digital well-being platform for Ethiopian youth — AI-powered tools, community support, telehealth, faith programs, and guardian accountability",
   "private": true,
   "scripts": {
     "dev": "next dev",
