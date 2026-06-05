@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2, CheckCircle } from 'lucide-react'
+import { Trash2, CheckCircle, Flag } from 'lucide-react'
 
 interface FlaggedMessageCardProps {
   id: string
@@ -14,25 +14,25 @@ interface FlaggedMessageCardProps {
   onClear: (id: string) => Promise<void>
 }
 
+const flagLabels: Record<string, string> = {
+  aggressive: 'AGGRESSIVE',
+  spam: 'SPAM',
+  inappropriate: 'INAPPROPRIATE',
+  reported: 'REPORTED',
+}
+
+const flagColors: Record<string, string> = {
+  aggressive: 'bg-red-50 text-red-600 border-red-200',
+  spam: 'bg-amber-50 text-amber-600 border-amber-200',
+  inappropriate: 'bg-purple-50 text-purple-600 border-purple-200',
+  reported: 'bg-gray-50 text-gray-600 border-gray-200',
+}
+
 export function FlaggedMessageCard({
   id, alias, roomId, message, sentAt, flagReason, onDelete, onClear,
 }: FlaggedMessageCardProps) {
   const [loading, setLoading] = useState(false)
   const [dismissed, setDismissed] = useState(false)
-
-  const flagLabels: Record<string, string> = {
-    aggressive: 'AGGRESSIVE',
-    spam: 'SPAM',
-    inappropriate: 'INAPPROPRIATE',
-    reported: 'REPORTED',
-  }
-
-  const flagColors: Record<string, string> = {
-    aggressive: 'bg-red-100 text-red-700',
-    spam: 'bg-amber-100 text-amber-700',
-    inappropriate: 'bg-purple-100 text-purple-700',
-    reported: 'bg-gray-100 text-gray-700',
-  }
 
   if (dismissed) return null
 
@@ -60,36 +60,31 @@ export function FlaggedMessageCard({
   }
 
   return (
-    <div className="bg-surface-container-lowest rounded-lg border border-error/20 shadow-sm p-4 transition-all">
+    <div className={`bg-white rounded-lg border border-[#e5e0db] shadow-sm p-4 transition-all ${loading ? 'opacity-50' : ''}`}>
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${flagColors[flagReason] || 'bg-surface-container-high text-on-surface-variant'}`}>
+        <div className="flex items-center gap-1.5">
+          <Flag size={12} className="text-red-500" />
+          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${flagColors[flagReason] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
             {flagLabels[flagReason] || flagReason.toUpperCase()}
           </span>
-          <span className="text-xs text-on-surface-variant">{timeAgo()}</span>
+          <span className="text-[10px] text-[#9a8a7d]">{timeAgo()}</span>
         </div>
-        <span className="text-xs text-on-surface-variant">#{roomId}</span>
+        <span className="text-[10px] text-[#9a8a7d]">#{roomId}</span>
       </div>
-      <div className="text-xs text-on-surface-variant mb-1">
+      <div className="text-[11px] text-[#6f5b4e] mb-1">
         <span className="font-medium">{alias}</span>
       </div>
-      <p className="text-sm text-on-surface mb-3 italic">&ldquo;{message.slice(0, 120)}{message.length > 120 ? '...' : ''}&rdquo;</p>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={handleDelete}
-          disabled={loading}
-          className="flex items-center gap-1 px-3 py-1.5 bg-error text-on-error rounded-lg text-xs font-semibold hover:brightness-90 disabled:opacity-50 transition-colors"
-        >
-          <Trash2 size={12} />
-          Delete
+      <p className="text-sm text-[#2c241f] mb-3 italic leading-relaxed">
+        &ldquo;{message.slice(0, 140)}{message.length > 140 ? '...' : ''}&rdquo;
+      </p>
+      <div className="flex items-center gap-1.5">
+        <button onClick={handleDelete} disabled={loading}
+          className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded-lg text-[10px] font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors">
+          <Trash2 size={11} /> Delete
         </button>
-        <button
-          onClick={handleClear}
-          disabled={loading}
-          className="flex items-center gap-1 px-3 py-1.5 border border-outline-variant/30 text-on-surface-variant rounded-lg text-xs font-semibold hover:bg-surface-container-low disabled:opacity-50 transition-colors"
-        >
-          <CheckCircle size={12} />
-          Clear Flag
+        <button onClick={handleClear} disabled={loading}
+          className="flex items-center gap-1 px-3 py-1.5 border border-[#e5e0db] text-[#6f5b4e] rounded-lg text-[10px] font-semibold hover:bg-[#f6f5f1] disabled:opacity-50 transition-colors">
+          <CheckCircle size={11} /> Clear Flag
         </button>
       </div>
     </div>

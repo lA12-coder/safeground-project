@@ -1,9 +1,14 @@
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { Sparkles } from 'lucide-react';
 
 export default function RegisterPage() {
   return (
-    <main className="flex flex-col items-center justify-center px-6 md:px-12 py-12">
+    <AuthLayout
+      title="Begin your healing"
+      icon={<Sparkles className="w-5 h-5" />}
+    >
       <RegisterForm />
-    </main>
+    </AuthLayout>
   );
 }

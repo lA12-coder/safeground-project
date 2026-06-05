@@ -20,6 +20,14 @@ interface Provider {
   in_person: boolean
   is_verified: boolean
   created_at: string
+  faith_category?: string
+  traditions?: string[]
+  ministries?: string[]
+  programs?: string[]
+  mentors?: string[]
+  availability_slots?: Record<string, unknown>
+  email?: string
+  user_id?: string
 }
 
 const typeLabels: Record<string, string> = {
@@ -93,8 +101,19 @@ export default function AdminProvidersPage() {
       const res = await fetch(`/api/admin/providers?status=${status}&limit=50`)
       if (res.ok) {
         const data = await res.json()
-        setProviders(data.providers || [])
-        if (data.providers?.length) setSelected(data.providers[0])
+        const mapped = (data.providers || []).map((p: any) => {
+          const slots = p.availability_slots || {}
+          return {
+            ...p,
+            faith_category: slots.faith_category as string | undefined,
+            traditions: slots.traditions as string[] | undefined,
+            ministries: slots.ministries as string[] | undefined,
+            programs: slots.programs as string[] | undefined,
+            mentors: slots.mentors as string[] | undefined,
+          }
+        })
+        setProviders(mapped)
+        if (mapped.length) setSelected(mapped[0])
       }
     } catch (e) {
       console.error('Failed to fetch providers:', e)
@@ -144,6 +163,28 @@ export default function AdminProvidersPage() {
       }
     } catch {
       setToast({ message: 'Failed to reject provider', type: 'error' })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  async function handleGrantAccess(id: string) {
+    setActionLoading(id)
+    try {
+      const res = await fetch(`/api/admin/providers/${id}/grant-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setProviders(prev => prev.map(p => p.id === id ? { ...p, user_id: data.user_id } : p))
+        setSelected(prev => prev?.id === id ? { ...prev, user_id: data.user_id } : prev)
+        setToast({ message: `Access granted. Password: ${data.password}`, type: 'success' })
+      } else {
+        setToast({ message: data.error || 'Failed to grant access', type: 'error' })
+      }
+    } catch {
+      setToast({ message: 'Failed to grant access', type: 'error' })
     } finally {
       setActionLoading(null)
     }
@@ -353,6 +394,53 @@ export default function AdminProvidersPage() {
                     </div>
                   </div>
                 </div>
+
+                {selected.faith_category && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-5">
+                    <h3 className="flex items-center gap-2 text-xs uppercase tracking-wider text-amber-800 font-semibold mb-3">
+                      <Sparkles size={14} />
+                      Spiritual Profile
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-amber-700">Faith Category</span>
+                        <span className="font-bold text-amber-900">{selected.faith_category}</span>
+                      </div>
+                      {selected.traditions && selected.traditions.length > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Traditions</span>
+                          <span className="font-medium text-right text-amber-900">{selected.traditions.join(', ')}</span>
+                        </div>
+                      )}
+                      {selected.ministries && selected.ministries.length > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Ministries</span>
+                          <span className="font-medium text-right text-amber-900">{selected.ministries.join(', ')}</span>
+                        </div>
+                      )}
+                      {selected.programs && selected.programs.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {selected.programs.map(p => (
+                            <span key={p} className="inline-flex items-center rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">{p}</span>
+                          ))}
+                        </div>
+                      )}
+                      {selected.mentors && selected.mentors.length > 0 && (
+                        <div>
+                          <span className="text-amber-700 text-xs block mb-1">Mentors ({selected.mentors.length})</span>
+                          <div className="space-y-1">
+                            {selected.mentors.map(m => (
+                              <div key={m} className="flex items-center gap-2 text-amber-800 text-xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                {m}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="p-6 pt-0 space-y-3">
@@ -366,6 +454,24 @@ export default function AdminProvidersPage() {
                   <BadgeCheck size={18} />
                   {actionLoading === selected.id ? 'Processing...' : 'Approve Organization'}
                 </motion.button>
+                {selected.is_verified && !selected.user_id && (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleGrantAccess(selected.id)}
+                    disabled={actionLoading === selected.id || !selected.email}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#92400E] px-6 py-3.5 font-bold text-white shadow-sm hover:bg-[#a04e14] disabled:opacity-50 transition-all"
+                  >
+                    <FileText size={18} />
+                    {actionLoading === selected.id ? 'Granting...' : selected.email ? 'Grant Portal Access' : 'No email on record'}
+                  </motion.button>
+                )}
+                {selected.user_id && (
+                  <div className="flex items-center justify-center gap-2 text-xs text-green-700 bg-green-50 rounded-xl px-4 py-3">
+                    <CheckCircle size={14} />
+                    Portal access active
+                  </div>
+                )}
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

@@ -26,7 +26,7 @@ components/
   guardian/                     # GuardianDashboard, GuardianSetupWizard
 
 lib/
-  ai/gemini.ts                  # generateGeminiText(), generateGeminiJson<T>() — Google Gemini wrapper
+  ai/gemini.ts                  # callGemini(), callGeminiJSON<T>() — Google Gemini SDK wrapper
   supabase/                     # client.ts (browser), server.ts (RSC), middleware.ts (edge)
   types/index.ts                # All TypeScript types
   utils/                        # aliasGenerator, streakUtils, khatRiskDetector
@@ -34,12 +34,12 @@ lib/
 scripts/
   seed.ts                       # Standalone seed script (npx tsx scripts/seed.ts)
 
-proxy.ts                        # Route protection (auth + admin email check)
+middleware.ts                   # Route protection (auth + admin email check)
 ```
 
 ---
 
-## Proxy (`proxy.ts`)
+## Middleware (`middleware.ts`)
 
 | Path | Access |
 |---|---|
@@ -69,13 +69,13 @@ proxy.ts                        # Route protection (auth + admin email check)
 ### AI
 | Route | Method | Description |
 |---|---|---|
-| `/api/ai/affirmation` | POST | Gemini-generated affirmation with 20 hardcoded fallbacks |
+| `/api/ai/affirmation` | POST | Claude-generated affirmation with 20 hardcoded fallbacks |
 | `/api/faith/companion` | POST | Multi-faith spiritual companion (Ethiopian context) |
 
 ### Panic
 | Route | Method | Description |
 |---|---|---|
-| `/api/panic` | POST | Insert panic habit_log, Gemini coping steps, guardian notification |
+| `/api/panic` | POST | Insert panic habit_log, Claude coping steps, guardian notification |
 | `/api/panic/complete` | POST | Mark streak protected, check milestone (3/7/14/30/60/90 day) |
 
 ### Chat
@@ -101,7 +101,7 @@ proxy.ts                        # Route protection (auth + admin email check)
 ### Guest
 | Route | Method | Description |
 |---|---|---|
-| `/api/guest/chat` | POST | Gemini chat, rate-limited to 20 msg/session (in-memory) |
+| `/api/guest/chat` | POST | Claude chat, rate-limited to 20 msg/session (in-memory) |
 
 ### Admin
 | Route | Method | Description |
@@ -269,10 +269,11 @@ Same functions as the standalone script but accessed via admin API. Requires adm
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here   # Admin operations
-GEMINI_API_KEY=your_gemini_api_key_here                 # Google Gemini AI
-GEMINI_MODEL=gemini-2.0-flash                          # Optional model override
+GEMINI_API_KEY=your_gemini_api_key_here                 # Gemini AI
+GEMINI_MODEL=gemini-2.0-flash                           # AI model
+ADMIN_SECRET_KEY=your_admin_secret_key_here             # Admin secret
 ADMIN_EMAILS=admin@example.com,superadmin@example.com   # Admin access
-NEXT_PUBLIC_APP_URL=http://localhost:3000               # Guardian links
+NEXT_PUBLIC_SITE_URL=http://localhost:3000              # Site URL
 ```
 
 ---
@@ -298,3 +299,76 @@ npx tsx scripts/seed.ts
 npm run build
 npm start
 ```
+
+---
+
+## Dashboard Design System (v2 — June 2026)
+
+All dashboards (admin, provider, org portal) share a common design language.
+
+### Palette
+- Background: `bg-[#f6f5f1]`
+- Cards: `bg-white` with `border border-[#e5e0db]` and `shadow-sm`
+- Left accent bars: `border-l-{amber|blue|green|purple}-500` on metric cards
+- Text: `text-[#2c241f]` headings, `text-[#6f5b4e]` labels, `text-[#9a8a7d]` placeholders
+- Amber accent: `#92400E` for primary buttons and active states
+
+### Spacing
+- Max container: `max-w-6xl mx-auto`
+- Padding: `px-4 sm:px-5 py-5 sm:py-6`
+- Card padding: `p-4` stats, `p-5` section cards
+- Gap: `gap-3` grid, `gap-5` between sections
+- Grid: `grid-cols-2 sm:grid-cols-4` stats, `xl:grid-cols-3` schedule+notes
+
+### Components
+- Metric Card: `border-l-4 border-l-{color} bg-white rounded-lg border border-[#e5e0db] shadow-sm p-4`
+- Section Card: `bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5`
+- Badge (type): `text-[10px] font-semibold px-1.5 py-0.5 rounded` + type color
+- Badge (status): `text-[10px] font-medium px-1.5 py-0.5 rounded` + status color
+- Primary btn: `bg-[#92400E] text-white rounded-md text-xs font-semibold hover:bg-[#a04e14]`
+- Ghost btn: `bg-[#f6f5f1] text-[#6f5b4e] rounded-md text-xs font-semibold hover:bg-[#e5e0db]`
+- Empty state: Icon + `text-xs text-[#6f5b4e] text-center py-6/10`
+- Toast: `fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-lg shadow-lg text-xs font-semibold flex items-center gap-2`
+- Loading: Centered spinning amber border ring
+- Scrollbar: `.custom-scrollbar` thin 4px with `#d4c9be` thumb
+
+### Key Files
+- `/app/provider/dashboard/page.tsx`: Today schedule, upcoming, session notes, availability grid, booking trends chart
+- `/app/org/portal/page.tsx`: Participant metrics, platform health bars, appointments list, program progress
+- `/app/guest/page.tsx` → `GuestSanctuary`: Chat panel, right panel, panic FAB
+- `/app/globals.css`: Custom scrollbar, dashboard utility classes
+
+---
+
+## Auth & Access Control (June 2026)
+
+### Middleware (`lib/supabase/middleware.ts`)
+| Path | Access |
+|---|---|
+| `/`, `/guest`, `/register`, `/login`, `/onboarding` | Public |
+| `/guardian/*`, `/org/register` | Public (token-gated) |
+| `/admin/*` | Auth required + email in `ADMIN_EMAILS` env var |
+| `/dashboard/*`, `/settings/*`, `/provider/*`, `/org/portal/*` | Auth + `onboarding_done` check |
+| `/provider/dashboard` | Auth + must have matching `providers.id` or `providers.user_id` |
+| `/org/portal` | Auth + must have matching org-type provider (religious_org/ngo/uni) |
+
+### Providers ↔ Auth Users
+- `providers` table has **no FK** to `auth.users` — it's a standalone directory
+- Provider API routes used `providers.id = user.id` (broken for auto-generated UUIDs)
+- **New**: `user_id` column on `providers` (FK to `auth.users.id`, nullable)
+- API routes now use `.or('id.eq.{uid},user_id.eq.{uid}')` — matches by either ID
+- Admin can "Grant Access" on verified orgs: creates auth user + profile + sets `user_id`
+- Migration: `supabase/migrations/01_add_provider_auth_columns.sql`
+
+### Org Auth Flow
+1. Org registers at `/org/register` (public, 4-step form)
+2. POST `/api/directory` → stores in `providers` with `is_verified=false, is_active=false`
+3. Admin approves in `/admin/providers` → sets `is_verified=true, is_active=true`
+4. Admin clicks "Grant Portal Access" → creates auth user, links provider via `user_id`
+5. Org logs in with their email + generated password → accesses `/org/portal`
+
+### New API Routes
+| Route | Method | Description |
+|---|---|---|
+| `/api/org/portal` | GET | Org portal metrics + appointments (auth-required, matches by email then user_id) |
+| `/api/admin/providers/[id]/grant-access` | POST | Create auth user + link to provider (admin-only) |

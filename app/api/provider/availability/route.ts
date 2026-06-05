@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
 
     const { data: provider, error } = await supabase
       .from('providers')
-      .select('online, in_person, availability_slots, session_types')
-      .eq('id', user.id)
+      .select('id, online, in_person, availability_slots, session_types')
+      .or(`id.eq.${user.id},user_id.eq.${user.id}`)
       .single()
 
     if (error || !provider) {
@@ -47,6 +47,14 @@ export async function PATCH(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { data: existing } = await supabase
+      .from('providers')
+      .select('id')
+      .or(`id.eq.${user.id},user_id.eq.${user.id}`)
+      .single()
+
+    if (!existing) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
+
     const body = await request.json()
     const update: Record<string, any> = {}
 
@@ -58,7 +66,7 @@ export async function PATCH(request: NextRequest) {
     const { error } = await supabase
       .from('providers')
       .update(update)
-      .eq('id', user.id)
+      .eq('id', existing.id)
 
     if (error) throw error
 

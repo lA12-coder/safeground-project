@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const { data: provider } = await supabase
       .from('providers')
       .select('id, name, specialization, online, in_person, is_verified, rating')
-      .eq('id', user.id)
+      .or(`id.eq.${user.id},user_id.eq.${user.id}`)
       .single()
 
     if (!provider) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })

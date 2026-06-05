@@ -13,6 +13,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { data: provider } = await supabase
+      .from('providers')
+      .select('id')
+      .or(`id.eq.${user.id},user_id.eq.${user.id}`)
+      .single()
+
+    if (!provider) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
+
     const body = await request.json()
     const update: Record<string, any> = {}
 
@@ -23,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .from('telehealth_bookings')
       .update(update)
       .eq('id', id)
-      .eq('provider_id', user.id)
+      .eq('provider_id', provider.id)
 
     if (error) throw error
 

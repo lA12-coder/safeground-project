@@ -3,10 +3,10 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { AuthLayout } from '@/components/auth/AuthLayout';
 import { ShieldCheck } from 'lucide-react';
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   return (
     <AuthLayout
-      title="Welcome back"
+      title="Admin login"
       icon={<ShieldCheck className="w-5 h-5" />}
     >
       <Suspense fallback={
@@ -14,7 +14,7 @@ export default function LoginPage() {
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       }>
-        <LoginForm />
+        <LoginForm mode="admin" defaultRedirectTo="/admin" />
       </Suspense>
     </AuthLayout>
   );

@@ -24,8 +24,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { error } = await supabase
       .from('providers')
       .update({
-        is_verified: verified ?? true,
-        is_active: verified ?? true,
+        is_verified: verified === true,
+        is_active: true,
       })
       .eq('id', id)
 

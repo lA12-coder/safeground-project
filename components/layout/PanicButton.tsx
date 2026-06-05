@@ -6,13 +6,18 @@ import Link from 'next/link';
 
 type PanicButtonProps = {
   variant?: 'header' | 'sidebar' | 'fab';
+  onActivate?: () => void | Promise<void>;
 };
 
-export function PanicButton({ variant = 'fab' }: PanicButtonProps) {
+export function PanicButton({ variant = 'fab', onActivate }: PanicButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePanic = async () => {
     setIsOpen(true);
+    if (onActivate) {
+      await onActivate();
+      return;
+    }
     try {
       await fetch('/api/panic', {
         method: 'POST',

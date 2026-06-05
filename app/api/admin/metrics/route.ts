@@ -34,7 +34,10 @@ export async function GET(request: NextRequest) {
     ])
 
     const { count: chat_today } = await supabase
-      .from('anonymous_chat').select('*', { count: 'exact', head: true }).gte('sent_at', today)
+      .from('anonymous_chat')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_deleted', false)
+      .gte('created_at', today)
 
     const { count: relapse_last_7 } = await supabase
       .from('habit_logs').select('*', { count: 'exact', head: true }).eq('relapsed', true).gte('log_date', sevenDaysAgoStr)
@@ -50,7 +53,10 @@ export async function GET(request: NextRequest) {
       .from('providers').select('*', { count: 'exact', head: true }).eq('is_verified', false)
 
     const { count: flagged_messages } = await supabase
-      .from('anonymous_chat').select('*', { count: 'exact', head: true }).eq('is_flagged', true)
+      .from('anonymous_chat')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_flagged', true)
+      .eq('is_deleted', false)
 
     const { data: avgStreakData } = await supabase
       .from('streaks').select('current_streak').gt('current_streak', 0)

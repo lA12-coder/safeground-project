@@ -96,29 +96,50 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const body = await request.json();
+    const name = String(body.name || body.org_name || '').trim();
+    const orgName = String(body.org_name || body.name || '').trim();
+    const languages = Array.isArray(body.languages)
+      ? body.languages.filter(Boolean)
+      : String(body.languages || '')
+        .split(',')
+        .map((language) => language.trim())
+        .filter(Boolean);
 
-    const { error } = await supabase.from('providers').insert({
-      name: body.name,
-      org_name: body.org_name,
+    if (!name || !orgName) {
+      return NextResponse.json({ error: 'Organization name and contact name are required' }, { status: 400 });
+    }
+
+    const spiritualMeta: Record<string, unknown> = {}
+    if (body.faith_category) spiritualMeta.faith_category = body.faith_category
+    if (body.traditions?.length) spiritualMeta.traditions = body.traditions
+    if (body.ministries?.length) spiritualMeta.ministries = body.ministries
+    if (body.programs?.length) spiritualMeta.programs = body.programs
+    if (body.mentors?.length) spiritualMeta.mentors = body.mentors
+
+    const { data, error } = await supabase.from('providers').insert({
+      name,
+      org_name: orgName,
       type: body.type || 'ngo',
-      specialization: body.bio?.slice(0, 100) || '',
+      specialization: body.specialization || body.faith_category || body.services?.join(', ') || body.bio?.slice(0, 100) || 'Community recovery support',
       city: body.city || '',
       region: body.region || 'Ethiopia',
       bio: body.bio || '',
-      languages: body.languages || [],
+      languages,
       consultation_fee: body.consultation_fee || null,
       pro_bono: body.pro_bono || false,
       online: body.online || false,
       in_person: body.in_person ?? true,
+      availability_slots: Object.keys(spiritualMeta).length > 0 ? spiritualMeta : null,
       is_verified: false,
       is_active: false,
-      phone: '',
-    });
+      email: body.email || body.contact_email || '',
+      phone: body.phone || body.contact_phone || '',
+    }).select('id, name, org_name, type, is_verified, is_active, email').single();
 
     if (error) throw error;
 
     return NextResponse.json(
-      { success: true, message: 'Registration submitted for review' },
+      { success: true, provider: data, message: 'Registration submitted for review' },
       { status: 201 }
     );
   } catch (error) {
