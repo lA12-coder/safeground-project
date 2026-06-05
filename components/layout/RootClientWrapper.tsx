@@ -1,12 +1,13 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { AIChatWidget } from '@/components/chat/AIChatWidget';
+import { BackButton } from '@/components/layout/BackButton';
 
 export function RootClientWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      <BackButton />
       <AIChatWidget />
     </>
   );
