@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 480">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdf6ed"/>
+      <stop offset="100%" stop-color="#fff"/>
+    </linearGradient>
+    <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#92400E"/>
+      <stop offset="100%" stop-color="#7a360a"/>
+    </linearGradient>
+    <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a04e14"/>
+      <stop offset="100%" stop-color="#8a4210"/>
+    </linearGradient>
+    <linearGradient id="m3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b85e1a"/>
+      <stop offset="100%" stop-color="#a04e14"/>
+    </linearGradient>
+    <radialGradient id="sg" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="480" fill="url(#sky)"/>
+  <circle cx="300" cy="180" r="80" fill="url(#sg)"/>
+  <circle cx="300" cy="180" r="40" fill="#f59e0b" opacity="0.3"/>
+  <circle cx="300" cy="180" r="20" fill="#f59e0b" opacity="0.5"/>
+  <path d="M0 380 L80 280 L160 330 L240 240 L320 290 L400 200 L480 260 L560 210 L600 230 L600 480 L0 480 Z" fill="url(#m1)" opacity="0.9"/>
+  <path d="M0 420 L60 350 L140 390 L220 310 L300 350 L380 280 L460 330 L540 290 L600 310 L600 480 L0 480 Z" fill="url(#m2)" opacity="0.85"/>
+  <path d="M0 450 L100 400 L200 430 L300 380 L400 410 L500 370 L600 390 L600 480 L0 480 Z" fill="url(#m3)" opacity="0.75"/>
+  <g opacity="0.12">
+    <text x="420" y="80" font-size="14" fill="#92400E">✦</text>
+    <text x="100" y="120" font-size="10" fill="#92400E">✦</text>
+    <text x="480" y="200" font-size="8" fill="#92400E">✦</text>
+    <text x="150" y="60" font-size="6" fill="#92400E">✦</text>
+    <text x="520" y="140" font-size="12" fill="#92400E">✦</text>
+    <text x="80" y="220" font-size="7" fill="#92400E">✦</text>
+  </g>
+</svg>

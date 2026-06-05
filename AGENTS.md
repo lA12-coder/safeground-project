@@ -1641,379 +1641,673 @@ Reverse-chronological feed of user's actions:
 - ✅ Check-in submitted · Mood 8/10 · 2h ago
 - 🚨 Panic session completed · Streak protected · Yesterday
 - 🏅 Milestone: 14 days clean · 2 days ago
-- 💬 Posted in Global Support · 3d ago
-- 🙏 Encouragement received from Guardian · 4d ago
-
-### 24.7 Achievement Center (8-col + 4-col split)
-
-**Left — Recovery Level System** (8 cols):
-- Level 1 → Level 12 ladder
-- XP bar with total points
-- "Earn 240 XP to reach Level 5: Healer"
-- Unlocked perks list
-
-**Right — Badge Wall** (4 cols, grid 2×3):
-- 🛡️ 3-Day Shield, 🌅 7-Day Dawn, 🦅 14-Day Eagle, 🏔️ 30-Day Mountain, 🌍 60-Day World, 🌌 90-Day Cosmos
-- Locked badges in muted grey
-- Hover → unlock criteria tooltip
-
-### 24.8 Quick Actions Grid (full width, 6 columns)
-
-| Action | Icon | Description | Accent |
-|---|---|---|---|
-| Daily Check-In | 📝 | Log mood, stress, urge | amber |
-| Panic Support | 🚨 | Emergency intervention | red |
-| Community Chat | 💬 | Anonymous support rooms | green |
-| Find Counselor | 👨‍⚕️ | Book professional | blue |
-| Faith Support | 🕊️ | Spiritual programs | amber |
-| Guardian Support | 🛡️ | Trusted supporter | green |
-
-Each tile: `rounded-xl border border-[#e5e0db] p-4 hover:shadow-md hover:border-[#92400E] transition` with icon, title, 1-line description, chevron arrow.
-
-### 24.9 User Dashboard File Plan
-
-| File | Purpose |
-|---|---|
-| `app/(dashboard)/dashboard/page.tsx` | Server component: fetch streak, score, history, insights |
-| `app/(dashboard)/dashboard/_components/HeroCard.tsx` | Hero with ring + score |
-| `app/(dashboard)/dashboard/_components/KpiRow.tsx` | 6 KPI cards |
-| `app/(dashboard)/dashboard/_components/InsightFeed.tsx` | AI insights list |
-| `app/(dashboard)/dashboard/_components/RiskCard.tsx` | Risk score + factors |
-| `app/(dashboard)/dashboard/_components/ChartsRow.tsx` | 3 Recharts charts |
-| `app/(dashboard)/dashboard/_components/ActivityTimeline.tsx` | Reverse-chronological feed |
-| `app/(dashboard)/dashboard/_components/AchievementCenter.tsx` | Level + badges |
-| `app/(dashboard)/dashboard/_components/QuickActions.tsx` | 6 action tiles |
-| `app/api/insights/route.ts` | Returns AI-generated insights based on logs |
 
 ---
 
-## 25. ADMIN DASHBOARD — "Executive Operations Center"
+# SafeGround — v0.app Build Playbook & Team Prompt Series
 
-Route: `/admin`
-Auth: required + admin email
-Layout: full DashboardShell, all admin-only routes.
-
-### 25.1 Executive KPI Row (4 large cards)
-
-| Card | Value | Sub | Trend | Accent |
-|---|---|---|---|---|
-| Daily Active Users | 1,247 | ▲ 12% vs yesterday | sparkline 7d | amber |
-| Weekly Active Users | 4,892 | ▲ 8% WoW | sparkline 8w | amber |
-| Monthly Active Users | 18,341 | ▲ 24% MoM | sparkline 12m | amber |
-| Total Registered | 26,108 | +248 this week | sparkline 30d | blue |
-
-Below the row: **Retention Rate 67%** (amber), **Success Rate 41%** (green), **Panic Activations 89** (red), **Bookings 312** (blue), **Faith Enrollments 78** (purple), **Guardian Connections 156** (green) — 6 mini-KPIs in a 6-col grid.
-
-### 25.2 Real-Time Monitoring Panel (split view)
-
-**Left (6 cols) — Live Activity Feed**:
-- Header: "Live Activity" + green pulse dot + "Realtime" badge
-- Items stream in via Supabase Realtime:
-  - 👤 New signup · QuietLion42 · 2s ago
-  - ✅ Check-in · Mood 8/10 · 5s ago
-  - 🚨 Panic event · Streak protected · 12s ago
-  - 📅 Booking confirmed · Dr. Hiwot · 18s ago
-  - 🙏 Enrollment · Restoration Fellowship · 25s ago
-- Each row: icon, action, context, time-ago
-- "View all activity" link → `/admin/activity`
-
-**Right (6 cols) — Geographic Heatmap**:
-- Stylized Ethiopia SVG (preserved from current implementation)
-- Bubble size = active users
-- Hover → tooltip (City, Active Users, Avg Streak)
-- Top 3 city cards: Addis Ababa 547 • Hawassa 218 • Dire Dawa 134
-
-### 25.3 Analytics Center (3 charts row)
-
-| Chart | Type | Window | Accent |
-|---|---|---|---|
-| User Growth | Recharts AreaChart, stacked by role | 30d | amber-500 |
-| Recovery Success Rate | Recharts LineChart, smooth | 90d | green-500 |
-| Engagement | Recharts BarChart, daily active | 30d | blue-500 |
-| Retention Cohorts | Recharts Heatmap | 12w | purple-500 |
-| Program Performance | Recharts RadarChart, 5 programs | now | amber-700 |
-| Panic Trend | Recharts ComposedChart (line+bar) | 30d | red-500 |
-
-Tabs above: 7d / 30d / 90d / 1y / All time
-
-### 25.4 Provider Management Section
-
-3-column layout: **Approval Queue** (5 cols), **Verification Workflow** (4 cols), **Performance Monitoring** (3 cols).
-
-- Approval Queue: list of pending providers with quick Verify/Reject actions
-- Verification Workflow: pipeline view (Submitted → Docs Review → Background → Approved) with counts at each stage
-- Performance Monitoring: top 5 providers by rating, sessions, response time
-
-### 25.5 Moderation Center
-
-- Flagged messages list with bulk select + bulk action toolbar (Delete, Dismiss, Escalate, Ban user)
-- Filters: AGGRESSIVE / SPAM / INAPPROPRIATE / OFF-TOPIC
-- Each message: flag badge, alias, time-ago, truncated text, full message on click (drawer)
-- "Bulk delete" with confirmation modal
-
-### 25.6 Audit Center (admin-only)
-
-- System logs: timestamp, actor, action, target, IP
-- Admin actions: who approved/rejected/deleted what
-- Security events: failed logins, suspicious patterns
-- Change history: diff view for sensitive tables
-- Export → CSV / JSON
-
-### 25.7 Admin Dashboard File Plan
-
-| File | Purpose |
-|---|---|
-| `app/admin/page.tsx` | Server component: aggregate metrics + pass to client |
-| `app/admin/_components/ExecutiveKpiRow.tsx` | 4 hero KPI cards |
-| `app/admin/_components/LiveActivityFeed.tsx` | Real-time Supabase subscription |
-| `app/admin/_components/GeoHeatmap.tsx` | SVG map + bubbles |
-| `app/admin/_components/AnalyticsCenter.tsx` | 6 Recharts |
-| `app/admin/_components/ProviderManagement.tsx` | Queue + workflow + perf |
-| `app/admin/_components/ModerationCenter.tsx` | Flagged messages + bulk actions |
-| `app/admin/_components/AuditCenter.tsx` | Logs + history + export |
-| `app/api/admin/audit/route.ts` | Returns audit events |
+> Ethiopian Youth Digital Well-Being Platform — 4-Day Hackathon Sprint
+>
+> **Stack:** Next.js 14 · Supabase · Claude AI · Tailwind · shadcn/ui
+> **Deploy:** Vercel (single command)
+> **Design Source:** Google Stitch — 19 screens
+> **Teams:** Team A (User-Facing) · Team B (Admin & Backend)
+> **Total v0 Prompts:** 12 prompts across 2 teams
+> **Build Duration:** 4 days / 96 hours
 
 ---
 
-## 26. PROVIDER DASHBOARD — "Professional Healthcare Portal"
+## PART 1 — PROJECT SETUP PROMPT
 
-Route: `/provider/dashboard`
-Auth: required + provider role
+Send this single prompt first — before splitting into teams. It scaffolds the entire project.
 
-### 26.1 Provider Overview (4 KPI cards)
+### 🚀 PROMPT 0 — Project Scaffold (Send Once, Before Teams Split)
 
-| Card | Value | Sub | Accent |
-|---|---|---|---|
-| Today's Appointments | 5 | 2 confirmed, 3 pending | blue |
-| This Week | 23 | ▲ 4 vs last week | blue |
-| Total Sessions | 412 | Lifetime | amber |
-| Rating | 4.8 / 5 | 89 reviews | green |
+Copy and paste the following prompt into v0.app:
 
-### 26.2 Schedule Center (calendar)
+```
+You are a senior Next.js 14 engineer. Scaffold the complete SafeGround project — a
+privacy-first digital well-being platform for Ethiopian university students.
 
-- Tabs: **Day / Week / Month** view
-- Week view: 7-col grid × hourly rows (8:00–18:00)
-- Each booking: anonymous alias, session type badge (Initial blue / Follow-up purple / Crisis red), duration pill, status (Confirmed/Pending/Completed)
-- **Join Session** green button (10 min before start)
-- Color-coded availability (green = available, amber = busy, red = blocked)
-- Drag-and-drop reschedule (optional enhancement)
-- "New appointment" FAB
+DESIGN LANGUAGE (from Stitch mockups — match exactly):
 
-### 26.3 Patient Management (3 panels)
+  Primary brand:  Amber/warm brown  (#92400E, #78350F, amber-600/800)
+  Danger/Panic:   Deep red           (#B91C1C, red-700)
+  Success:        Forest green       (#166534, green-700)
+  Background:     Warm cream         (#FAFAF9, stone-50)
+  Cards:          White with subtle shadow (shadow-sm)
+  Typography:     Geist Sans (body) + Noto Serif Ethiopic (accent headings)
+  Panic button:   Fixed red pill, always visible, bottom-right on mobile,
+                  left sidebar on desktop
 
-**Left — Patient List** (4 cols):
-- Anonymized aliases only (QuietLion42, HopeRunner, etc.)
-- Last session date, total sessions, current streak
-- Search + filter (active / inactive / new)
+GENERATE THIS EXACT FILE & FOLDER STRUCTURE:
 
-**Center — Patient Detail** (5 cols):
-- Session history (timeline)
-- Encrypted notes
-- Treatment plan (free-text)
-- Next appointment
-- "Add note" button → opens encrypted note modal
+safeground/
+├── app/
+│   ├── (auth)/
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   └── onboarding/page.tsx
+│   ├── (dashboard)/
+│   │   ├── layout.tsx              ← sidebar + bottom nav + panic button
+│   │   ├── dashboard/page.tsx
+│   │   ├── log/page.tsx
+│   │   ├── chat/page.tsx
+│   │   ├── directory/page.tsx
+│   │   ├── spiritual/page.tsx
+│   │   └── settings/guardian/page.tsx
+│   ├── guardian/[token]/page.tsx
+│   ├── admin/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── providers/page.tsx
+│   │   ├── moderation/page.tsx
+│   │   └── seed/page.tsx
+│   ├── guest/page.tsx              ← anonymous sanctuary
+│   ├── api/                        ← all server routes (see PART 4 B1)
+│   ├── layout.tsx                  ← root layout, fonts, global providers
+│   └── page.tsx                    ← public landing page
+├── components/
+│   ├── ui/                         ← shadcn/ui auto-generated
+│   ├── layout/                     ← Sidebar, BottomNav, PanicButton
+│   ├── dashboard/                  ← StreakCard, MoodChart, AffirmationCard, KhatRiskBanner
+│   ├── log/HabitLogForm.tsx
+│   ├── panic/                      ← PanicModal, BreathingCircle, CopingStepCard
+│   ├── chat/                       ← ChatRoom, MessageBubble, ChatInput, RoomSelector
+│   ├── directory/                  ← ProviderCard, BookingFlow
+│   ├── spiritual/                  ← FaithOrgCard, SpiritualCompanion
+│   ├── guardian/                   ← GuardianSetupWizard, GuardianDashboard
+│   └── admin/                      ← MetricCard, ProviderReviewCard, FlaggedMessageCard
+├── lib/
+│   ├── supabase/                   ← client.ts, server.ts
+│   ├── ai/claude.ts
+│   ├── utils/                      ← aliasGenerator, streakUtils, khatRiskDetector
+│   └── types/index.ts              ← all shared TypeScript types
+├── middleware.ts                   ← route protection + auth checks
+├── .env.local.example
+├── tailwind.config.ts
+└── package.json
 
-**Right — Follow-up Reminders** (3 cols):
-- Patients due for follow-up in 7 days
-- One-click "Send reminder" button (in-app notification)
-- Snooze / dismiss actions
+DEPENDENCIES TO INSTALL:
+  @supabase/supabase-js @supabase/ssr
+  @anthropic-ai/sdk
+  recharts framer-motion lucide-react
+  shadcn/ui (button, card, badge, dialog, progress, tabs, toast, slider)
+  qrcode.react
 
-### 26.4 Provider Analytics
+GENERATE THESE STARTER FILES WITH FULL CODE:
+  1.  app/layout.tsx          — root layout with Noto Serif Ethiopic + Geist fonts
+  2.  middleware.ts           — protect /dashboard/*, /admin/*, allow /guest, /guardian
+  3.  lib/supabase/client.ts  — createBrowserClient
+  4.  lib/supabase/server.ts  — createServerClient
+  5.  lib/types/index.ts      — all types: Profile, HabitLog, Streak, Provider,
+                                AnonymousChat, GuardianControl, TelehealthBooking
+  6.  lib/utils/aliasGenerator.ts — Amharic-adjective + animal + number combos
+  7.  components/layout/PanicButton.tsx — red fixed pill, opens PanicModal
+  8.  components/layout/Sidebar.tsx    — desktop sidebar matching Stitch design
+  9.  components/layout/BottomNav.tsx  — mobile 5-tab bottom navigation
+  10. app/(dashboard)/layout.tsx      — wraps all dashboard pages
+  11. tailwind.config.ts              — extend with amber/stone/forest palette
+  12. .env.local.example              — all required env var keys
 
-| Chart | Type | Window | Accent |
-|---|---|---|---|
-| Session Completion Rate | Recharts RadialBar | 30d | green |
-| Attendance Rate | Recharts LineChart | 12w | blue |
-| Patient Satisfaction | Recharts BarChart (1–5 stars) | 30d | amber |
-| Weekly Trends | Recharts AreaChart | 12w | amber-500 |
-| Monthly Performance | Recharts ComposedChart | 12m | amber-700 |
+PANIC BUTTON EXACT SPEC (match emergency_panic_support_mobile screen):
+  - On desktop: in sidebar, full-width red pill with asterisk * icon
+  - On mobile: fixed bottom-right, circular red button, z-50
+  - Label: 'PANIC' in white, bold
+  - On click: open PanicModal full-screen overlay (do not navigate away)
 
-### 26.5 Availability & Settings
+ALIAS GENERATOR SPEC:
+  Amharic adjectives (latinized): Selam, Biruk, Tsega, Fiker, Tena,
+    Nitsuh, Haile, Abebe, Genet, Abenezer, Chora
+  Animals: Lion, Eagle, Crane, Gazelle, Wolf, Falcon, Cheetah,
+    Ibis, Eland, Jackal, Otter, Dove
+  Format: [Adjective]-[Animal]-[2-digit-number]
+  Example: 'Abenezer-Crane-68'  (matches Stitch join screen)
 
-- Weekly calendar grid (Mon–Sat × 8:00–18:00, clickable green slots) — **preserved**
-- Session types checkboxes (Initial / Follow-up / Crisis) — **preserved**
-- Online / In-person toggles with Hybrid indicator — **preserved**
-- New: time-off blocks, recurring availability templates, sync with Google Calendar (future)
-
-### 26.6 Communication Center
-
-- Appointment notifications (auto + manual)
-- Patient messages (provider inbox)
-- Bulk announcements to all patients
-- Reminder system (24h, 1h before session)
-
-### 26.7 Provider File Plan
-
-| File | Purpose |
-|---|---|
-| `app/provider/dashboard/page.tsx` | Server component: provider data |
-| `app/provider/dashboard/_components/ProviderOverview.tsx` | 4 KPI cards |
-| `app/provider/dashboard/_components/ScheduleCenter.tsx` | Day/Week/Month calendar |
-| `app/provider/dashboard/_components/PatientManagement.tsx` | List + Detail + Reminders |
-| `app/provider/dashboard/_components/ProviderAnalytics.tsx` | 5 Recharts |
-| `app/provider/dashboard/_components/AvailabilitySettings.tsx` | Grid + toggles (preserved) |
-| `app/provider/dashboard/_components/CommunicationCenter.tsx` | Notifications + messages |
-
----
-
-## 27. GUARDIAN DASHBOARD — "Recovery Support Portal"
-
-Route: `/guardian/[token]`
-Auth: **none** (token-gated, public route)
-
-### 27.1 Privacy Rules (CRITICAL)
-
-Guardian **NEVER** sees:
-- ❌ Private journal entries
-- ❌ Chat messages
-- ❌ Private notes
-- ❌ Detailed triggers (only "high-risk window today" yes/no)
-- ❌ Relapse detail (only "last relapse: 12 days ago" — no cause/notes)
-- ❌ AI reflections
-
-Guardian **MAY** see (sanitized):
-- ✅ Current streak (number only)
-- ✅ Goal progress (X/Y days)
-- ✅ Recovery status badge (Improving / Steady / Needs Support)
-- ✅ Mood trend (weekly aggregate, anonymized points)
-- ✅ Panic activity count (no details)
-- ✅ Milestone list (which badges unlocked, when)
-
-### 27.2 Guardian Overview (4 KPI cards)
-
-| Card | Value | Sub | Accent |
-|---|---|---|---|
-| Current Streak | 14 days | ▲ 2 from last week | amber |
-| Goal Progress | 47% | 16 days remaining | amber |
-| Recovery Status | Improving | Steady trend | green |
-| Last Panic Event | 2 days ago | Streak protected | blue |
-
-### 27.3 Recovery Analytics (sanitized)
-
-- **Mood Trend** — Recharts LineChart, weekly aggregate, no daily points
-- **Goal Completion** — Recharts RadialBar with X/Y
-- **Streak Timeline** — Recharts AreaChart, weekly clean days
-- **Risk Signal (Boolean)** — green = "Stable", amber = "Elevated today", red = "High risk — consider reaching out"
-  - **Never** shows the cause or detail
-
-### 27.4 Support Actions (3 cards)
-
-| Action | Description | API |
-|---|---|---|
-| 💌 Send Encouragement | One-tap motivational message | `POST /api/guardian/encourage` |
-| 🧘 Suggest Calm Activity | Sends a breathing/grounding tip | `POST /api/guardian/encourage` (variant) |
-| 🙏 Share Faith Quote | Sends daily scripture or quote | `POST /api/guardian/encourage` (variant) |
-
-Each card: emoji, title, description, "Send" button → toast confirmation "Sent to {alias}".
-
-### 27.5 Weekly Summary (auto-generated every Sunday)
-
-- This week: 5 check-ins, 2 peaks in stress, 1 milestone (7-day)
-- Mood: average 7.2 / 10
-- Trend: improving
-- "Send weekly summary" toggle (default on)
-
-### 27.6 Alert Settings (guardian-side preferences)
-
-- 🔔 Panic Alerts (instant)
-- 📊 Weekly Summaries (Sunday 6 PM)
-- ⚠️ Relapse Notifications (sanitized count only)
-- 🏅 Milestone Celebrations (badge unlocks)
-
-### 27.7 Access Controls
-
-- Guardian Access Active ✓
-- Last viewed: 2h ago
-- "Revoke Access" button → confirmation modal → calls `POST /api/guardian/revoke`
-- New: "View audit log of my access" (when did I last view this dashboard?)
-
-### 27.8 Guardian File Plan
-
-| File | Purpose |
-|---|---|
-| `app/guardian/[token]/page.tsx` | Server: fetch sanitized data via `/api/guardian/view/[token]` |
-| `app/guardian/[token]/_components/GuardianOverview.tsx` | 4 KPI cards |
-| `app/guardian/[token]/_components/SanitizedCharts.tsx` | Mood/Goal/Streak charts |
-| `app/guardian/[token]/_components/SupportActions.tsx` | 3 encouragement cards |
-| `app/guardian/[token]/_components/WeeklySummary.tsx` | Auto-generated weekly digest |
-| `app/guardian/[token]/_components/AlertSettings.tsx` | Toggle preferences |
-| `app/guardian/[token]/_components/AccessControls.tsx` | Revoke + audit log |
+Output all files with complete, working TypeScript code. No placeholders.
+```
 
 ---
 
-## 28. ORGANIZATION DASHBOARD — "Program Management Platform"
+## PART 2 — TEAM DIVISION
 
-Route: `/org/portal`
-Auth: required + matching org-type provider
-
-### 28.1 Org Overview (4 KPI cards)
-
-| Card | Value | Sub | Accent |
-|---|---|---|---|
-| Participants | 248 | ▲ 18 this month | amber |
-| Active Programs | 12 | 3 launching next week | blue |
-| Sessions (30d) | 412 | ▲ 12% MoM | green |
-| Engagement Rate | 73% | Strong participation | green |
-
-### 28.2 Program Management
-
-**Tabs**: All / Active / Draft / Completed
-
-Each program card:
-- Cover image, title, type (Faith / NGO / University)
-- Participant count, completion rate, current week
-- "Manage" → opens Program Detail
-- "Create new program" button → opens wizard
-
-**Create Program Wizard** (3 steps):
-1. Basic info: name, type, description, cover image
-2. Curriculum: weekly topics, materials, assignments
-3. Enrollment: open / invite-only, capacity, start date
-
-### 28.3 Participant Management
-
-- Table: Alias, Program, Week, Attendance %, Last Active, Status
-- Search + filter
-- Anonymized names (QuietLion42, etc.)
-- "Send announcement" → bulk message
-- "Export participants" → CSV
-
-### 28.4 Org Analytics
-
-| Chart | Type | Window | Accent |
-|---|---|---|---|
-| Program Success Rate | Recharts BarChart (per program) | 90d | green |
-| Attendance Rate | Recharts LineChart | 12w | blue |
-| User Engagement | Recharts AreaChart | 30d | amber-500 |
-| Growth Trends | Recharts ComposedChart | 12m | amber-700 |
-| Completion Funnel | Recharts FunnelChart | 90d | purple |
-| Satisfaction | Recharts RadialBar | 30d | amber |
-
-### 28.5 Reports & Export
-
-- **Export PDF**: branded PDF with logo, KPIs, charts (jsPDF + html2canvas)
-- **Export Excel**: full data tables (xlsx)
-- **Export Analytics**: JSON for BI tools
-- **Scheduled reports**: weekly / monthly email
-
-### 28.6 Org Appointments
-
-- List of upcoming telehealth bookings (anonymized aliases)
-- Confirm / Reschedule / Cancel actions
-- "Join session" button for confirmed bookings
-
-### 28.7 Platform Health (preserved from current)
-
-- Completion Rate bar
-- Attendance bar
-- Satisfaction bar
-- Each: `bg-[#f6f5f1]` track, `bg-[#92400E]` fill, animated
-
-### 28.8 Org File Plan
-
-| File | Purpose |
+| Team | Responsibility |
 |---|---|
-| `app/org/portal/page.tsx` | Server: fetch org data via `/api/org/portal` |
-| `app/org/portal/_components/OrgOverview.tsx` | 4 KPI cards |
-| `app/org/portal/_components/ProgramManagement.tsx` | List + Create wizard |
-| `
+| **TEAM A — User Experience** | All user-facing pages: Landing, Auth, Dashboard, Log, Panic, Chat, Directory, Spiritual, Guardian |
+| **TEAM B — Platform & Admin** | Admin dashboard, Provider portal, Organization flows, Clinical dashboard, Seed data, API routes |
+
+| Pages → Team A | Pages → Team B |
+|---|---|
+| `/` — Landing (public) | `/admin` — System Overview Dashboard |
+| `/guest` — Anonymous Sanctuary | `/admin/providers` — Approval Queue |
+| `/register` — Join Anonymously | `/admin/moderation` — Chat Moderation |
+| `/onboarding` — 5-Step Wizard | `/admin/seed` — Demo Data Panel |
+| `/dashboard` — Recovery Hub | `/guardian/[token]` — Guardian View |
+| `/log` — Daily Habit Check-in | Organization Registration Page |
+| `/panic` — Emergency Support | Organization Wellness Portal |
+| `/chat` — Community Healing Spaces | Clinical Provider Dashboard |
+| `/directory` — Support Directory | Organization Approval Center |
+| `/spiritual` — Spiritual Support Hub | All `/api/*` route handlers |
+| `/settings/guardian` — Link Setup | Database seed script |
+
+---
+
+## PART 3 — TEAM A PROMPTS (User Experience)
+
+Team A sends prompts A1 through A6 in sequence. Each prompt builds on the previous.
+
+### TEAM A — PROMPT A1: Landing Page + Auth Flow
+
+You are building SafeGround, a privacy-first well-being platform for Ethiopian university students. Build the following 3 pages matching the Stitch design exactly.
+
+**DESIGN REFERENCE (safeground_home screen):**
+- Background: stone-50 (#FAFAF9), warm cream
+- Nav: 'SafeGround' logo in amber-800, nav links in stone-600, PANIC button in red-700 (always right side of nav)
+- Hero: 'Your Journey is Private.' — 'Private.' in amber-600 italic, subtitle: 'A digital hearth for university students in Ethiopia', Buttons: 'Start Anonymously' (amber filled) + 'How it Works' (outline)
+- Stats: '15k+ Active Students' | '100% Data Sovereignty' | '24/7 Crisis Response'
+- Feature grid: AI Recovery Paths | Panic Support (dark red card) | Anonymous Chat (green card) | Faith Integration
+- Testimonials: 'Voices of Healing' section with student quotes
+- University logos: AAU, ASTU, JU, MU, HU
+- Privacy FAQ: accordion with 3 questions
+
+**PAGE 1 — `app/page.tsx` (Landing)**
+Full marketing landing page matching Stitch design.
+CTA 'Start Anonymously' → `/register`
+'How it Works' → scrolls to features section
+
+**PAGE 2 — `app/(auth)/register/page.tsx` (Join Anonymously)**
+DESIGN REFERENCE (safeground_join_anonymously screen):
+- Header: 'Your healing journey starts privately.' (with 'privately.' in amber-600 italic)
+- Language selector: 4 pill buttons — English (selected/green) | አማርኛ Amharic | Oromifa | ትግርኛ Tigrinya
+- Anonymous alias box: shows generated alias (e.g. 'Abenezer-Crane-68') with refresh/regenerate icon button
+- 'The Seal of Trust' green info card: privacy explanation
+- Buttons: 'Exit SafeGround' (ghost) | 'Begin Your Recovery →' (amber filled)
+- Footer trust badges: Local Encryption | Zero-Log Policy | Private Keys
+- On 'Begin Your Recovery': create anonymous Supabase session → `/onboarding`
+
+**PAGE 3 — `app/(auth)/onboarding/page.tsx` (Guided Onboarding)**
+DESIGN REFERENCE (safeground_guided_onboarding screen):
+- Header badge: 'ONBOARDING JOURNEY' label + '1 / 5' counter
+- Green progress bar showing current step
+- '256-bit Encrypted Session' badge top right
+- Step 1: 'Choose your heart's language' — 4 language cards in 2x2 grid (language name + script + globe/flag icon)
+- Step 2: Trigger Identification — multi-select tags (boredom, stress, loneliness, late_night, telegram, social_media, post_khat, fatigue, after_alcohol)
+- Step 3: Support preference radio — Secular | Faith-Based | Clinical
+- Step 4: Guardian opt-in — 'Would you like a trusted person to support you?' Yes (sets up guardian flow) | Not yet
+- Step 5: Goal setting — streak target slider + personal affirmation input
+- Footer: 'ZERO-LOG ARCHITECTURE' | 'VERIFIED BY UNIVERSITY PARTNERS'
+- On complete: POST `/api/auth/profile` → redirect `/dashboard`
+
+**STYLING RULES:**
+- Use Noto Serif Ethiopic for Amharic script (import from Google Fonts)
+- All amber-600 CTAs, stone-50 background, white cards with shadow-sm
+- PanicButton component always rendered (imported from components/layout)
+
+### TEAM A — PROMPT A2: Dashboard + Daily Habit Log
+
+Build the Recovery Dashboard and Daily Habit Log for SafeGround.
+
+**PAGE 1 — `app/(dashboard)/dashboard/page.tsx`**
+DESIGN REFERENCE (safeground_anonymous_guest_sanctuary — right panel):
+Layout: sidebar on desktop, bottom nav on mobile (already in layout.tsx)
+- Session badge top: 'Session: SG-ANON-7742' | 'PRIVACY ACTIVE' green badge
+
+**StreakCard.tsx:**
+- Large animated number: current_streak days
+- 'Days of Strength' subtitle + 'Safety Plan Active' green badge
+- Sub-stats: longest_streak | total_clean_days
+- Milestones 3/7/14/30/60/90: framer-motion confetti animation
+
+**MoodChart.tsx:**
+- Recharts AreaChart — 30 days
+- Two lines: mood_score (amber) + urge_intensity (red)
+- Milestone reference lines at 7, 14, 30 days
+- X-axis: dates, Y-axis: 0-10
+
+**Today's Check-In CTA card** — shows if log not yet submitted today
+
+**AffirmationCard.tsx:**
+- Skeleton loader while fetching
+- Warm amber-50 card, italic affirmation text
+- Refresh icon to regenerate
+- POST to `/api/ai/affirmation` with today's context
+- Fallback: array of 20 static affirmations
+
+**KhatRiskBanner.tsx:**
+- Appears only if: `khat_used_today=true` AND `khat_hours_ago 4-9`
+- Red-orange warning card: 'Based on your log, you may be entering a high-risk window. Your coping skills are strongest right now.'
+- Panic button shortcut inside the banner
+
+**Immediate Relief quick-actions** (match guest sanctuary right panel):
+- 'Breathing Technique' card (green): '4-7-8 method for calm'
+- 'Grounding Exercise' card (amber): '5-4-3-2-1 technique'
+
+**Echoes of Support** (read-only rotating quotes from community)
+
+**PAGE 2 — `app/(dashboard)/log/page.tsx` (HabitLogForm.tsx)**
+- 'How is your heart today?' heading (match guest sanctuary screen)
+- Mood emoji picker: 5 face emojis (😞😐🙂😊✨), tap to select
+- Stress slider: 1-10 with labels 'Calm' to 'Overwhelmed'
+- Urge intensity: 4 tap targets: None / Low / Medium / High
+- Relapse toggle: confirmation AlertDialog before recording
+- Context flags section:
+  - ☐ Khat used today → if yes, show 'How many hours ago?' number input
+  - ☐ Alcohol used today
+- Trigger tags multi-select chips (9 options from spec)
+- Notes textarea: 'Stays on your device only — never uploaded'
+- Submit: 'Save Today's Check-in' → POST `/api/habits/log` → update streak
+
+**API ROUTES TO CREATE:**
+- `POST /api/habits/log` — insert habit_log row, trigger streak update
+- `GET  /api/habits/streak` — return streak data for current user
+- `POST /api/ai/affirmation` — call `claude-sonnet-4-20250514`, return affirmation
+
+Claude system prompt:
+> 'You are a compassionate recovery companion for Ethiopian university students. Generate a single culturally respectful, non-religious-defaulting daily affirmation (2-3 sentences) based on the user's mood and urge intensity. Use metaphors of strength, nature, and academic focus. Output ONLY the affirmation text, nothing else.'
+
+### TEAM A — PROMPT A3: Panic Engine (Emergency Support)
+
+Build the complete Panic Button and Emergency Intervention system.
+
+DESIGN REFERENCE: emergency_panic_support_mobile screen
+
+**COMPONENT: `components/panic/PanicModal.tsx`**
+Full-screen overlay that opens when PANIC button pressed. Three phases — render sequentially:
+
+**PHASE 1 — Breathing Circle (BreathingCircle.tsx):**
+Match exact design: large concentric circle, center text 'Inhale'/'Hold'/'Exhale'
+4-7-8 pattern: Inhale 4s → Hold 7s → Exhale 8s
+Timer badge top-left: red pill 'Urge Active' + clock showing 06:58
+Bottom: 'Breathe with us.' heading
+Timing pills: 'In: 4s' | 'Hold: 7s' | 'Out: 8s'
+CSS animation: circle pulses/expands on inhale, contracts on exhale
+Auto-advance to Phase 2 after 2 full breath cycles (38 seconds)
+
+**PHASE 2 — Urge Surfing Guide (CopingStepCard.tsx):**
+'Urge Surfing Guide' heading + 'Step 1 of 5' counter (top right)
+Card with amber icon + 'Step 1: Grounding' label in amber
+Large heading: '5 Things You See'
+Instruction text below
+Bottom: 'I'm feeling better, Cancel Intervention' text link
+5 steps total (fetched from /api/panic):
+  1. Grounding — 5 Things You See
+  2. Breathing — 4-7-8 Reset
+  3. Distraction — Physical Movement
+  4. Connection — Reach for Support
+  5. Affirmation — Your Strength Statement
+Each step has a 90-second timer bar
+
+**PHASE 3 — Completion:**
+'You Held Your Ground 🌟' celebration screen
+Streak protected badge: amber confetti animation (framer-motion)
+Current streak displayed prominently
+'Return to Dashboard' button
+
+**API: `POST /api/panic`**
+Body: `{ user_id, intensity (0-10), context_tags[] }`
+1. INSERT panic_event into habit_logs (`ai_intervention_triggered=true`)
+2. Call Claude API for coping task:
+   System: 'You are a CBT urge-surfing coach for Ethiopian students. Generate 5 grounding steps for immediate crisis intervention. Return JSON: { steps: [{title, instruction, duration_seconds}], affirmation: string }'
+3. Async: check guardian_controls, queue notification if alert_on_panic=true
+4. Return: `{ session_id, steps[], affirmation, breathing_duration }`
+
+**API: `POST /api/panic/complete`**
+Body: `{ session_id, completed_steps }`
+Update streak: mark as 'held_ground' (no relapse), INSERT milestone
+
+**LOCALSTORAGE KEYS (zero server trace):**
+- `safeground_panic_active`: boolean
+- `safeground_panic_start`: timestamp
+- `safeground_panic_step`: current step index
+
+### TEAM A — PROMPT A4: Community Chat (Healing Spaces)
+
+Build the Anonymous Community Chat Room.
+
+DESIGN REFERENCE: safeground_community_support_chat_1 and _2 screens
+
+**PAGE: `app/(dashboard)/chat/page.tsx`**
+
+LAYOUT (match chat_1 screen exactly):
+- Left panel (280px): 'Healing Spaces' / 'Select a community room'
+- 3 room options:
+  - **Global Support** — green active state, '42 active members'
+  - **Crisis Room** — asterisk * icon, 'Immediate attention'
+  - **Faith Support** — cross icon, 'Grounded in faith'
+- Bottom of left panel: Privacy Policy | Chat Settings
+
+- Right panel: Chat area
+  - Header: room name + '42 people here now' (green dot) + 'Share Milestone' amber button (top right)
+  - Message types (match chat_1 screenshots):
+    - **text**: left-aligned dark bubble (others), amber-600 right (you)
+    - **milestone_share**: special center card — green border, 🏆 icon, 'Milestone Celebration!' heading, italic quote, '— Anonymous Soul', emoji reactions row
+    - **support_reaction**: inline emoji burst (👊 💚 🙏)
+  - Reaction counts shown below messages (e.g. '👊 12  💚 8')
+  - 'TODAY' date separator pill
+
+- Bottom input bar:
+  - + icon (attach/extras) | 'Share your journey anonymously...' placeholder
+  - Send button (green circle, arrow icon)
+  - Below bar: 'Feeling' | 'Fully Ghost Mode' toggles + 'Messages are encrypted and ephemeral.' right-aligned
+
+**SUPABASE REALTIME:**
+- Subscribe to `anonymous_chat` WHERE room_id=eq.{currentRoom}
+- Use Supabase Presence for live user count
+- Insert messages directly from browser client (not via API)
+- Auto-scroll to bottom on new message
+- 'Fully Ghost Mode': hide own alias, show as 'Anonymous'
+
+**ALIAS:** use `lib/utils/aliasGenerator.ts`, store in `sessionStorage`
+- Each page load gets fresh alias. 'Fully Ghost Mode' replaces with 'Anonymous'
+
+**MILESTONE SHARE DIALOG:**
+- Opens when 'Share Milestone' clicked
+- 'Today marks N days of growth and resilience.'
+- 'Thank you SafeGround community for being my anchor.'
+- User can edit before sending. Submits as `message_type='milestone_share'`
+
+### TEAM A — PROMPT A5: Support Directory + Spiritual Hub
+
+Build the Support Directory and Spiritual Hub pages.
+
+**PAGE 1 — `app/(dashboard)/directory/page.tsx`**
+DESIGN REFERENCE: safeground_support_directory screen
+
+LAYOUT:
+- Header: 'Healing through Connection'
+- Subtext: 'Find a path forward with culturally responsive clinical care or grounded spiritual guidance. Your journey is private and secure.'
+- Tab bar: 'Clinical Support' (active) | 'Faith-Based Programs'
+
+FILTER BAR (white card):
+- City or Region: location pin icon + text input
+- Language: dropdown (Any Language | Amharic | English | Oromifa | Tigrinya)
+- Session Type: 'Online' | 'In-person' toggle pills
+- Pro-bono only: toggle switch
+
+PROVIDER CARDS (3-column grid, match directory screen exactly):
+- Profile photo (rounded, full bleed top)
+- Badge: 'Verified' (green) or 'Faith Support' (amber) — top-right overlay
+- Name (large, bold) + type badge (PSYCHIATRIST | COUNSELOR | CHURCH-LED)
+- Languages: green globe icon + language names
+- Bio excerpt (2 lines, truncated)
+- Price: amber '$120 / session' or 'Free (Pro-bono)'
+- Mode: laptop icon + 'Online' or 'In-person'
+- CTA: 'Book Session' (amber filled) or 'Join Program' (green outline)
+
+BOOKING FLOW MODAL (BookingFlow.tsx):
+- Step 1: Date picker → available dates highlighted
+- Step 2: Time slot grid (30-min slots)
+- Step 3: Optional notes textarea
+- Step 4: Confirmation — provider name, date, time, meeting link
+- POST `/api/bookings` to save
+
+Pagination: page numbers at bottom (1, 2, 3... 12) matching design
+
+**PAGE 2 — `app/(dashboard)/spiritual/page.tsx`**
+DESIGN REFERENCE: spiritual_support_hub screen
+
+LAYOUT:
+- Sidebar nav: Programs | Dashboard | Recovery | Community
+- Main area: 'Path of Restoration' pill badge
+- 'Week 4: Anchoring in Faith' heading
+- Progress: 'Overall Progress' bar + 'Week 4 of 12' label
+- 4 milestone bars below (weeks segmented)
+
+WISDOM COMPANION panel (right):
+- Avatar + 'Wisdom Companion' heading + 'FAITH-GUIDED AI' badge
+- Quote card: italic wisdom text
+- 'Seek Guidance →' amber button
+- Opens AI companion chat (POST `/api/faith/companion`)
+
+SCRIPTURE/REFLECTION section (center):
+- Amharic scripture text in Noto Serif Ethiopic (large, centered)
+- English translation in italic below
+- 'Your Reflection' label + textarea
+- 'Save Entry' button
+
+Faith tab in directory: filter providers WHERE type IN ('religious_org','religious_individual')
+Denomination filter pills: All | Orthodox | Protestant | Muslim
+
+API: `GET /api/directory?type=&city=&language=&online=&pro_bono=`
+API: `POST /api/bookings`
+API: `POST /api/faith/companion` (Claude AI, 200 tokens, multi-faith system prompt)
+
+### TEAM A — PROMPT A6: Guest Sanctuary + Guardian Settings
+
+Build the Anonymous Guest Sanctuary and Guardian Link pages.
+
+**PAGE 1 — `app/guest/page.tsx` (Anonymous Sanctuary)**
+DESIGN REFERENCE: safeground_anonymous_guest_sanctuary screen
+
+LAYOUT:
+- Top bar: 'SafeGround' logo | 'Session: SG-ANON-7742' badge | 'PRIVACY ACTIVE' green badge | profile icon
+
+LEFT PANEL — AI Recovery Support Chat:
+- 'Recovery Support' header + 'Anonymous & Secure' + green dot
+- Chat messages: SafeGround AI (amber left bubble) / User (green right bubble)
+- Message metadata: 'SafeGround AI • Just now' | 'You • 1m ago'
+- Encrypted disclaimer: 'This session is encrypted and will not be saved unless you upgrade.'
+- Input: 'Type your thoughts...' + green send button
+- Chat to Claude via POST `/api/guest/chat` (no auth required)
+- System prompt: 'You are SafeGround AI. A warm, anonymous, non-judgmental recovery support companion for Ethiopian students. Your first message is: "Welcome. You are safe and anonymous here. How are you feeling in this moment?" Keep responses under 100 words. Never mention pornography directly.'
+
+RIGHT PANEL:
+- 'How is your heart today?' — 5 emoji mood selector (same as dashboard)
+- 'IMMEDIATE RELIEF' section:
+  - Breathing Technique card (sage green)
+  - Grounding Exercise card (amber/terracotta)
+- 'ECHOES OF SUPPORT — READ ONLY' section:
+  - 2 rotating quotes from community (pull from `anonymous_chat` milestones)
+- 'Save Your Journey' dark amber CTA card:
+  - 'Create a private account to track your moods...'
+  - 'Create Private Account →' outlined button → `/register`
+
+PANIC button: fixed bottom-right (circular, red, z-50)
+
+**PAGE 2 — `app/(dashboard)/settings/guardian/page.tsx`**
+DESIGN REFERENCE: guardian_support_view_1 (user side of guardian management)
+
+GuardianSetupWizard.tsx — 3 steps:
+- Step 1: Guardian alias + relationship selector (Parent | Sibling | Spouse | Mentor | Trusted Friend)
+- Step 2: Monitoring level + alert toggles
+  - 'Alert Only' | 'Weekly Summary' | 'Full View'
+  - ☑ Notify on panic (default ON) | ☐ Notify on relapse | ☐ Streak breaks
+- Step 3: Share access — generated URL + copy button + QR code (qrcode.react)
+  - Pre-written share text: 'I'm working on something important for my wellbeing. I've given you a private link: [link]. Thank you.'
+
+GuardianStatusCard (when link exists):
+- Guardian alias + relationship + monitoring level
+- 'Revoke Access' red button (confirmation modal)
+
+API: `POST /api/guardian/create` — generate 32-char token, return URL
+API: `POST /api/guardian/revoke`
+
+---
+
+## PART 4 — TEAM B PROMPTS (Admin & Platform)
+
+Team B sends prompts B1 through B6 in sequence. Coordinate env vars with Team A.
+
+### TEAM B — PROMPT B1: All API Routes & Supabase Setup
+
+Build all server-side API routes for SafeGround. These are shared by Team A's UI.
+
+SUPABASE CONFIG:
+- Region: af-south-1 (closest to Ethiopia)
+- Run the full DDL schema (provided in spec Section 3) in Supabase SQL Editor
+- Enable Realtime for: `anonymous_chat` table
+- Enable Auth providers: Email + Phone OTP
+
+MIDDLEWARE — `middleware.ts`:
+- Protected routes: `/dashboard/*`, `/admin/*`
+- Public routes: `/`, `/guest`, `/register`, `/login`, `/guardian/*`, `/onboarding`
+- Admin check: auth user email in `ADMIN_EMAILS` env var
+- onboarding_done check: if profile.onboarding_done=false → redirect /onboarding
+
+API ROUTES — implement ALL of these:
+
+**`POST /api/auth/profile`**
+- Create profile after registration
+- Body: `{ alias, language_pref, support_preference, trigger_tags[], streak_goal }`
+- INSERT into profiles, INSERT into streaks (all zeros)
+
+**`POST /api/habits/log`**
+- Insert daily habit_log row
+- Body: `{ mood_score, stress_level, urge_intensity, relapsed, khat_used_today, khat_hours_ago, alcohol_used_today, trigger_tags[], log_date }`
+- Trigger streak update via DB trigger (already in schema)
+- Return: `{ log_id, streak_updated: true }`
+
+**`GET /api/habits/streak`**
+- Return: `{ current_streak, longest_streak, total_clean_days, last_clean_date }`
+
+**`GET /api/habits/history?days=30`**
+- Return last N days of habit_logs for chart data
+
+**`POST /api/ai/affirmation`**
+- Body: `{ mood_score, urge_intensity }`
+- Call `claude-sonnet-4-20250514`, max_tokens: 150
+- Fallback: return random from 20 hardcoded affirmations if API fails
+- Return: `{ affirmation: string }`
+
+**`POST /api/panic`**
+- Body: `{ intensity, context_tags[] }`
+- INSERT habit_log (ai_intervention_triggered=true)
+- Call Claude for coping steps (JSON mode)
+- Async: check guardian_controls, log notification
+- Return: `{ session_id, steps[], affirmation }`
+
+**`POST /api/panic/complete`**
+- Body: `{ session_id, completed_steps }`
+- Mark streak as protected, INSERT milestone if 3/7/14/30/60/90 day
+
+**`POST /api/chat/flag`**
+- Body: `{ message_id }`
+- UPDATE `anonymous_chat` SET is_flagged=true WHERE id=?
+
+**`GET /api/directory?type=&city=&language=&online=&pro_bono=`**
+- SELECT from providers WHERE is_verified=true AND is_active=true
+- Apply filters. Return paginated list.
+
+**`POST /api/bookings`**
+- Insert telehealth_booking. Return confirmation.
+
+**`POST /api/faith/companion`**
+- Body: `{ messages[], user_context: { religion, language_pref } }`
+- Claude system prompt (multi-faith, non-dogmatic, Ethiopian context)
+- max_tokens: 200. Return: `{ response: string }`
+
+**`POST /api/guardian/create`**
+- Generate 32-char `crypto.randomBytes` token
+- INSERT guardian_controls. Return: `{ token, access_url }`
+
+**`GET /api/guardian/view/[token]`**
+- Validate token, return sanitized data:
+  - `{ current_streak, longest_streak, last_7_days_mood[], last_panic_event_date, recent_alerts[] }`
+  - NO relapse data, NO trigger tags, NO substance flags
+  - UPDATE `last_accessed_at`
+
+**`POST /api/guardian/revoke`**
+- SET `is_active=false` on guardian_controls
+
+**`POST /api/guest/chat`**
+- No auth required. Claude AI chat for guest mode.
+- Rate-limit: 20 messages per session (track in Redis or in-memory)
+
+### TEAM B — PROMPT B2: Admin System Overview Dashboard
+
+Build the Admin Platform Dashboard.
+
+DESIGN REFERENCE: admin_platform_dashboard screen
+
+**ROUTE:** `app/admin/page.tsx` (Server Component, admin-only)
+
+ADMIN SIDEBAR (`app/admin/layout.tsx`):
+- Logo: 'SafeGround' in amber + search bar at top
+- Nav items (with icons, match admin screen):
+  - Dashboard (active: green highlight, grid icon)
+  - Recovery (cross icon)
+  - Community (people icon)
+  - Telehealth (calendar icon)
+  - Moderation (shield icon)
+  - Appointments (calendar icon)
+  - Programs (chart icon)
+  - Settings (gear icon)
+- Bottom: PANIC red full-width pill | Support | Logout
+
+HEADER:
+- 'System Overview' in amber-800 (large)
+- 'Admin Portal & Enterprise Monitoring' subtitle
+- 'LIVE STATUS: OPTIMAL' green badge (top right)
+
+METRIC CARDS ROW 1 (match exact design):
+- Total Users: '12,482' + '+12% ↑' green trend
+- Today's Panic Events: '42' in red + 'Real-time' badge (red border card)
+- Active Streaks: '894' + 'Avg 14d' amber text
+- Provider Queue: '18' + 'Pending' blue text (blue border card)
+
+REGIONAL ACTIVITY HEATMAP:
+- Ethiopian map visualization — use a placeholder SVG of Ethiopia
+- Bubble overlays for Addis Abeba (large), Hawassa, Dire Dawa (medium)
+- Legend: 'Low ○' | 'High ●'
+
+MODERATION QUEUE (right panel):
+- Each flagged message shows:
+  - 'AGGRESSIVE LANGUAGE' red badge + '2m ago'
+  - Message text (truncated in quotes)
+  - 'DELETE' red button | 'IGNORE' outline button
+- 'View All Flagged (142)' amber link
+
+30-DAY ACTIVITY TRENDS CHART:
+- Recharts BarChart — CHECK-INS (amber) and PANIC (red) dual series
+- X-axis: DAY 1, DAY 10, DAY 20, TODAY
+
+PENDING PROVIDER VERIFICATIONS table:
+- Columns: ENTITY | TYPE | ACTION
+- Each row: Avatar initials + name + org | type badge | 'VERIFY' amber button
+- Type badges: MEDICAL (blue) | SPIRITUAL (amber) | COMMUNITY (green)
+
+**API: `GET /api/admin/metrics`**
+- Returns: `{ total_users, panic_today, active_streaks, provider_queue, avg_streak, relapse_rate_7d, chat_today, flagged_messages, activity_30d: [{date, checkins, panic}] }`
+- Server-side only, uses service role key
+
+### TEAM B — PROMPT B3: Provider Management & Organization Flows
+
+Build the Provider Approval system and Organization portal flows.
+
+**PAGE 1 — `app/admin/providers/page.tsx`**
+DESIGN REFERENCE: organization_approval_center screen
+- List of providers WHERE `is_verified=false`
+- `ProviderReviewCard.tsx` for each:
+  - Avatar initials circle (amber bg) + name + org + city
+  - Provider type badge
+  - Bio (full, not truncated in review)
+  - Languages spoken
+  - Consultation fee
+  - Availability (online/in-person/hybrid)
+  - Documents uploaded (list with green check)
+- Actions:
+  - '✅ Verify' — PATCH `/api/admin/providers/[id]/verify` `{verified: true}`
+  - '❌ Reject' — PATCH `/api/admin/providers/[id]/verify` `{verified: false}`
+- Optimistic UI: card fades out on action, toast notification
+
+**PAGE 2 — `app/admin/moderation/page.tsx`**
+- `FlaggedMessageCard.tsx` for each `is_flagged` message:
+  - sender_alias, room_id, sent_at, message text
+  - Flag reason badge (AGGRESSIVE | SPAM | INAPPROPRIATE)
+  - '🗑 Delete' — soft delete (`is_deleted=true`)
+  - '✓ Clear Flag' — set `is_flagged=false`
+  - Batch select checkbox + 'Bulk Delete Selected' button
+
+**PAGE 3 — Organization Registration (org-facing, not admin)**
+DESIGN REFERENCE: organization_registration_page screen
+Route: `app/org/register/page.tsx` (public, no auth required for submission)
+- Multi-section form:
+  - Section 1: Organization Information
+    - Organization name, type (NGO | Religious Org | Healthcare | University)
+    - Registration number, country, city
+  - Section 2: Contact & Leadership
+    - Primary contact name, email, phone, role/title
+  - Section 3: Service Details
+    - Services offered (checkboxes), languages, online/in-person
+    - Fee structure, pro-bono availability
+  - Section 4: Verification Documents

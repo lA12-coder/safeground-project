@@ -1,26 +1,58 @@
+'use client'
+
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { AdminSidebar } from './_components/AdminSidebar'
-import Link from 'next/link'
+import { DashboardTopBar } from '@/components/layout/DashboardTopBar'
+import { ToastContainer } from '@/components/ui/Toast'
+import { BottomNav } from '@/components/layout/BottomNav'
+
+const titleMap: Record<string, string> = {
+  '/admin': 'System Overview',
+  '/admin/providers': 'Provider Management',
+  '/admin/faith-organizations': 'Faith Organizations',
+  '/admin/partnerships': 'Partnerships',
+  '/admin/users': 'User Management',
+  '/admin/guardians': 'Guardians',
+  '/admin/bookings': 'Bookings',
+  '/admin/programs': 'Programs',
+  '/admin/moderation': 'Chat Moderation',
+  '/admin/panic-monitor': 'Panic Monitor',
+  '/admin/analytics': 'Analytics',
+  '/admin/content': 'Content Management',
+  '/admin/settings': 'System Settings',
+  '/admin/super': 'Super Admin',
+  '/admin/recovery': 'Recovery',
+  '/admin/community': 'Community',
+  '/admin/telehealth': 'Telehealth',
+  '/admin/appointments': 'Appointments',
+  '/admin/seed': 'Seed Data',
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  const pageTitle = Object.entries(titleMap).find(([path]) => pathname.startsWith(path))?.[1] || 'Admin'
+
   return (
     <div className="flex min-h-screen bg-[#f6f5f1]">
       <AdminSidebar />
-      <main className="flex-1 lg:ml-64 relative">
-        <div className="sticky top-0 z-30 lg:hidden border-b bg-white px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/admin" className="font-serif text-lg font-bold text-[#8a3d08]">
-              SafeGround Admin
-            </Link>
-            <div className="flex items-center gap-3 text-sm font-semibold text-[#6f5b4e]">
-              <Link href="/admin/providers" className="hover:text-[#8a3d08]">Orgs</Link>
-              <Link href="/admin/moderation" className="hover:text-[#8a3d08]">Chat</Link>
-              <Link href="/admin/users" className="hover:text-[#8a3d08]">Users</Link>
-              <Link href="/admin/bookings" className="hover:text-[#8a3d08]">Bookings</Link>
-            </div>
+      <div className="flex-1 flex flex-col transition-all duration-200 lg:ml-[240px]">
+        <DashboardTopBar
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          pageTitle={pageTitle}
+          breadcrumb="Admin"
+        />
+        <main className="flex-1 pb-20 md:pb-0">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {children}
           </div>
-        </div>
-        <div className="px-4 py-3 sm:px-4 lg:px-6 lg:py-4 mx-auto max-w-6xl">{children}</div>
-      </main>
+        </main>
+      </div>
+      <BottomNav />
+      <ToastContainer />
     </div>
   )
 }
