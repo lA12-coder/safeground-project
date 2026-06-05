@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Shield,
   Calendar, BarChart3, Settings, LogOut, LifeBuoy,
-  Building2, BookOpen, AlertTriangle,
+  Building2, BookOpen, AlertTriangle, Heart,
 } from 'lucide-react'
 import { PanicButton } from '@/components/layout/PanicButton'
 import { signOut } from '@/lib/auth/actions'
@@ -22,6 +22,7 @@ const navGroups = [
     label: 'Management',
     items: [
       { label: 'Providers', href: '/admin/providers', icon: Building2 },
+      { label: 'Faith Orgs', href: '/admin/faith-organizations', icon: Heart },
       { label: 'Moderation', href: '/admin/moderation', icon: Shield },
       { label: 'Programs', href: '/admin/programs', icon: BookOpen },
       { label: 'Seed Data', href: '/admin/seed', icon: AlertTriangle },
