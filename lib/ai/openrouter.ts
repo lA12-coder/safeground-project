@@ -3,14 +3,14 @@ export type ChatMessage = {
   content: string;
 };
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
-export function getOpenRouterKey(): string | undefined {
-  return process.env.OPENROUTER_API_KEY;
+export function getOpenAIKey(): string | undefined {
+  return process.env.OPENAI_API_KEY;
 }
 
-export function isOpenRouterConfigured(): boolean {
-  return Boolean(getOpenRouterKey());
+export function isOpenAIConfigured(): boolean {
+  return Boolean(getOpenAIKey());
 }
 
 export async function generateChatText(options: {
@@ -19,11 +19,11 @@ export async function generateChatText(options: {
   maxTokens?: number;
   temperature?: number;
 }): Promise<string> {
-  const apiKey = getOpenRouterKey();
-  if (!apiKey) throw new Error('Missing OPENROUTER_API_KEY');
+  const apiKey = getOpenAIKey();
+  if (!apiKey) throw new Error('Missing OPENAI_API_KEY');
 
   const body: Record<string, unknown> = {
-    model: process.env.AI_CHAT_MODEL ?? 'anthropic/claude-3.5-sonnet',
+    model: process.env.AI_CHAT_MODEL ?? 'gpt-4o-mini',
     messages: [
       { role: 'system', content: options.systemPrompt },
       ...options.messages,
@@ -32,20 +32,18 @@ export async function generateChatText(options: {
     temperature: options.temperature ?? 0.7,
   };
 
-  const res = await fetch(OPENROUTER_URL, {
+  const res = await fetch(OPENAI_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
-      'X-Title': 'SafeGround',
     },
     body: JSON.stringify(body),
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => 'Unknown error');
-    throw new Error(`OpenRouter ${res.status}: ${errText}`);
+    throw new Error(`OpenAI ${res.status}: ${errText}`);
   }
 
   const data = await res.json();
@@ -58,13 +56,13 @@ export async function generateChatTextWithFallback(options: {
   maxTokens?: number;
   temperature?: number;
   fallbacks: string[];
-}): Promise<{ reply: string; source: 'openrouter' | 'gemini' | 'fallback' }> {
-  if (isOpenRouterConfigured()) {
+}): Promise<{ reply: string; source: 'openai' | 'gemini' | 'fallback' }> {
+  if (isOpenAIConfigured()) {
     try {
       const reply = await generateChatText(options);
-      return { reply, source: 'openrouter' };
+      return { reply, source: 'openai' };
     } catch (err) {
-      console.error('[openrouter] Primary call failed:', err);
+      console.error('[openai] Primary call failed:', err);
     }
   }
 
@@ -82,7 +80,7 @@ export async function generateChatTextWithFallback(options: {
       });
       return { reply, source: 'gemini' };
     } catch (err) {
-      console.error('[openrouter] Gemini fallback failed:', err);
+      console.error('[openai] Gemini fallback failed:', err);
     }
   }
 
