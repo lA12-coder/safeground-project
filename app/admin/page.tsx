@@ -19,23 +19,34 @@ async function fetchAdminData() {
   )
 
   const today = new Date().toISOString().split('T')[0]
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0]
 
   const [
     { count: total_users },
+    { count: new_users_7d },
     { count: panic_today },
     { count: active_streaks },
     { count: provider_queue },
     { count: flagged_messages },
+    { count: chat_today },
+    { count: relapse_last_7 },
+    { count: total_last_7 },
     { data: avgStreakData },
     { data: activityData },
     { data: pendingProviders },
     { data: flaggedChatMessages },
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgoStr),
     supabase.from('habit_logs').select('*', { count: 'exact', head: true }).eq('ai_intervention_triggered', true).gte('log_date', today),
     supabase.from('streaks').select('*', { count: 'exact', head: true }).gt('current_streak', 0),
     supabase.from('providers').select('*', { count: 'exact', head: true }).eq('is_verified', false),
     supabase.from('anonymous_chat').select('*', { count: 'exact', head: true }).eq('is_flagged', true).eq('is_deleted', false),
+    supabase.from('anonymous_chat').select('*', { count: 'exact', head: true }).eq('is_deleted', false).gte('created_at', today),
+    supabase.from('habit_logs').select('*', { count: 'exact', head: true }).eq('relapsed', true).gte('log_date', sevenDaysAgoStr),
+    supabase.from('habit_logs').select('*', { count: 'exact', head: true }).gte('log_date', sevenDaysAgoStr),
     supabase.from('streaks').select('current_streak').gt('current_streak', 0),
     supabase.from('habit_logs').select('log_date, ai_intervention_triggered').gte('log_date', new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]).order('log_date', { ascending: true }),
     supabase.from('providers').select('*').eq('is_verified', false).order('created_at', { ascending: false }).limit(20),
@@ -44,6 +55,9 @@ async function fetchAdminData() {
 
   const avg_streak = avgStreakData?.length
     ? Math.round(avgStreakData.reduce((a, b) => a + b.current_streak, 0) / avgStreakData.length)
+    : 0
+  const relapse_rate_7d = total_last_7 && total_last_7 > 0
+    ? Math.round(((relapse_last_7 || 0) / total_last_7) * 100)
     : 0
 
   const activityMap = new Map<string, { checkins: number; panic: number }>()
@@ -62,13 +76,13 @@ async function fetchAdminData() {
 
   const metrics: AdminMetrics = {
     total_users: total_users || 0,
-    new_users_7d: 0,
+    new_users_7d: new_users_7d || 0,
     panic_today: panic_today || 0,
     active_streaks: active_streaks || 0,
     provider_queue: provider_queue || 0,
     avg_streak,
-    relapse_rate_7d: 0,
-    chat_today: 0,
+    relapse_rate_7d,
+    chat_today: chat_today || 0,
     flagged_messages: flagged_messages || 0,
     activity_30d: Array.from(activityMap.entries()).map(([date, val]) => ({
       date,

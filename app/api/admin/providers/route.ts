@@ -24,14 +24,20 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
 
-    const isVerified = status === 'verified'
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    const { data, error, count } = await supabase
-      .from('providers')
-      .select('*', { count: 'exact' })
-      .eq('is_verified', isVerified)
+    let query = supabase.from('providers').select('*', { count: 'exact' })
+
+    if (status === 'pending') {
+      query = query.eq('is_verified', false).eq('is_active', false)
+    } else if (status === 'verified') {
+      query = query.eq('is_verified', true)
+    } else if (status === 'rejected') {
+      query = query.eq('is_verified', false).eq('is_active', true)
+    }
+
+    const { data, error, count } = await query
       .order('created_at', { ascending: false })
       .range(from, to)
 

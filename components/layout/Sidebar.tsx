@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Shield,
+  UserRound,
 } from 'lucide-react';
 import { PanicButton } from './PanicButton';
 import { signOut } from '@/lib/auth/actions';
@@ -21,11 +22,17 @@ const menuItems = [
   { label: 'Chat', href: '/chat', icon: MessageCircle },
   { label: 'Directory', href: '/directory', icon: Users },
   { label: 'Spiritual', href: '/spiritual', icon: Sparkles },
-  { label: 'Guardian', href: '/settings/guardian', icon: Settings },
+  { label: 'Guardian', href: '/settings/guardian', icon: UserRound },
+  { label: 'Settings', href: '/settings', icon: Settings },
 ] as const;
 
 export function Sidebar() {
   const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === '/settings') return pathname.startsWith('/settings');
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-surface-container-lowest border-r border-outline-variant fixed left-0 top-0 h-screen z-30">
@@ -34,20 +41,20 @@ export function Sidebar() {
         <span className="font-serif text-xl font-bold text-primary">SafeGround</span>
       </Link>
 
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-0.5 overflow-y-auto custom-scrollbar">
         {menuItems.map(({ label, href, icon: Icon }) => {
-          const isActive = pathname === href || pathname.startsWith(`${href}/`);
+          const active = isActive(href);
           return (
             <Link
               key={href}
               href={href}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm ${
+                active
                   ? 'bg-primary/10 text-primary font-semibold'
-                  : 'text-on-surface-variant hover:bg-surface-container-low'
+                  : 'text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface'
               }`}
             >
-              <Icon size={20} aria-hidden />
+              <Icon size={18} aria-hidden />
               <span>{label}</span>
             </Link>
           );
@@ -58,13 +65,13 @@ export function Sidebar() {
         <PanicButton variant="sidebar" />
       </div>
 
-      <div className="p-4 border-t border-outline-variant">
+      <div className="p-4 pt-2 border-t border-outline-variant">
         <form action={signOut}>
           <button
             type="submit"
-            className="w-full flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors text-sm"
           >
-            <LogOut size={20} aria-hidden />
+            <LogOut size={18} aria-hidden />
             <span>Logout</span>
           </button>
         </form>

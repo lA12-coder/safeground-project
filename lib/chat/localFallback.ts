@@ -16,7 +16,7 @@ export function seedMessagesForRoom(roomId: ChatRoomId): ChatMessage[] {
   const now = new Date().toISOString();
   return [
     {
-      id: 'local-1',
+      id: 'seed-1',
       room_id: roomId,
       message_type: 'text',
       content: 'Welcome to SafeGround — you are among friends here.',
@@ -26,7 +26,7 @@ export function seedMessagesForRoom(roomId: ChatRoomId): ChatMessage[] {
       created_at: now,
     },
     {
-      id: 'local-2',
+      id: 'seed-2',
       room_id: roomId,
       message_type: 'milestone_share',
       content: '30 days — one day at a time. Grateful for this space.',

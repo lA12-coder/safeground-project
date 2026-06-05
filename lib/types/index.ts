@@ -57,8 +57,17 @@ export type Provider = {
   in_person: boolean
   is_verified: boolean
   is_active: boolean
+  email?: string
+  user_id?: string
   phone: string
   rating: number
+  session_types?: string[]
+  availability_slots?: Record<string, unknown>
+  faith_category?: string
+  traditions?: string[]
+  ministries?: string[]
+  programs?: string[]
+  mentors?: string[]
   created_at: string
 }
 

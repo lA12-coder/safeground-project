@@ -1,5 +1,5 @@
 /** Routes that do not require authentication */
-export const PUBLIC_EXACT_PATHS = new Set(['/', '/login', '/register', '/guest']);
+export const PUBLIC_EXACT_PATHS = new Set(['/', '/login', '/admin-login', '/register', '/guest', '/services']);
 
 export const PUBLIC_GUARDIAN_PREFIX = '/guardian';
 
@@ -17,7 +17,7 @@ export const PROTECTED_ROUTES = [
   '/settings',
 ] as const;
 
-const AUTH_ENTRY_PATHS = new Set(['/login', '/register', '/guest', ONBOARDING_PATH]);
+const AUTH_ENTRY_PATHS = new Set(['/login', '/admin-login', '/register', '/guest', ONBOARDING_PATH]);
 
 export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT_PATHS.has(pathname)) return true;

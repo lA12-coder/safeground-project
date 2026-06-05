@@ -150,6 +150,39 @@ export async function updateSession(request: NextRequest) {
     );
   }
 
+  // Gate /provider/dashboard — user must have a matching provider record
+  if (user && (pathname === '/provider/dashboard' || pathname.startsWith('/provider/dashboard/'))) {
+    try {
+      const { data: provider } = await supabase
+        .from('providers')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!provider) {
+        return redirectWithSession(request, '/dashboard', supabaseResponse);
+      }
+    } catch {
+      // providers table may not be accessible; allow access
+    }
+  }
+
+  // Gate /org/portal — user must have a matching org-type provider record
+  if (user && (pathname === '/org/portal' || pathname.startsWith('/org/portal/'))) {
+    try {
+      const { data: org } = await supabase
+        .from('providers')
+        .select('id')
+        .eq('id', user.id)
+        .in('type', ['religious_org', 'ngo', 'university', 'healthcare'])
+        .maybeSingle();
+      if (!org) {
+        return redirectWithSession(request, '/dashboard', supabaseResponse);
+      }
+    } catch {
+      // providers table may not be accessible; allow access
+    }
+  }
+
   if (user && !onboardingDone) {
     if (pathname === '/login' || pathname === '/register') {
       return redirectWithSession(request, ONBOARDING_PATH, supabaseResponse);
@@ -159,12 +192,21 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  const isAdmin =
+    user?.email &&
+    (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .includes(user.email.toLowerCase());
+
+  const defaultRedirect = isAdmin ? '/admin' : '/dashboard';
+
   if (user && onboardingDone && pathname === ONBOARDING_PATH) {
-    return redirectWithSession(request, '/dashboard', supabaseResponse);
+    return redirectWithSession(request, defaultRedirect, supabaseResponse);
   }
 
   if (user && onboardingDone && (pathname === '/login' || pathname === '/register')) {
-    return redirectWithSession(request, '/dashboard', supabaseResponse);
+    return redirectWithSession(request, defaultRedirect, supabaseResponse);
   }
 
   return supabaseResponse;

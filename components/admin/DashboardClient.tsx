@@ -6,7 +6,7 @@ import {
   Users, AlertTriangle, Zap, Clock, Shield, Trash2, XCircle, TrendingUp, Activity, MessageCircle, UserPlus, CheckCircle, Flag,
 } from 'lucide-react'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { createClient } from '@/lib/supabase/client'
 import type { AdminMetrics, Provider, AnonymousChat } from '@/lib/types'
@@ -19,21 +19,21 @@ interface DashboardClientProps {
 
 const typeBadge = (type: string) => {
   const map: Record<string, { label: string; class: string }> = {
-    psychiatrist: { label: 'MEDICAL', class: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
-    counselor: { label: 'MEDICAL', class: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
-    healthcare: { label: 'MEDICAL', class: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
-    religious_org: { label: 'SPIRITUAL', class: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
-    religious_individual: { label: 'SPIRITUAL', class: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' },
-    ngo: { label: 'COMMUNITY', class: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
-    university: { label: 'COMMUNITY', class: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
-    community: { label: 'COMMUNITY', class: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
+    psychiatrist: { label: 'MEDICAL', class: 'bg-blue-50 text-blue-700' },
+    counselor: { label: 'MEDICAL', class: 'bg-blue-50 text-blue-700' },
+    healthcare: { label: 'MEDICAL', class: 'bg-blue-50 text-blue-700' },
+    religious_org: { label: 'SPIRITUAL', class: 'bg-amber-50 text-amber-700' },
+    religious_individual: { label: 'SPIRITUAL', class: 'bg-amber-50 text-amber-700' },
+    ngo: { label: 'COMMUNITY', class: 'bg-green-50 text-green-700' },
+    university: { label: 'COMMUNITY', class: 'bg-green-50 text-green-700' },
+    community: { label: 'COMMUNITY', class: 'bg-green-50 text-green-700' },
   }
-  return map[type] || { label: type.toUpperCase(), class: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }
+  return map[type] || { label: type.toUpperCase(), class: 'bg-gray-50 text-gray-600' }
 }
 
 const flagLabel = (reason?: string) => {
   const map: Record<string, string> = {
-    aggressive: 'AGGRESSIVE LANGUAGE',
+    aggressive: 'AGGRESSIVE',
     spam: 'SPAM',
     inappropriate: 'INAPPROPRIATE',
     reported: 'REPORTED',
@@ -42,10 +42,10 @@ const flagLabel = (reason?: string) => {
 }
 
 const flagColors: Record<string, string> = {
-  aggressive: 'bg-error/10 text-error border-error/20',
-  spam: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
-  inappropriate: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-  reported: 'bg-surface-container-high text-on-surface-variant',
+  aggressive: 'bg-red-50 text-red-600 border-red-200',
+  spam: 'bg-amber-50 text-amber-600 border-amber-200',
+  inappropriate: 'bg-purple-50 text-purple-600 border-purple-200',
+  reported: 'bg-gray-50 text-gray-600 border-gray-200',
 }
 
 const timeAgo = (date: string) => {
@@ -59,22 +59,34 @@ const timeAgo = (date: string) => {
 
 function EthiopiaMap() {
   return (
-    <svg viewBox="0 0 400 460" className="w-full h-full">
+    <svg viewBox="0 0 500 550" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="heatAddis" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#dc2626" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="heatHawassa" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#8a3d08" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#8a3d08" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="heatDire" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#8a3d08" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#8a3d08" stopOpacity="0" />
+        </radialGradient>
+      </defs>
       <path
-        d="M200 30 Q250 25 300 50 Q350 80 370 130 Q385 170 365 210 Q375 250 355 290 Q335 330 295 370 Q255 410 200 435 Q145 425 105 385 Q65 345 50 295 Q35 245 45 195 Q40 145 65 105 Q90 65 135 45 Q165 32 200 30 Z"
-        fill="var(--color-surface-container-high)"
-        stroke="var(--color-primary-container)"
-        strokeWidth="2"
+        d="M245 25 L270 28 L310 45 L340 65 L370 95 L395 130 L405 165 L400 195 L390 220 L375 245 L355 268 L335 290 L315 310 L295 330 L270 350 L250 365 L230 375 L210 380 L190 378 L170 370 L150 355 L130 335 L115 310 L105 285 L95 260 L88 235 L85 210 L87 185 L95 160 L108 138 L125 118 L145 100 L165 85 L185 72 L205 60 L225 48 L235 35 Z"
+        fill="#e8e3dd" stroke="#d4c9be" strokeWidth="1.5" className="drop-shadow-sm"
       />
-      <circle cx="220" cy="200" r="28" fill="var(--color-error)" fillOpacity={0.25} className="animate-pulse" />
-      <circle cx="220" cy="200" r="10" fill="var(--color-error)" fillOpacity={0.8} />
-      <circle cx="160" cy="310" r="14" fill="var(--color-primary)" fillOpacity={0.2} />
-      <circle cx="160" cy="310" r="5" fill="var(--color-primary)" fillOpacity={0.7} />
-      <circle cx="310" cy="250" r="14" fill="var(--color-primary)" fillOpacity={0.2} />
-      <circle cx="310" cy="250" r="5" fill="var(--color-primary)" fillOpacity={0.7} />
-      <text x="220" y="160" textAnchor="middle" fill="var(--color-on-surface)" className="text-[10px] font-bold">Addis Abeba</text>
-      <text x="160" y="340" textAnchor="middle" fill="var(--color-on-surface-variant)" className="text-[9px] font-semibold">Hawassa</text>
-      <text x="310" y="280" textAnchor="middle" fill="var(--color-on-surface-variant)" className="text-[9px] font-semibold">Dire Dawa</text>
+      <circle cx="245" cy="200" r="40" fill="url(#heatAddis)" />
+      <circle cx="245" cy="200" r="8" fill="#dc2626" fillOpacity={0.5} className="animate-pulse" />
+      <circle cx="170" cy="330" r="28" fill="url(#heatHawassa)" />
+      <circle cx="170" cy="330" r="5" fill="#8a3d08" fillOpacity={0.6} />
+      <circle cx="340" cy="270" r="28" fill="url(#heatDire)" />
+      <circle cx="340" cy="270" r="5" fill="#8a3d08" fillOpacity={0.6} />
+      <text x="245" y="155" textAnchor="middle" fill="#3d2e23" fontSize="11" fontWeight="bold">Addis Abeba</text>
+      <text x="170" y="355" textAnchor="middle" fill="#6f5b4e" fontSize="10" fontWeight="600">Hawassa</text>
+      <text x="340" y="295" textAnchor="middle" fill="#6f5b4e" fontSize="10" fontWeight="600">Dire Dawa</text>
     </svg>
   )
 }
@@ -122,335 +134,223 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
   }
 
   return (
-    <div className="space-y-8 transition-colors duration-300">
+    <div className="space-y-5">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-wrap items-center justify-between gap-4"
-      >
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-5xl font-bold text-primary">System Overview</h1>
-          <p className="mt-2 text-on-surface-variant">Admin Portal &amp; Enterprise Monitoring</p>
+          <h1 className="text-2xl font-bold text-[#2c241f]">Dashboard</h1>
+          <p className="text-sm text-[#6f5b4e] mt-0.5">System overview &amp; enterprise monitoring</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary/10 text-secondary rounded-full text-sm font-semibold border border-secondary/20">
-          <span className="w-2 h-2 rounded-full bg-secondary animate-pulse-glow" />
-          LIVE STATUS: OPTIMAL
+        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-semibold border border-green-200">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+          ALL SYSTEMS OPTIMAL
         </div>
-      </motion.div>
+      </div>
 
-      {/* Metric Cards Row 1 */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0, duration: 0.4 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6 animate-scale-in"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-on-surface-variant">Total Users</span>
-            <Users size={20} className="text-on-surface-variant" />
+      {/* Metric Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: 'Total Users', value: metrics.total_users.toLocaleString(),
+            sub: `+${metrics.new_users_7d} this week`, icon: Users,
+            color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-l-blue-500',
+          },
+          {
+            label: "Today's Panic Events", value: String(metrics.panic_today),
+            sub: 'Real-time alerts', icon: AlertTriangle,
+            color: 'text-red-600', bg: 'bg-red-50', border: 'border-l-red-500',
+          },
+          {
+            label: 'Active Streaks', value: metrics.active_streaks.toLocaleString(),
+            sub: `Avg ${metrics.avg_streak}d`, icon: Zap,
+            color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-l-amber-500',
+          },
+          {
+            label: 'Provider Queue', value: String(metrics.provider_queue),
+            sub: 'Pending verification', icon: Clock,
+            color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-l-indigo-500',
+          },
+        ].map(({ label, value, sub, icon: Icon, color, bg, border }) => (
+          <div key={label} className={`bg-white rounded-lg border border-[#e5e0db] border-l-4 ${border} shadow-sm p-4`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-[#6f5b4e] uppercase tracking-wider">{label}</span>
+              <Icon size={16} className={color} />
+            </div>
+            <div className="text-2xl font-bold text-[#2c241f]">{value}</div>
+            <div className="text-xs text-[#6f5b4e] mt-0.5">{sub}</div>
           </div>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-on-surface">{metrics.total_users.toLocaleString()}</span>
-            <span className="text-sm font-semibold text-secondary">+{metrics.new_users_7d} new this week</span>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          className="bg-surface-container-lowest rounded-xl border border-error/30 shadow-sm p-6 animate-scale-in"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-on-surface-variant">Today&apos;s Panic Events</span>
-            <AlertTriangle size={20} className="text-error" />
-          </div>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-error">{metrics.panic_today}</span>
-          </div>
-          <div className="flex items-center mt-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-error/10 text-error border border-error/20">Real-time</span>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6 animate-scale-in"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-on-surface-variant">Active Streaks</span>
-            <Zap size={20} className="text-primary" />
-          </div>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-on-surface">{metrics.active_streaks.toLocaleString()}</span>
-            <span className="text-sm font-semibold text-primary">Avg {metrics.avg_streak}d</span>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
-          whileHover={{ scale: 1.02, y: -2 }}
-          className="bg-surface-container-lowest rounded-xl border border-primary-container/30 shadow-sm p-6 animate-scale-in"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-on-surface-variant">Provider Queue</span>
-            <Clock size={20} className="text-primary" />
-          </div>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-on-surface">{metrics.provider_queue}</span>
-          </div>
-          <div className="flex items-center mt-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">Pending</span>
-          </div>
-        </motion.div>
+        ))}
       </div>
 
       {/* System Health Row */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35, duration: 0.4 }}
-        className="grid gap-4 grid-cols-2 md:grid-cols-4"
-      >
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
         {[
-          { label: 'Chat Today', value: metrics.chat_today, icon: MessageCircle, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-          { label: 'Relapse Rate (7d)', value: `${metrics.relapse_rate_7d}%`, icon: Activity, color: metrics.relapse_rate_7d > 20 ? 'text-error' : 'text-secondary', bg: metrics.relapse_rate_7d > 20 ? 'bg-red-50 dark:bg-red-950/30' : 'bg-green-50 dark:bg-green-950/30' },
-          { label: 'New Users (7d)', value: metrics.new_users_7d, icon: UserPlus, color: 'text-secondary', bg: 'bg-green-50 dark:bg-green-950/30' },
-          { label: 'Avg Streak', value: `${metrics.avg_streak}d`, icon: TrendingUp, color: 'text-primary', bg: 'bg-amber-50 dark:bg-amber-950/30' },
-        ].map(({ label, value, icon: Icon, color, bg }, i) => (
-          <div key={label} className={`${bg} rounded-xl border border-outline-variant/30 p-4 flex items-center gap-3`}>
-            <Icon className={`w-8 h-8 ${color}`} />
+          { label: 'Chat Today', value: String(metrics.chat_today), icon: MessageCircle, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Relapse Rate (7d)', value: `${metrics.relapse_rate_7d}%`, icon: Activity, color: metrics.relapse_rate_7d > 20 ? 'text-red-600' : 'text-green-600', bg: metrics.relapse_rate_7d > 20 ? 'bg-red-50' : 'bg-green-50' },
+          { label: 'New Users (7d)', value: String(metrics.new_users_7d), icon: UserPlus, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Avg Streak', value: `${metrics.avg_streak}d`, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-50' },
+        ].map(({ label, value, icon: Icon, color, bg }) => (
+          <div key={label} className={`${bg} rounded-lg border border-[#e5e0db] p-3 flex items-center gap-3`}>
+            <Icon size={18} className={color} />
             <div>
-              <p className="text-lg font-bold text-on-surface">{value}</p>
-              <p className="text-xs text-on-surface-variant">{label}</p>
+              <div className="text-base font-bold text-[#2c241f]">{value}</div>
+              <div className="text-[10px] text-[#6f5b4e]">{label}</div>
             </div>
           </div>
         ))}
-      </motion.div>
+      </div>
 
-      {/* Regional Activity + Moderation Queue */}
-      <div className="grid gap-6 xl:grid-cols-3">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.4 }}
-          whileHover={{ scale: 1.01 }}
-          className="xl:col-span-2 bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-8 transition-colors duration-300"
-        >
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-on-surface">Regional Activity Heatmap</h2>
-            <div className="flex items-center gap-4 text-sm font-bold">
-              <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full bg-surface-container-high" /> Low</span>
-              <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full bg-primary" /> High</span>
+      {/* Regional Map + Moderation Queue */}
+      <div className="grid gap-5 xl:grid-cols-3">
+        {/* Map */}
+        <div className="xl:col-span-2 bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-[#2c241f]">Regional Activity</h2>
+            <div className="flex items-center gap-3 text-[10px] font-medium text-[#6f5b4e]">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#e8e3dd]" /> Low</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#dc2626]" /> High</span>
             </div>
           </div>
-          <div className="relative h-[24rem] rounded-lg bg-gradient-to-br from-[#1f3b3f] via-[#425f5e] to-[#d4c79c] dark:from-[#0d1b1e] dark:via-[#1a2f2e] dark:to-[#5c4f2e] flex items-center justify-center overflow-hidden">
-            <div className="w-full h-full p-4">
-              <EthiopiaMap />
-            </div>
+          <div className="h-72 rounded-lg bg-gradient-to-br from-emerald-900/10 via-teal-800/10 to-amber-900/10 border border-[#e5e0db] flex items-center justify-center overflow-hidden p-4">
+            <EthiopiaMap />
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.4 }}
-          whileHover={{ scale: 1.01 }}
-          className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-6 transition-colors duration-300"
-        >
+        {/* Moderation Queue */}
+        <div className="bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-on-surface">Moderation Queue</h2>
+              <h2 className="text-sm font-semibold text-[#2c241f]">Moderation</h2>
               {messages.length > 0 && (
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-error/10 text-error rounded-full">{messages.length}</span>
+                <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-50 text-red-600 rounded-full">{messages.length}</span>
               )}
             </div>
-            <span className="text-xs text-on-surface-variant flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
+            <span className="flex items-center gap-1 text-[10px] text-[#6f5b4e]">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               Live
             </span>
           </div>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+          <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
             {messages.length === 0 && (
               <div className="text-center py-8">
-                <CheckCircle className="w-10 h-10 text-secondary mx-auto mb-2 opacity-50" />
-                <p className="text-sm text-on-surface-variant">No flagged messages</p>
-                <p className="text-xs text-on-surface-variant/60 mt-1">Community is doing well</p>
+                <CheckCircle size={28} className="text-green-400 mx-auto mb-2" />
+                <p className="text-sm text-[#6f5b4e]">No flagged messages</p>
+                <p className="text-xs text-[#9a8a7d] mt-0.5">Community is doing well</p>
               </div>
             )}
             {messages.map(msg => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
-                className="bg-surface-container-lowest rounded-lg border border-error/20 shadow-sm p-4"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Flag size={12} className="text-error" />
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${flagColors[msg.flag_reason || 'reported']}`}>
+              <div key={msg.id} className="bg-[#f6f5f1] rounded-lg border border-[#e5e0db] p-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Flag size={11} className="text-red-500" />
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${flagColors[msg.flag_reason || 'reported']}`}>
                       {flagLabel(msg.flag_reason)}
                     </span>
-                    <span className="text-xs text-on-surface-variant">{timeAgo(msg.created_at)}</span>
+                    <span className="text-[10px] text-[#9a8a7d]">{timeAgo(msg.created_at)}</span>
                   </div>
                 </div>
-                <p className="text-sm text-on-surface mb-3 italic leading-relaxed">
-                  &ldquo;{msg.message.slice(0, 120)}{msg.message.length > 120 ? '...' : ''}&rdquo;
+                <p className="text-xs text-[#2c241f] mb-2 italic leading-relaxed line-clamp-2">
+                  &ldquo;{msg.message.slice(0, 100)}{msg.message.length > 100 ? '...' : ''}&rdquo;
                 </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleDelete(msg.id)}
-                    disabled={loadingId === msg.id}
-                    className="px-3 py-1.5 bg-error text-on-error rounded-lg text-xs font-semibold hover:bg-error/80 disabled:opacity-50 transition-colors flex items-center gap-1"
-                  >
-                    <Trash2 size={12} />
-                    DELETE
+                <div className="flex items-center gap-1.5">
+                  <button onClick={() => handleDelete(msg.id)} disabled={loadingId === msg.id}
+                    className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-1">
+                    <Trash2 size={10} /> Delete
                   </button>
-                  <button
-                    onClick={() => handleIgnore(msg.id)}
-                    disabled={loadingId === msg.id}
-                    className="px-3 py-1.5 border border-outline-variant text-on-surface-variant rounded-lg text-xs font-semibold hover:bg-surface-container-low disabled:opacity-50 transition-colors flex items-center gap-1"
-                  >
-                    <XCircle size={12} />
-                    IGNORE
+                  <button onClick={() => handleIgnore(msg.id)} disabled={loadingId === msg.id}
+                    className="px-2 py-1 border border-[#e5e0db] text-[#6f5b4e] rounded text-[10px] font-semibold hover:bg-[#f6f5f1] disabled:opacity-50 transition-colors flex items-center gap-1">
+                    <XCircle size={10} /> Ignore
                   </button>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
-          <a
-            href="/admin/moderation"
-            className="block w-full mt-4 text-center text-sm text-primary font-semibold hover:text-primary/80 transition-colors"
-          >
-            View All Flagged ({metrics.flagged_messages}) →
+          <a href="/admin/moderation" className="block w-full mt-3 text-center text-xs font-semibold text-[#8a3d08] hover:underline">
+            View all flagged ({metrics.flagged_messages}) →
           </a>
-        </motion.div>
+        </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-      {/* 30-Day Activity Trends */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.4 }}
-        whileHover={{ scale: 1.01 }}
-        className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-8 transition-colors duration-300"
-      >
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-on-surface">30-Day Activity Trends</h2>
-          <div className="flex items-center gap-5 text-xs text-on-surface-variant">
-            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-sm bg-primary" /> CHECK-INS</span>
-            <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-sm bg-error" /> PANIC</span>
+      {/* Chart + Provider Table */}
+      <div className="grid gap-5 xl:grid-cols-2">
+        {/* 30-Day Chart */}
+        <div className="bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-[#2c241f]">30-Day Activity</h2>
+            <div className="flex items-center gap-4 text-[10px] text-[#6f5b4e]">
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#8a3d08]" /> CHECK-INS</span>
+              <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#dc2626]" /> PANIC</span>
+            </div>
           </div>
-        </div>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={metrics.activity_30d} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 10, fill: 'var(--color-on-surface-variant)' }}
-                tickFormatter={(v: string) => {
-                  const d = new Date(v)
-                  const day = d.getDate()
-                  if (day === 1 || day === 10 || day === 20) return `${d.getMonth() + 1}/${day}`
-                  if (day === new Date().getDate()) return 'Today'
-                  return ''
-                }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis hide />
-              <Tooltip
-                contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-outline-variant)', background: 'var(--color-surface-container-lowest)' }}
-                labelFormatter={(v: string) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              />
-              <Bar dataKey="checkins" fill="var(--color-primary)" radius={[4, 4, 0, 0]} name="CHECK-INS" opacity={0.85} />
-              <Bar dataKey="panic" fill="var(--color-error)" radius={[4, 4, 0, 0]} name="PANIC" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
-
-      {/* Pending Provider Verifications Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm p-8 transition-colors duration-300"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-on-surface">Pending Provider Verifications</h2>
-          <span className="text-xs text-on-surface-variant">{providers.length} pending</span>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={metrics.activity_30d} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e0db" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: '#9a8a7d' }}
+                  tickFormatter={(v: string) => {
+                    const d = new Date(v)
+                    if (d.getDate() === 1 || d.getDate() === 10 || d.getDate() === 20) return `${d.getMonth() + 1}/${d.getDate()}`
+                    return ''
+                  }}
+                  axisLine={false} tickLine={false}
+                />
+                <YAxis hide />
+                <Tooltip
+                  contentStyle={{ borderRadius: '6px', border: '1px solid #e5e0db', background: '#fff', fontSize: '12px' }}
+                  labelFormatter={(v: string) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                />
+                <Bar dataKey="checkins" fill="#8a3d08" radius={[3, 3, 0, 0]} name="CHECK-INS" opacity={0.85} />
+                <Bar dataKey="panic" fill="#dc2626" radius={[3, 3, 0, 0]} name="PANIC" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {providers.length === 0 ? (
-          <div className="text-center py-12 text-sm text-on-surface-variant">
-            <CheckCircle className="w-10 h-10 text-secondary mx-auto mb-3" />
-            No pending provider verifications
+        {/* Pending Providers */}
+        <div className="bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-[#2c241f]">Pending Verifications</h2>
+            <span className="text-xs text-[#6f5b4e]">{providers.length} pending</span>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-outline-variant/30">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Entity</th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Type</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {providers.map((p, i) => (
-                  <motion.tr
-                    key={p.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05, duration: 0.3 }}
-                    className="border-b border-outline-variant/10 hover:bg-surface-container-low transition-colors"
-                  >
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                          {p.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-on-surface">{p.name}</p>
-                          <p className="text-xs text-on-surface-variant">{p.org_name || p.specialization || p.city}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${typeBadge(p.type).class}`}>
-                        {typeBadge(p.type).label}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => handleVerify(p.id)}
-                        disabled={loadingId === p.id}
-                        className="px-4 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:bg-primary/80 disabled:opacity-50 transition-colors"
-                      >
-                        {loadingId === p.id ? '...' : 'VERIFY'}
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </motion.div>
+          {providers.length === 0 ? (
+            <div className="text-center py-10">
+              <CheckCircle size={28} className="text-green-400 mx-auto mb-2" />
+              <p className="text-sm text-[#6f5b4e]">All providers verified</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {providers.slice(0, 5).map((p, i) => (
+                <div key={p.id} className="flex items-center justify-between py-2.5 px-3 rounded-md hover:bg-[#f6f5f1] transition-colors">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-full bg-[#f0ece7] flex items-center justify-center text-[11px] font-bold text-[#8a3d08] shrink-0">
+                      {p.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#2c241f] truncate">{p.name}</p>
+                      <p className="text-[10px] text-[#6f5b4e] truncate">{p.org_name || p.specialization || p.city}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${typeBadge(p.type).class}`}>
+                      {typeBadge(p.type).label}
+                    </span>
+                    <button onClick={() => handleVerify(p.id)} disabled={loadingId === p.id}
+                      className="px-2.5 py-1 bg-[#8a3d08] text-white rounded text-[10px] font-semibold hover:bg-[#a04e14] disabled:opacity-50 transition-colors">
+                      {loadingId === p.id ? '...' : 'Verify'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {providers.length > 5 && (
+                <a href="/admin/providers" className="block text-center text-xs font-semibold text-[#8a3d08] pt-2 hover:underline">
+                  View all {providers.length} pending →
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -12,13 +12,21 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { data: provider } = await supabase
+      .from('providers')
+      .select('id')
+      .or(`id.eq.${user.id},user_id.eq.${user.id}`)
+      .single()
+
+    if (!provider) return NextResponse.json({ error: 'Provider not found' }, { status: 404 })
+
     const { booking_id, notes } = await request.json()
 
     const { error } = await supabase
       .from('telehealth_bookings')
       .update({ notes })
       .eq('id', booking_id)
-      .eq('provider_id', user.id)
+      .eq('provider_id', provider.id)
 
     if (error) throw error
 

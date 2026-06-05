@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "admin:create": "node scripts/create-admin.mjs",
     "db:setup": "echo 'Paste supabase/migrations/00_full_schema.sql into Supabase SQL Editor and Run.'"
   },
   "dependencies": {
