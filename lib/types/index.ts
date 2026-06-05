@@ -162,8 +162,6 @@ export type AdminSeedRequest = {
   type: 'users' | 'logs' | 'providers' | 'chat' | 'demo' | 'clear'
 }
 
-// == New Types for Complete Admin System ==
-
 export type FaithOrganization = {
   id: string
   org_name: string
@@ -255,4 +253,55 @@ export type UserProfile = Profile & {
   streak?: Streak
   guardian?: GuardianControl
   last_checkin?: string
+}
+
+export type GuestSession = {
+  session_id: string
+  message_count: number
+  created_at: string
+  last_active_at: string
+}
+
+export type CopingStep = {
+  title: string
+  instruction: string
+  duration_seconds: number
+}
+
+export type PanicResponse = {
+  session_id: string
+  steps: CopingStep[]
+  affirmation: string
+  breathing_duration: number
+}
+
+export type RecoveryScore = {
+  current: number
+  previous: number
+  trend: 'up' | 'down' | 'stable'
+  factors: { name: string; impact: number }[]
+}
+
+export type TriggerAnalysis = {
+  primary_triggers: { trigger: string; frequency: number; strength: number }[]
+  high_risk_times: string[]
+  suggested_actions: string[]
+}
+
+export type AIChatMessage = {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp?: string
+}
+
+export type DashboardData = {
+  profile: Profile
+  streak: Streak
+  today_log?: HabitLog
+  recent_logs: HabitLog[]
+  recovery_score: RecoveryScore
+  trigger_analysis: TriggerAnalysis
+  ai_insight?: string
+  risk_level: 'low' | 'moderate' | 'high'
+  notifications: NotificationLog[]
 }

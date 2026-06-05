@@ -15,12 +15,12 @@ const triggers = [
   { id: 'stress', label: 'Stress', icon: '⚡' },
   { id: 'boredom', label: 'Boredom', icon: '😐' },
   { id: 'late-night', label: 'Late Night', icon: '🌙' },
-  { id: 'telegram', label: 'Telegram', icon: '✈️' },
+  { id: 'social-media', label: 'Social Media', icon: '📱' },
   { id: 'peer-pressure', label: 'Peer Pressure', icon: '👥' },
   { id: 'loneliness', label: 'Loneliness', icon: '😔' },
   { id: 'fatigue', label: 'Fatigue', icon: '😴' },
-  { id: 'post-khat', label: 'Post-Khat Crash', icon: '📉' },
-  { id: 'after-alcohol', label: 'After Alcohol', icon: '🍷' },
+  { id: 'relationship-stress', label: 'Relationship Stress', icon: '💔' },
+  { id: 'exam-anxiety', label: 'Exam Anxiety', icon: '📚' },
 ];
 
 const supportModes = [

@@ -1,30 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
+import { GUEST_CHAT_SYSTEM_PROMPT, FALLBACK_REPLIES } from '@/lib/ai/prompts';
+import { GUEST_WELCOME_MESSAGE } from '@/lib/guest/constants';
 
 export const runtime = 'nodejs';
-import { GUEST_WELCOME_MESSAGE } from '@/lib/guest/constants';
 
 const sessionCounts = new Map<string, number>();
 const MAX_MESSAGES = 20;
 
-const SYSTEM_PROMPT = `You are SafeGround AI. A warm, anonymous, non-judgmental recovery support companion for Ethiopian students.
-
-Your first message is: "${GUEST_WELCOME_MESSAGE}"
-
-Keep responses under 100 words. Never mention pornography directly. Focus on grounding, hope, cultural sensitivity, and professional help when appropriate.`;
-
-const fallbackReplies = [
-  'Welcome. You are safe and anonymous here. How are you feeling in this moment?',
-  'Thank you for sharing. It takes courage to open up.',
-  'You are not alone in this. Many students face similar challenges.',
-  'Take a deep breath. You are exactly where you need to be.',
-  'Your feelings are valid. There is no wrong way to feel right now.',
-  'Recovery is not a straight line. Every step counts.',
-  'You deserve support and compassion.',
-  'Would you like to try a breathing exercise together?',
-  'That sounds difficult. I am here to listen without judgment.',
-  'You are doing so much better than you think.',
-];
+const SYSTEM_PROMPT = GUEST_CHAT_SYSTEM_PROMPT + `\n\nYour first message is: "${GUEST_WELCOME_MESSAGE}"`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isGeminiConfigured()) {
-      const reply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      const reply = FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
       sessionCounts.set(session_id, count + 1);
       return NextResponse.json({ success: true, reply, response: reply, source: 'fallback' });
     }
@@ -73,7 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, reply, response: reply, source: 'gemini' });
   } catch (error) {
     console.error('[guest/chat] Error:', error);
-    const reply = fallbackReplies[0];
+    const reply = FALLBACK_REPLIES[0];
     return NextResponse.json({ success: true, reply, response: reply, source: 'fallback' });
   }
 }
