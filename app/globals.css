@@ -59,11 +59,40 @@
   --color-success: var(--color-secondary);
 }
 
+.dark {
+  --color-primary: #f59e0b;
+  --color-primary-container: #92400E;
+  --color-on-primary: #1c1917;
+  --color-secondary: #4ade80;
+  --color-secondary-container: #166534;
+  --color-on-secondary: #1c1917;
+  --color-on-secondary-container: #92f5a4;
+  --color-tertiary: #fb923c;
+  --color-tertiary-container: #9a3412;
+  --color-on-tertiary: #1c1917;
+  --color-error: #f87171;
+  --color-on-error: #1c1917;
+  --color-error-container: #7f1d1d;
+  --color-surface: #14110f;
+  --color-surface-container-lowest: #1c1815;
+  --color-surface-container-low: #221d19;
+  --color-surface-container: #2c241f;
+  --color-surface-container-high: #3a302a;
+  --color-surface-container-highest: #4a3d35;
+  --color-on-surface: #f5efe8;
+  --color-on-surface-variant: #b8a99a;
+  --color-outline: #8a7a6c;
+  --color-outline-variant: #3a302a;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
 @layer base {
   html {
     @apply scroll-smooth;
     background-color: rgb(249 249 248);
-    color-scheme: light;
   }
 
   body {
