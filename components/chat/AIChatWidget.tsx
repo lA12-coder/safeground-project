@@ -79,7 +79,7 @@ export function AIChatWidget() {
         style={{
           position: 'fixed',
           bottom: '24px',
-          left: '24px',
+          right: '24px',
           zIndex: 9999,
           width: '56px',
           height: '56px',
@@ -116,7 +116,7 @@ export function AIChatWidget() {
             style={{
               position: 'fixed',
               bottom: '96px',
-              left: '24px',
+              right: '24px',
               zIndex: 9999,
               width: '360px',
               maxWidth: 'calc(100vw - 48px)',
