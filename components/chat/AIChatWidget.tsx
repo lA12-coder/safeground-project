@@ -21,6 +21,9 @@ export function AIChatWidget() {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,7 +55,7 @@ export function AIChatWidget() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'I am here for you. Please try again.' },
+        { role: 'assistant', content: 'Connection issue. Please try again.' },
       ]);
     } finally {
       setLoading(false);
@@ -66,15 +69,41 @@ export function AIChatWidget() {
     }
   };
 
+  if (!mounted) return null;
+
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-[#92400E] to-[#7a360a] text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          left: '24px',
+          zIndex: 9999,
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #92400E, #7a360a)',
+          color: 'white',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'transform 200ms, box-shadow 200ms',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.3)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+        }}
         aria-label="Open AI Chat"
       >
-        <MessageCircle className="w-6 h-6" />
+        <MessageCircle size={24} />
       </button>
 
       <AnimatePresence>
@@ -84,48 +113,147 @@ export function AIChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed bottom-24 left-6 z-50 w-[360px] max-w-[calc(100vw-48px)] bg-white rounded-2xl shadow-2xl border border-[#e5e0db] overflow-hidden"
-            style={{ maxHeight: '560px' }}
+            style={{
+              position: 'fixed',
+              bottom: '96px',
+              left: '24px',
+              zIndex: 9999,
+              width: '360px',
+              maxWidth: 'calc(100vw - 48px)',
+              maxHeight: '560px',
+              backgroundColor: '#ffffff',
+              borderRadius: '16px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+              border: '1px solid #e5e0db',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#92400E] to-[#7a360a] px-4 py-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
+            <div
+              style={{
+                background: 'linear-gradient(90deg, #92400E, #7a360a)',
+                padding: '14px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Sparkles size={16} color="white" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">SafeGround AI</p>
-                  <p className="text-[10px] text-white/65">Recovery Companion</p>
+                  <p style={{ fontSize: '14px', fontWeight: 600, color: '#ffffff', margin: 0 }}>
+                    SafeGround AI
+                  </p>
+                  <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.65)', margin: 0 }}>
+                    Recovery Companion
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255,255,255,0.1)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background-color 200ms',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                }}
               >
-                <X className="w-3.5 h-3.5 text-white" />
+                <X size={14} color="white" />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="p-4 space-y-3 overflow-y-auto" style={{ height: '360px' }}>
+            <div
+              style={{
+                flex: 1,
+                padding: '16px',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                minHeight: '300px',
+                maxHeight: '360px',
+              }}
+            >
               {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                  }}
+                >
                   <div
-                    className={`max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                      msg.role === 'user'
-                        ? 'bg-[#92400E] text-white rounded-br-md'
-                        : 'bg-[#f6f5f1] text-[#2c241f] rounded-bl-md'
-                    }`}
+                    style={{
+                      maxWidth: '85%',
+                      borderRadius: '12px',
+                      padding: '10px 14px',
+                      fontSize: '14px',
+                      lineHeight: '1.5',
+                      ...(msg.role === 'user'
+                        ? {
+                            backgroundColor: '#92400E',
+                            color: '#ffffff',
+                            borderBottomRightRadius: '6px',
+                          }
+                        : {
+                            backgroundColor: '#f6f5f1',
+                            color: '#1c1917',
+                            borderBottomLeftRadius: '6px',
+                          }),
+                    }}
                   >
                     {msg.content}
                   </div>
                 </div>
               ))}
               {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-[#f6f5f1] rounded-xl rounded-bl-md px-4 py-3">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#92400E]" />
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <div
+                    style={{
+                      backgroundColor: '#f6f5f1',
+                      borderRadius: '12px',
+                      borderBottomLeftRadius: '6px',
+                      padding: '12px 16px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid #92400E',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.6s linear infinite',
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -133,7 +261,15 @@ export function AIChatWidget() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-[#e5e0db] p-3 flex items-center gap-2">
+            <div
+              style={{
+                borderTop: '1px solid #e5e0db',
+                padding: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
               <input
                 ref={inputRef}
                 type="text"
@@ -141,21 +277,75 @@ export function AIChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your message..."
-                className="flex-1 h-10 px-3.5 rounded-xl border border-[#e5e0db] text-sm outline-none focus:border-[#92400E] focus:ring-2 focus:ring-[#92400E]/10 transition-all placeholder:text-[#B09880]/60"
                 disabled={loading}
+                style={{
+                  flex: 1,
+                  height: '40px',
+                  padding: '0 14px',
+                  borderRadius: '12px',
+                  border: '1px solid #e5e0db',
+                  fontSize: '14px',
+                  outline: 'none',
+                  color: '#1c1917',
+                  backgroundColor: '#ffffff',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#92400E';
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(146,64,14,0.1)';
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e0db';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               />
               <button
                 type="button"
                 onClick={send}
                 disabled={!input.trim() || loading}
-                className="w-10 h-10 rounded-xl bg-[#92400E] text-white flex items-center justify-center hover:bg-[#7a360a] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  backgroundColor: input.trim() && !loading ? '#92400E' : '#d6d3d1',
+                  color: '#ffffff',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
+                  transition: 'background-color 200ms',
+                  flexShrink: 0,
+                }}
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {loading ? (
+                  <div
+                    style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTop: '2px solid white',
+                      borderRadius: '50%',
+                      animation: 'spin 0.6s linear infinite',
+                    }}
+                  />
+                ) : (
+                  <Send size={16} />
+                )}
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <style jsx global>{`
+        @keyframes aichat-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        div[style*="animation: spin"] {
+          animation-name: aichat-spin !important;
+        }
+      `}</style>
     </>
   );
 }
