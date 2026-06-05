@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Users, AlertTriangle, Zap, Clock, Shield, Trash2, XCircle, TrendingUp,
-  Activity, MessageCircle, UserPlus, CheckCircle, Flag, Database, Wifi,
+  AlertTriangle, Zap, Shield, Trash2, XCircle, TrendingUp,
+  Activity, MessageCircle, CheckCircle, Flag, Database, Wifi,
   BrainCircuit, ExternalLink, Settings, MapPin, Sparkles,
 } from 'lucide-react'
 import {
@@ -211,15 +211,6 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
 
   const feedItems = useMemo<FeedItem[]>(() => {
     const items: FeedItem[] = []
-    items.push({
-      id: 'users',
-      icon: UserPlus,
-      color: 'text-green-600',
-      bg: 'bg-green-50',
-      text: `${metrics.new_users_7d} new ${metrics.new_users_7d === 1 ? 'user has' : 'users have'} joined this week`,
-      time: 'Today',
-      type: 'user',
-    })
     if (metrics.panic_today > 0) {
       items.push({
         id: 'panic',
@@ -229,17 +220,6 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
         text: `${metrics.panic_today} panic ${metrics.panic_today === 1 ? 'event was' : 'events were'} resolved today`,
         time: '2h ago',
         type: 'panic',
-      })
-    }
-    if (providers.length > 0) {
-      items.push({
-        id: 'provider',
-        icon: Shield,
-        color: 'text-blue-600',
-        bg: 'bg-blue-50',
-        text: `${providers[0].name} is pending verification`,
-        time: '1h ago',
-        type: 'provider',
       })
     }
     items.push({
@@ -273,12 +253,6 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
 
   const kpiCards = useMemo(() => [
     {
-      label: 'Total Users', value: metrics.total_users,
-      sub: `+${metrics.new_users_7d} this week`, icon: Users,
-      color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-l-blue-500',
-      showDelta: true, deltaUp: true, deltaValue: metrics.new_users_7d,
-    },
-    {
       label: "Panic Events Today", value: metrics.panic_today,
       sub: 'Real-time alerts', icon: AlertTriangle,
       color: 'text-red-600', bg: 'bg-red-50', border: 'border-l-red-500',
@@ -288,12 +262,6 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
       label: 'Active Streaks', value: metrics.active_streaks,
       sub: `Avg ${metrics.avg_streak}d`, icon: Zap,
       color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-l-amber-500',
-    },
-    {
-      label: 'Provider Queue', value: metrics.provider_queue,
-      sub: 'Pending verification', icon: Clock,
-      color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-l-indigo-500',
-      showPending: true,
     },
   ], [metrics])
 
@@ -307,10 +275,6 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
       icon: Activity,
       color: metrics.relapse_rate_7d > 20 ? 'text-red-600' : 'text-green-600',
       bg: metrics.relapse_rate_7d > 20 ? 'bg-red-50' : 'bg-green-50',
-    },
-    {
-      label: 'New Users (7d)', value: metrics.new_users_7d, suffix: '',
-      icon: UserPlus, color: 'text-green-600', bg: 'bg-green-50',
     },
     {
       label: 'Avg Streak', value: metrics.avg_streak, suffix: 'd',
@@ -342,7 +306,7 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
 
       <motion.div variants={fadeUp} initial="initial" animate="animate">
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {kpiCards.map(({ label, value, sub, icon: Icon, color, bg, border, showLive, showDelta, deltaUp, deltaValue }) => (
+          {kpiCards.map(({ label, value, sub, icon: Icon, color, bg, border, showLive }) => (
             <motion.div
               key={label}
               whileHover={{ y: -2 }}
@@ -361,12 +325,7 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
               <div className="text-2xl font-bold text-[#2c241f]">
                 <CountUp value={value} />
               </div>
-              <div className="text-xs text-[#6f5b4e] mt-0.5 flex items-center gap-1.5">
-                {showDelta && (
-                  <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold ${deltaUp ? 'text-green-600' : 'text-red-600'}`}>
-                    <TrendingUp size={10} /> {deltaValue}
-                  </span>
-                )}
+              <div className="text-xs text-[#6f5b4e] mt-0.5">
                 {sub}
               </div>
             </motion.div>
@@ -407,21 +366,7 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
             <div className="h-80 rounded-lg bg-gradient-to-br from-emerald-900/10 via-teal-800/10 to-amber-900/10 border border-[#e5e0db] flex items-center justify-center overflow-hidden p-4">
               <EthiopiaMap />
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              {[
-                { name: 'Addis Abeba', activity: 'High activity', count: '12.4k' },
-                { name: 'Hawassa', activity: 'Moderate', count: '3.2k' },
-                { name: 'Dire Dawa', activity: 'Moderate', count: '2.8k' },
-              ].map(city => (
-                <div key={city.name} className="bg-[#fdf6ed] rounded-lg p-2.5 text-center">
-                  <p className="text-xs font-semibold text-[#2c241f]">{city.name}</p>
-                  <p className="text-[10px] text-[#6f5b4e]">{city.activity}</p>
-                  <p className="text-[10px] font-semibold text-[#8a3d08] mt-0.5">{city.count} users</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-4 mt-3 text-[10px] text-[#6f5b4e]">
-              <span className="flex items-center gap-1.5"><Users size={12} /> 15k+ Students</span>
+            <div className="flex items-center gap-4 mt-4 text-[10px] text-[#6f5b4e]">
               <span className="flex items-center gap-1.5"><MapPin size={12} /> 8 Active Cities</span>
             </div>
           </div>
@@ -487,112 +432,58 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
       </motion.div>
 
       <motion.div variants={fadeUp} initial="initial" animate="animate">
-        <div className="grid gap-5 xl:grid-cols-2">
-          <div className="bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-[#2c241f]">Activity Trends</h2>
-              <div className="flex items-center gap-3">
-                <div className="flex bg-[#f6f5f1] rounded-lg p-0.5">
-                  {(['7d', '30d'] as const).map(range => (
-                    <button
-                      key={range}
-                      onClick={() => setChartRange(range)}
-                      className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
-                        chartRange === range
-                          ? 'bg-white text-[#2c241f] shadow-sm'
-                          : 'text-[#6f5b4e] hover:text-[#2c241f]'
-                      }`}
-                    >
-                      {range.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-3 text-[10px] text-[#6f5b4e]">
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#8a3d08]" /> CHECK-INS</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#dc2626]" /> PANIC</span>
-                </div>
+        <div className="bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-[#2c241f]">Activity Trends</h2>
+            <div className="flex items-center gap-3">
+              <div className="flex bg-[#f6f5f1] rounded-lg p-0.5">
+                {(['7d', '30d'] as const).map(range => (
+                  <button
+                    key={range}
+                    onClick={() => setChartRange(range)}
+                    className={`px-2.5 py-1 text-[10px] font-semibold rounded-md transition-colors ${
+                      chartRange === range
+                        ? 'bg-white text-[#2c241f] shadow-sm'
+                        : 'text-[#6f5b4e] hover:text-[#2c241f]'
+                    }`}
+                  >
+                    {range.toUpperCase()}
+                  </button>
+                ))}
               </div>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e0db" vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 10, fill: '#9a8a7d' }}
-                    tickFormatter={(v: string) => {
-                      const d = new Date(v)
-                      if (d.getDate() === 1 || d.getDate() === 10 || d.getDate() === 20) return `${d.getMonth() + 1}/${d.getDate()}`
-                      return ''
-                    }}
-                    axisLine={false} tickLine={false}
-                  />
-                  <YAxis hide />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: '8px', border: '1px solid #e5e0db',
-                      background: '#fff', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                    }}
-                    labelFormatter={(v: string) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  />
-                  <Bar dataKey="checkins" fill="#8a3d08" radius={[3, 3, 0, 0]} name="CHECK-INS" opacity={0.85} />
-                  <Bar dataKey="panic" fill="#dc2626" radius={[3, 3, 0, 0]} name="PANIC" />
-                  <Line type="monotone" dataKey="trend" stroke="#8a3d08" strokeWidth={2} dot={false} strokeDasharray="4 3" opacity={0.5} />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="flex items-center gap-3 text-[10px] text-[#6f5b4e]">
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#8a3d08]" /> CHECK-INS</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#dc2626]" /> PANIC</span>
+              </div>
             </div>
           </div>
-
-          <div className="bg-white rounded-lg border border-[#e5e0db] shadow-sm p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-[#2c241f]">Pending Verifications</h2>
-              <span className="text-xs text-[#6f5b4e]">{providers.length} pending</span>
-            </div>
-            {providers.length === 0 ? (
-              <div className="text-center py-10">
-                <Shield size={32} className="text-green-400 mx-auto mb-2" />
-                <p className="text-sm font-medium text-[#2c241f]">All providers verified</p>
-                <p className="text-xs text-[#6f5b4e] mt-0.5">The provider queue is empty</p>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-1.5">
-                  {providers.slice(0, 5).map((p, i) => (
-                    <motion.div
-                      key={p.id}
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.04 }}
-                      className="flex items-center justify-between py-2.5 px-3 rounded-md hover:bg-[#f6f5f1] transition-colors"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-[#f0ece7] flex items-center justify-center text-[11px] font-bold text-[#8a3d08] shrink-0">
-                          {p.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-[#2c241f] truncate">{p.name}</p>
-                          <p className="text-[10px] text-[#6f5b4e] truncate">{p.org_name || p.specialization || p.city}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${typeBadge(p.type).class}`}>
-                          {typeBadge(p.type).label}
-                        </span>
-                        <button onClick={() => handleVerify(p.id)} disabled={loadingId === p.id}
-                          className="px-2.5 py-1 bg-[#8a3d08] text-white rounded text-[10px] font-semibold hover:bg-[#a04e14] disabled:opacity-50 transition-colors">
-                          {loadingId === p.id ? '...' : 'Verify'}
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-                {providers.length > 5 && (
-                  <a href="/admin/providers" className="block text-center text-xs font-semibold text-[#8a3d08] pt-3 hover:underline">
-                    View all {providers.length} pending &rarr;
-                  </a>
-                )}
-              </>
-            )}
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e0db" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: '#9a8a7d' }}
+                  tickFormatter={(v: string) => {
+                    const d = new Date(v)
+                    if (d.getDate() === 1 || d.getDate() === 10 || d.getDate() === 20) return `${d.getMonth() + 1}/${d.getDate()}`
+                    return ''
+                  }}
+                  axisLine={false} tickLine={false}
+                />
+                <YAxis hide />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: '8px', border: '1px solid #e5e0db',
+                    background: '#fff', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  }}
+                  labelFormatter={(v: string) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                />
+                <Bar dataKey="checkins" fill="#8a3d08" radius={[3, 3, 0, 0]} name="CHECK-INS" opacity={0.85} />
+                <Bar dataKey="panic" fill="#dc2626" radius={[3, 3, 0, 0]} name="PANIC" />
+                <Line type="monotone" dataKey="trend" stroke="#8a3d08" strokeWidth={2} dot={false} strokeDasharray="4 3" opacity={0.5} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </motion.div>

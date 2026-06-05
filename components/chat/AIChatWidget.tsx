@@ -224,8 +224,8 @@ export function AIChatWidget() {
                             borderBottomRightRadius: '6px',
                           }
                         : {
-                            backgroundColor: '#f6f5f1',
-                            color: '#1c1917',
+                            backgroundColor: '#3a302a',
+                            color: '#ffffff',
                             borderBottomLeftRadius: '6px',
                           }),
                     }}
