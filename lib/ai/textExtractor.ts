@@ -36,9 +36,18 @@ async function extractFromPdf(file: File): Promise<{ text: string; fileName: str
 
   const pdfjsLib = await import('pdfjs-dist');
   const isBrowser = typeof window !== 'undefined';
-  pdfjsLib.GlobalWorkerOptions.workerSrc = isBrowser
-    ? '/pdf.worker.min.mjs'
-    : `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  if (isBrowser) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+  } else {
+    const fs = await import('fs');
+    const path = await import('path');
+    const workerPath = path.join(process.cwd(), 'node_modules/pdfjs-dist/build/pdf.worker.min.mjs');
+    if (fs.existsSync(workerPath)) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `file://${workerPath}`;
+    } else {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+    }
+  }
   const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
   const pdf = await loadingTask.promise;
 
