@@ -87,12 +87,6 @@ function SectionHeading({ children }: { children: string }) {
   );
 }
 
-const stats = [
-  { label: 'Active Students', value: '15k+', color: 'text-[#92400E]', desc: 'Across Ethiopian universities' },
-  { label: 'Data Sovereignty', value: '100%', color: 'text-[#16a34a]', desc: 'Anonymous by design' },
-  { label: 'Crisis Response', value: '24/7', color: 'text-[#2563eb]', desc: 'Always available' },
-];
-
 const problems = [
   { icon: AlertCircle, title: 'Compulsive pornography use', desc: 'Silent struggle affecting academic and personal life' },
   { icon: AlertCircle, title: 'Shame cycles & isolation', desc: 'Fear of judgment preventing students from seeking help' },
@@ -232,6 +226,21 @@ function FloatingOrbs() {
 }
 
 export default function LandingPage() {
+  const [realUsers, setRealUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/stats')
+      .then((r) => r.json())
+      .then((d) => setRealUsers(d.totalUsers))
+      .catch(() => {});
+  }, []);
+
+  const realStats = [
+    { label: 'Active Students', value: realUsers !== null ? `${realUsers}+` : '—', color: 'text-[#92400E]', desc: 'Across Ethiopian universities' },
+    { label: 'Data Sovereignty', value: '100%', color: 'text-[#16a34a]', desc: 'Anonymous by design' },
+    { label: 'Crisis Response', value: '24/7', color: 'text-[#2563eb]', desc: 'Always available' },
+  ];
+
   return (
     <div className="min-h-screen bg-[#fafaf9]">
       <SiteHeader />
@@ -587,7 +596,7 @@ export default function LandingPage() {
               <img src="/organ1.png" alt="Organization impact" className="w-full h-full object-cover" loading="lazy" />
             </motion.div>
             <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-5">
-              {stats.map((stat) => (
+              {realStats.map((stat) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}

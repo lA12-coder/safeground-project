@@ -3,31 +3,32 @@ import { createServerClient } from '@supabase/ssr'
 import { generateAlias } from '@/lib/utils/aliasGenerator'
 import { generateEmbedding } from '@/lib/ai/embeddings'
 import { KNOWLEDGE_ENTRIES } from '@/lib/ai/knowledgeBase'
+import * as crypto from 'crypto'
 
 export const dynamic = 'force-dynamic'
 
-const regions = ['Addis Abeba', 'Hawassa', 'Dire Dawa', 'Mekelle', 'Bahir Dar'] as const
 const religions = ['orthodox', 'protestant', 'muslim', 'none'] as const
 const languages = ['amharic', 'english', 'oromifa'] as const
 
+const DEMO_USER_ID = '00000000-0000-4000-a000-000000000028'
+
 async function seedUsers(supabase: ReturnType<typeof createServerClient>) {
   for (let i = 0; i < 25; i++) {
+    const id = crypto.randomUUID()
     const alias = generateAlias()
     await supabase.from('profiles').upsert({
-      id: `seed-user-${i}`,
+      id,
       alias,
-      language_pref: languages[Math.floor(Math.random() * languages.length)],
-      support_preference: ['secular', 'faith_based', 'clinical'][Math.floor(Math.random() * 3)],
-      trigger_tags: [],
-      streak_goal: 30,
-      region: regions[i < 10 ? 0 : i < 15 ? 1 : i < 19 ? 2 : i < 22 ? 3 : 4],
+      language: languages[Math.floor(Math.random() * languages.length)],
+      triggers: [],
+      recovery_goal: 30,
       religion: religions[Math.floor(Math.random() * religions.length)],
       onboarding_done: true,
     })
 
     const streakDays = Math.floor(Math.random() * 45)
     await supabase.from('streaks').upsert({
-      user_id: `seed-user-${i}`,
+      user_id: id,
       current_streak: streakDays,
       longest_streak: streakDays + Math.floor(Math.random() * 15),
       total_clean_days: streakDays + Math.floor(Math.random() * 30),
@@ -35,19 +36,17 @@ async function seedUsers(supabase: ReturnType<typeof createServerClient>) {
   }
 
   await supabase.from('profiles').upsert({
-    id: 'demo-user',
+    id: DEMO_USER_ID,
     alias: 'Biruk-Eagle-28',
-    language_pref: 'english',
-    support_preference: 'secular',
-    trigger_tags: ['stress', 'late_night'],
-    streak_goal: 30,
-    region: 'Addis Abeba',
+    language: 'english',
+    triggers: ['stress', 'late_night'],
+    recovery_goal: 30,
     religion: 'orthodox',
     onboarding_done: true,
   })
 
   await supabase.from('streaks').upsert({
-    user_id: 'demo-user',
+    user_id: DEMO_USER_ID,
     current_streak: 28,
     longest_streak: 28,
     total_clean_days: 30,
@@ -59,8 +58,16 @@ async function seedUsers(supabase: ReturnType<typeof createServerClient>) {
 async function seedLogs(supabase: ReturnType<typeof createServerClient>) {
   let total = 0
 
-  for (let u = 0; u < 25; u++) {
-    const userId = `seed-user-${u}`
+  const { data: seedProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .not('id', 'eq', DEMO_USER_ID)
+    .limit(25)
+
+  const userIds = (seedProfiles || []).map(p => p.id)
+
+  for (let u = 0; u < Math.min(25, userIds.length); u++) {
+    const userId = userIds[u]
     let streak = 0
     const relapsedDays = new Set<number>()
     const numRelapses = 2 + Math.floor(Math.random() * 2)
@@ -125,7 +132,7 @@ async function seedLogs(supabase: ReturnType<typeof createServerClient>) {
     const dateStr = logDate.toISOString().split('T')[0]
 
     await supabase.from('habit_logs').insert({
-      user_id: 'demo-user',
+      user_id: DEMO_USER_ID,
       log_date: dateStr,
       mood_score: 6 + Math.round(Math.sin(d * 0.2) * 1.5 + (Math.random() - 0.5)),
       stress_level: 4 + Math.round(Math.sin(d * 0.15) * 2 + (Math.random() - 0.5) * 1.5),
@@ -143,7 +150,7 @@ async function seedLogs(supabase: ReturnType<typeof createServerClient>) {
     current_streak: demoStreak,
     longest_streak: demoStreak,
     total_clean_days: demoStreak + 2,
-  }).eq('user_id', 'demo-user')
+  }).eq('user_id', DEMO_USER_ID)
 
   return { logs: total }
 }
@@ -256,10 +263,17 @@ async function seedChat(supabase: ReturnType<typeof createServerClient>) {
 }
 
 async function seedGuardians(supabase: ReturnType<typeof createServerClient>) {
+  const { data: seedProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .not('id', 'eq', DEMO_USER_ID)
+    .limit(10);
+  const ids = (seedProfiles || []).map(p => p.id);
+
   const guardians = [
-    { user_id: 'seed-user-0', token: 'guardian-seed-001-alpha-bravo-charlie', guardian_alias: 'Guardian-A', relationship: 'family', is_active: true },
-    { user_id: 'seed-user-5', token: 'guardian-seed-002-delta-echo-foxtrot', guardian_alias: 'Guardian-B', relationship: 'trusted_friend', is_active: true },
-    { user_id: 'demo-user', token: 'demo-guardian-token-safeground-2024', guardian_alias: 'Guardian', relationship: 'family', is_active: true, notify_on_panic: true, notify_on_relapse: true, notify_streak_break: false, monitoring_level: 'alert_only' },
+    { user_id: ids[0] || crypto.randomUUID(), token: 'guardian-seed-001-alpha-bravo-charlie', guardian_alias: 'Guardian-A', relationship: 'family', is_active: true },
+    { user_id: ids[5] || crypto.randomUUID(), token: 'guardian-seed-002-delta-echo-foxtrot', guardian_alias: 'Guardian-B', relationship: 'trusted_friend', is_active: true },
+    { user_id: DEMO_USER_ID, token: 'demo-guardian-token-safeground-2024', guardian_alias: 'Guardian', relationship: 'family', is_active: true, notify_on_panic: true, notify_on_relapse: true, notify_streak_break: false, monitoring_level: 'alert_only' },
   ]
 
   for (const g of guardians) {
@@ -289,15 +303,22 @@ async function seedBookings(supabase: ReturnType<typeof createServerClient>) {
     tomorrow.setDate(tomorrow.getDate() + 1)
     tomorrow.setHours(10, 0, 0, 0)
 
-    await supabase.from('telehealth_bookings').insert({
-      user_id: 'demo-user',
-      provider_id: hiwotId,
+      await supabase.from('telehealth_bookings').insert({
+        user_id: DEMO_USER_ID,
+        provider_id: hiwotId,
       session_type: 'follow_up',
       scheduled_at: tomorrow.toISOString(),
       duration_minutes: 50,
       status: 'confirmed',
     })
   }
+
+  const { data: seedProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .not('id', 'eq', DEMO_USER_ID)
+    .limit(25);
+  const userIds = (seedProfiles || []).map(p => p.id);
 
   const { data: allProviders } = await supabase.from('providers').select('id').limit(5)
   if (allProviders) {
@@ -311,7 +332,7 @@ async function seedBookings(supabase: ReturnType<typeof createServerClient>) {
       bookingDate.setHours(i % 2 === 0 ? 10 : 14, 0, 0, 0)
 
       await supabase.from('telehealth_bookings').insert({
-        user_id: `seed-user-${i * 6}`,
+        user_id: userIds[i * 6] || crypto.randomUUID(),
         provider_id: allProviders[i % allProviders.length].id,
         session_type: i === 0 ? 'initial' : i === 1 ? 'follow_up' : i === 2 ? 'crisis' : 'follow_up',
         scheduled_at: bookingDate.toISOString(),
@@ -325,26 +346,24 @@ async function seedBookings(supabase: ReturnType<typeof createServerClient>) {
 }
 
 async function seedDemo(supabase: ReturnType<typeof createServerClient>) {
-  await supabase.from('profiles').delete().eq('id', 'demo-user')
-  await supabase.from('streaks').delete().eq('user_id', 'demo-user')
-  await supabase.from('habit_logs').delete().eq('user_id', 'demo-user')
-  await supabase.from('guardian_controls').delete().eq('user_id', 'demo-user')
-  await supabase.from('telehealth_bookings').delete().eq('user_id', 'demo-user')
-  await supabase.from('notification_logs').delete().eq('user_id', 'demo-user')
+  await supabase.from('profiles').delete().eq('id', DEMO_USER_ID)
+  await supabase.from('streaks').delete().eq('user_id', DEMO_USER_ID)
+  await supabase.from('habit_logs').delete().eq('user_id', DEMO_USER_ID)
+  await supabase.from('guardian_controls').delete().eq('user_id', DEMO_USER_ID)
+  await supabase.from('telehealth_bookings').delete().eq('user_id', DEMO_USER_ID)
+  await supabase.from('notification_logs').delete().eq('user_id', DEMO_USER_ID)
 
   await supabase.from('profiles').insert({
-    id: 'demo-user',
+    id: DEMO_USER_ID,
     alias: 'Biruk-Eagle-28',
-    language_pref: 'english',
-    support_preference: 'secular',
-    trigger_tags: ['stress', 'late_night'],
-    streak_goal: 30,
-    region: 'Addis Abeba',
+    language: 'english',
+    triggers: ['stress', 'late_night'],
+    recovery_goal: 30,
     religion: 'orthodox',
     onboarding_done: true,
   })
   await supabase.from('streaks').upsert({
-    user_id: 'demo-user',
+    user_id: DEMO_USER_ID,
     current_streak: 28,
     longest_streak: 28,
     total_clean_days: 30,
@@ -355,7 +374,7 @@ async function seedDemo(supabase: ReturnType<typeof createServerClient>) {
     const logDate = new Date()
     logDate.setDate(logDate.getDate() - d)
     await supabase.from('habit_logs').insert({
-      user_id: 'demo-user',
+      user_id: DEMO_USER_ID,
       log_date: logDate.toISOString().split('T')[0],
       mood_score: 6 + Math.round(Math.sin(d * 0.2) * 1.5 + (Math.random() - 0.5)),
       stress_level: 4 + Math.round(Math.sin(d * 0.15) * 2 + (Math.random() - 0.5) * 1.5),
@@ -370,7 +389,7 @@ async function seedDemo(supabase: ReturnType<typeof createServerClient>) {
 
   // Demo guardian link
   await supabase.from('guardian_controls').insert({
-    user_id: 'demo-user',
+    user_id: DEMO_USER_ID,
     token: 'demo-guardian-token-safeground-2024',
     guardian_alias: 'Guardian',
     relationship: 'family',
@@ -388,7 +407,7 @@ async function seedDemo(supabase: ReturnType<typeof createServerClient>) {
     tomorrow.setDate(tomorrow.getDate() + 1)
     tomorrow.setHours(10, 0, 0, 0)
     await supabase.from('telehealth_bookings').insert({
-      user_id: 'demo-user',
+      user_id: DEMO_USER_ID,
       provider_id: hiwot[0].id,
       session_type: 'follow_up',
       scheduled_at: tomorrow.toISOString(),
@@ -399,7 +418,7 @@ async function seedDemo(supabase: ReturnType<typeof createServerClient>) {
 
   // Faith program enrollment
   await supabase.from('notification_logs').insert({
-    user_id: 'demo-user',
+    user_id: DEMO_USER_ID,
     type: 'program_enrollment',
     message: 'You are enrolled in Restoration Fellowship — Week 4 of 12.',
     read: false,
@@ -476,19 +495,14 @@ export async function POST(request: NextRequest) {
             const alias = acct.role === 'admin' ? 'Admin-SafeGround-00'
               : acct.role === 'demo' ? 'Biruk-Eagle-28'
               : 'Dr-Provider-00'
-            const support = acct.role === 'demo' ? 'secular'
-              : acct.role === 'admin' ? 'secular'
-              : 'clinical'
             const streak = acct.role === 'demo' ? 28 : 0
 
             await supabase.from('profiles').upsert({
               id: data.user.id,
               alias,
-              language_pref: 'english',
-              support_preference: support,
-              trigger_tags: acct.role === 'demo' ? ['stress', 'late_night'] : [],
-              streak_goal: 30,
-              region: 'Addis Abeba',
+              language: 'english',
+              triggers: acct.role === 'demo' ? ['stress', 'late_night'] : [],
+              recovery_goal: 30,
               religion: acct.role === 'demo' ? 'orthodox' : null,
               onboarding_done: true,
             }, { onConflict: 'id' })
