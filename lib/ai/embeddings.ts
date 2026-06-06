@@ -1,32 +1,36 @@
-const EMBEDDING_MODEL = 'text-embedding-004';
-const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+const OPENAI_EMBEDDING_URL = 'https://api.openai.com/v1/embeddings';
+const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? 'text-embedding-3-small';
+/** Matches knowledge_base VECTOR(768) in Supabase. */
+const EMBEDDING_DIMENSIONS = 768;
 
-export function getGeminiApiKey(): string | undefined {
-  return process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+export function isEmbeddingConfigured(): boolean {
+  return Boolean(process.env.OPENAI_API_KEY);
 }
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const apiKey = getGeminiApiKey();
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error('Missing GEMINI_API_KEY for embeddings');
+    throw new Error('Missing OPENAI_API_KEY for embeddings (RAG knowledge base)');
   }
 
-  const url = `${API_BASE}/models/${EMBEDDING_MODEL}:embedContent?key=${apiKey}`;
-
-  const res = await fetch(url, {
+  const res = await fetch(OPENAI_EMBEDDING_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
     body: JSON.stringify({
-      model: `models/${EMBEDDING_MODEL}`,
-      content: { parts: [{ text }] },
+      model: EMBEDDING_MODEL,
+      input: text,
+      dimensions: EMBEDDING_DIMENSIONS,
     }),
   });
 
   if (!res.ok) {
     const err = await res.text().catch(() => 'Unknown error');
-    throw new Error(`Gemini embedding ${res.status}: ${err}`);
+    throw new Error(`OpenAI embedding ${res.status}: ${err}`);
   }
 
   const data = await res.json();
-  return data.embedding?.values as number[];
+  return data.data?.[0]?.embedding as number[];
 }

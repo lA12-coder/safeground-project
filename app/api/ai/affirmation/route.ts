@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
+import {
+  generateGroqSingleTurn,
+  isGroqConfigured,
+  isGroqRateLimitError,
+} from '@/lib/ai/groq';
 import { AI_AFFIRMATION_SYSTEM_PROMPT, AI_AFFIRMATION_USER_PROMPT, FALLBACK_AFFIRMATIONS } from '@/lib/ai/prompts';
 
 export const runtime = 'nodejs';
@@ -10,20 +14,24 @@ export async function POST(request: NextRequest) {
     const mood_score = body.mood_score ?? body.moodScore ?? 5;
     const urge_intensity = body.urge_intensity ?? body.urgeIntensity ?? 5;
 
-    if (isGeminiConfigured()) {
+    if (isGroqConfigured()) {
       try {
         const userMessage = AI_AFFIRMATION_USER_PROMPT(mood_score, urge_intensity);
 
-        const affirmation = await generateGeminiText({
+        const affirmation = await generateGroqSingleTurn({
           systemPrompt: AI_AFFIRMATION_SYSTEM_PROMPT,
           userMessage,
-          maxOutputTokens: 150,
+          maxTokens: 150,
           temperature: 0.8,
         });
 
-        return NextResponse.json({ success: true, affirmation, source: 'gemini' });
+        return NextResponse.json({ success: true, affirmation, source: 'groq' });
       } catch (e) {
-        console.error('[ai/affirmation] Gemini failed:', e);
+        if (isGroqRateLimitError(e)) {
+          console.warn('[ai/affirmation] Groq rate limit — using fallback affirmation');
+        } else {
+          console.error('[ai/affirmation] Groq failed:', e);
+        }
       }
     }
 

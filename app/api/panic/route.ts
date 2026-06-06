@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateGeminiJson, isGeminiConfigured } from '@/lib/ai/gemini';
+import { generateGroqJson, isGroqConfigured } from '@/lib/ai/groq';
 import { PANIC_SYSTEM_PROMPT, FALLBACK_PANIC_STEPS, FALLBACK_PANIC_AFFIRMATION } from '@/lib/ai/prompts';
 
 export const runtime = 'nodejs';
@@ -43,12 +43,12 @@ export async function POST(request: NextRequest) {
     let steps = FALLBACK_PANIC_STEPS;
     let affirmation = FALLBACK_PANIC_AFFIRMATION;
 
-    if (isGeminiConfigured()) {
+    if (isGroqConfigured()) {
       try {
-        const result = await generateGeminiJson<PanicStepsResult>({
+        const result = await generateGroqJson<PanicStepsResult>({
           systemPrompt: PANIC_SYSTEM_PROMPT,
           userMessage: `User is experiencing a panic episode. Intensity: ${intensity}/10. Context: ${(context_tags || []).join(', ')}`,
-          maxOutputTokens: 1024,
+          maxTokens: 1024,
           temperature: 0.5,
         });
         if (result.steps?.length) {
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
           affirmation = result.affirmation;
         }
       } catch (e) {
-        console.error('[panic] Gemini failed, using fallback:', e);
+        console.error('[panic] Groq failed, using fallback:', e);
       }
     }
 

@@ -85,7 +85,14 @@ export async function updateSession(request: NextRequest) {
   try {
     const { data, error } = await supabase.auth.getUser();
     if (error) {
-      console.warn('[proxy] getUser failed:', error.message);
+      const sessionMissing = error.message.includes('Auth session missing');
+      const publicRoute =
+        isPublicPath(pathname) ||
+        pathname.startsWith('/guardian/') ||
+        pathname.startsWith('/org/register');
+      if (!(sessionMissing && publicRoute)) {
+        console.warn('[proxy] getUser failed:', error.message);
+      }
     } else {
       user = data.user;
     }

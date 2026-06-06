@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
+import { generateGroqSingleTurn, isGroqConfigured } from '@/lib/ai/groq';
 import { FAITH_COMPANION_SYSTEM_PROMPT, FALLBACK_FAITH_RESPONSES } from '@/lib/ai/prompts';
 
 export const runtime = 'nodejs';
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required.' }, { status: 400 });
     }
 
-    if (!isGeminiConfigured()) {
+    if (!isGroqConfigured()) {
       const reply =
         FALLBACK_FAITH_RESPONSES[Math.floor(Math.random() * FALLBACK_FAITH_RESPONSES.length)];
       return NextResponse.json({ success: true, reply, response: reply, source: 'fallback' });
@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
     const { religion = 'none', language_pref = 'english' } = user_context;
     const contextInfo = `User's faith: ${religion}, Language preference: ${language_pref}`;
 
-    const reply = await generateGeminiText({
+    const reply = await generateGroqSingleTurn({
       systemPrompt: FAITH_COMPANION_SYSTEM_PROMPT,
       userMessage: `${contextInfo}\n\nUser says: ${userMessage}`,
-      maxOutputTokens: 256,
+      maxTokens: 256,
       temperature: 0.8,
     });
 
-    return NextResponse.json({ success: true, reply, response: reply, source: 'gemini' });
+    return NextResponse.json({ success: true, reply, response: reply, source: 'groq' });
   } catch (error) {
     console.error('[faith/companion] Error:', error);
     const reply = FALLBACK_FAITH_RESPONSES[0];

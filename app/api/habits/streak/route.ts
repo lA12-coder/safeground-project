@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isMissingSupabaseTable } from '@/lib/supabase/schema-errors';
+
+const emptyStreak = {
+  currentStreak: 0,
+  longestStreak: 0,
+  totalCleanDays: 0,
+  lastLoggedAt: null,
+  current_streak: 0,
+  longest_streak: 0,
+  total_clean_days: 0,
+  last_clean_date: null,
+};
 
 export async function GET() {
   try {
@@ -9,16 +21,7 @@ export async function GET() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({
-        currentStreak: 0,
-        longestStreak: 0,
-        totalCleanDays: 0,
-        lastLoggedAt: null,
-        current_streak: 0,
-        longest_streak: 0,
-        total_clean_days: 0,
-        last_clean_date: null,
-      });
+      return NextResponse.json(emptyStreak);
     }
 
     const { data, error } = await supabase
@@ -28,17 +31,10 @@ export async function GET() {
       .maybeSingle();
 
     if (error) {
-      console.error('[habits/streak]', error);
-      return NextResponse.json({
-        currentStreak: 0,
-        longestStreak: 0,
-        totalCleanDays: 0,
-        lastLoggedAt: null,
-        current_streak: 0,
-        longest_streak: 0,
-        total_clean_days: 0,
-        last_clean_date: null,
-      });
+      if (!isMissingSupabaseTable(error)) {
+        console.error('[habits/streak]', error);
+      }
+      return NextResponse.json(emptyStreak);
     }
 
     const current = data?.current_streak ?? 0;

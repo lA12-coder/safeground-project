@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateGroqText, isGroqConfigured } from '@/lib/ai/groq';
-import { generateChatText, openAIAvailable } from '@/lib/ai/openrouter';
-import { generateGeminiText, isGeminiConfigured } from '@/lib/ai/gemini';
 import { RAG_SYSTEM_PROMPT, AI_CHAT_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { searchKnowledgeBase } from '@/lib/ai/rag';
 
@@ -13,6 +11,13 @@ export async function POST(request: NextRequest) {
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required.' }, { status: 400 });
+    }
+
+    if (!isGroqConfigured()) {
+      return NextResponse.json(
+        { error: 'No AI service configured. Add GROQ_API_KEY to .env.local' },
+        { status: 503 }
+      );
     }
 
     const chatMessages = history.slice(-20).map((m) => ({
@@ -27,55 +32,18 @@ export async function POST(request: NextRequest) {
       ? RAG_SYSTEM_PROMPT.replace('{context}', context)
       : AI_CHAT_SYSTEM_PROMPT;
 
-    if (isGroqConfigured()) {
-      try {
-        const reply = await generateGroqText({
-          systemPrompt,
-          messages: chatMessages,
-          maxTokens: 300,
-          temperature: 0.7,
-        });
-        return NextResponse.json({ success: true, reply, source: 'groq' });
-      } catch (err) {
-        console.error('[ai/chat] Groq failed:', err);
-      }
-    }
+    const reply = await generateGroqText({
+      systemPrompt,
+      messages: chatMessages,
+      maxTokens: 300,
+      temperature: 0.7,
+    });
 
-    if (openAIAvailable()) {
-      try {
-        const reply = await generateChatText({
-          systemPrompt,
-          messages: chatMessages,
-          maxTokens: 300,
-          temperature: 0.7,
-        });
-        return NextResponse.json({ success: true, reply, source: 'openai' });
-      } catch (err) {
-        console.error('[ai/chat] OpenAI failed:', err);
-      }
-    }
-
-    if (isGeminiConfigured()) {
-      const lastUserMsg = [...chatMessages].reverse().find((m) => m.role === 'user');
-      const history = chatMessages.slice(0, -1);
-      const reply = await generateGeminiText({
-        systemPrompt,
-        userMessage: lastUserMsg?.content ?? message,
-        history: history.length ? history : undefined,
-        maxOutputTokens: 300,
-        temperature: 0.7,
-      });
-      return NextResponse.json({ success: true, reply, source: 'gemini' });
-    }
-
-    return NextResponse.json(
-      { error: 'No AI service configured. Add GROQ_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY to .env.local' },
-      { status: 503 }
-    );
+    return NextResponse.json({ success: true, reply, source: 'groq' });
   } catch (error) {
     console.error('[ai/chat] Error:', error);
     return NextResponse.json(
-      { error: 'AI service unavailable. Check your API keys and network connection.' },
+      { error: 'AI service unavailable. Check your GROQ_API_KEY and network connection.' },
       { status: 503 }
     );
   }

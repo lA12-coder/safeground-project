@@ -13,7 +13,6 @@
     "db:setup": "echo 'Paste supabase/migrations/00_full_schema.sql into Supabase SQL Editor and Run.'"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.107.0",
     "framer-motion": "^12.40.0",
