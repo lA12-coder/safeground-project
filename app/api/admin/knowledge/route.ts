@@ -48,6 +48,10 @@ export async function GET(request: NextRequest) {
   const { data, error, count } = await query;
 
   if (error) {
+    console.error('[admin/knowledge] GET error:', error);
+    if (error.code === 'PGRST205' || error.message?.includes('Could not find the table')) {
+      return NextResponse.json({ data: [], total: 0, tableMissing: true });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 

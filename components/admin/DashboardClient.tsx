@@ -457,8 +457,8 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
               </div>
             </div>
           </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height={288}>
               <BarChart data={chartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e0db" vertical={false} />
                 <XAxis
