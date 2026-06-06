@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { insertHabitLog, upsertStreak } from '@/lib/supabase/habit-logs';
 
 const URGE_TO_SCORE: Record<string, number> = {
   None: 1,
@@ -39,25 +40,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data, error } = await supabase
-      .from('habit_logs')
-      .insert({
-        user_id: user.id,
-        log_date,
-        mood_score,
-        stress_level,
-        urge_intensity,
-        relapsed: khat_used_today,
-        khat_used_today,
-        khat_hours_ago: khat_used_today ? khat_hours_ago : null,
-        alcohol_used_today,
-        trigger_tags,
-        ai_intervention_triggered: false,
-      })
-      .select('id')
-      .single();
+    const { data, error } = await insertHabitLog(supabase, {
+      user_id: user.id,
+      log_date,
+      mood_score,
+      stress_level,
+      urge_intensity,
+      relapsed: khat_used_today,
+      khat_used_today,
+      khat_hours_ago: khat_used_today ? khat_hours_ago : null,
+      alcohol_used_today,
+      trigger_tags,
+      ai_intervention_triggered: false,
+    });
 
-    if (error) {
+    if (error || !data) {
       console.error('[habits/log]', error);
       return NextResponse.json({ error: 'Failed to save habit log' }, { status: 500 });
     }
@@ -73,14 +70,13 @@ export async function POST(request: NextRequest) {
       const longest = Math.max(streak?.longest_streak ?? 0, current);
       const total = (streak?.total_clean_days ?? 0) + 1;
 
-      await supabase.from('streaks').upsert({
+      await upsertStreak(supabase, {
         user_id: user.id,
         current_streak: current,
         longest_streak: longest,
         total_clean_days: total,
         last_clean_date: log_date,
         last_logged_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       });
     }
 

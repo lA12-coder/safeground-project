@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateGroqJson, isGroqConfigured } from '@/lib/ai/groq';
 import { PANIC_SYSTEM_PROMPT, FALLBACK_PANIC_STEPS, FALLBACK_PANIC_AFFIRMATION } from '@/lib/ai/prompts';
+import { insertHabitLog } from '@/lib/supabase/habit-logs';
 
 export const runtime = 'nodejs';
 
@@ -26,19 +27,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: logData } = await supabase
-      .from('habit_logs')
-      .insert({
-        user_id: user.id,
-        log_date: new Date().toISOString().split('T')[0],
-        ai_intervention_triggered: true,
-        urge_intensity: intensity,
-        trigger_tags: Array.isArray(context_tags) ? context_tags : [],
-        mood_score: 3,
-        stress_level: 8,
-      })
-      .select('id')
-      .single();
+    const tags = Array.isArray(context_tags) ? context_tags : [];
+
+    const { data: logData } = await insertHabitLog(supabase, {
+      user_id: user.id,
+      log_date: new Date().toISOString().split('T')[0],
+      mood_score: 3,
+      stress_level: 8,
+      urge_intensity: intensity,
+      trigger_tags: tags,
+      ai_intervention_triggered: true,
+      log_type: 'panic',
+    });
 
     let steps = FALLBACK_PANIC_STEPS;
     let affirmation = FALLBACK_PANIC_AFFIRMATION;
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       try {
         const result = await generateGroqJson<PanicStepsResult>({
           systemPrompt: PANIC_SYSTEM_PROMPT,
-          userMessage: `User is experiencing a panic episode. Intensity: ${intensity}/10. Context: ${(context_tags || []).join(', ')}`,
+          userMessage: `User is experiencing a panic episode. Intensity: ${intensity}/10. Context: ${tags.join(', ')}`,
           maxTokens: 1024,
           temperature: 0.5,
         });

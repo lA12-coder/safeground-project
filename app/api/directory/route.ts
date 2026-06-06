@@ -3,29 +3,49 @@ import { createClient } from '@/lib/supabase/server';
 import { MOCK_PROVIDERS, filterProviders } from '@/lib/directory/providers';
 import type { DirectoryProvider } from '@/lib/directory/types';
 
+function extractDenomination(row: Record<string, unknown>): string | undefined {
+  const slots = row.availability_slots as Record<string, unknown> | null;
+  const fromSlots = slots?.faith_category ?? slots?.denomination;
+  if (typeof fromSlots === 'string' && fromSlots) return fromSlots;
+  const spec = String(row.specialization ?? '');
+  if (/orthodox/i.test(spec)) return 'Orthodox';
+  if (/protestant|evangelical/i.test(spec)) return 'Protestant';
+  if (/muslim|islam/i.test(spec)) return 'Muslim';
+  return undefined;
+}
+
 function mapDbProvider(row: Record<string, unknown>): DirectoryProvider {
   const type = String(row.type ?? 'clinical');
-  const category = type === 'faith' || type === 'religious_org' ? 'faith' : 'clinical';
+  const category =
+    type === 'faith' || type === 'religious_org' || type === 'religious_individual'
+      ? 'faith'
+      : 'clinical';
+  const fee = row.consultation_fee as number | null;
+  const proBono = Boolean(row.pro_bono);
+
   return {
     id: String(row.id),
     name: String(row.name),
+    orgName: row.org_name ? String(row.org_name) : undefined,
     category,
     providerType: type as DirectoryProvider['providerType'],
-    typeLabel: String(row.specialization ?? type),
+    typeLabel: type === 'religious_individual' ? 'SPIRITUAL TEACHER' : String(row.specialization ?? type),
     badge: row.is_verified ? 'verified' : 'faith',
     city: String(row.city ?? ''),
     languages: (row.languages as string[]) ?? [],
     bio: String(row.bio ?? ''),
-    price: row.pro_bono ? 'Pro bono' : row.consultation_fee ? `${row.consultation_fee} ETB` : 'Contact',
-    priceHighlight: row.pro_bono ? 'green' : 'amber',
+    price: proBono ? 'Free (Pro bono)' : fee ? `${fee} ETB` : 'Contact',
+    priceHighlight: proBono ? 'green' : 'amber',
+    consultationFee: fee,
     mode: row.online && row.in_person ? 'hybrid' : row.online ? 'online' : 'in-person',
     modeLabel: row.online && row.in_person ? 'Hybrid' : row.online ? 'Online' : 'In-person',
-    proBono: Boolean(row.pro_bono),
+    proBono,
     online: Boolean(row.online),
     inPerson: Boolean(row.in_person),
     verified: Boolean(row.is_verified),
+    denomination: extractDenomination(row) as DirectoryProvider['denomination'],
     imageUrl: '',
-    cta: 'book',
+    cta: type === 'religious_org' ? 'join' : 'book',
   };
 }
 
@@ -46,7 +66,13 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
     let query = supabase.from('providers').select('*', { count: 'exact' }).eq('is_verified', true).eq('is_active', true);
 
-    if (type) query = query.eq('type', type);
+    if (type === 'faith') {
+      query = query.in('type', ['religious_org', 'religious_individual']);
+    } else if (type === 'clinical') {
+      query = query.in('type', ['psychiatrist', 'counselor', 'clinical']);
+    } else if (type) {
+      query = query.eq('type', type);
+    }
     if (city) query = query.ilike('city', `%${city}%`);
     if (language && language !== 'any') query = query.contains('languages', [language]);
     if (online) query = query.eq('online', true);

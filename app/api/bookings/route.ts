@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isMissingSupabaseTable, isMissingSupabaseColumn } from '@/lib/supabase/schema-errors';
 import type { BookingRequest } from '@/lib/directory/types';
 
 export async function POST(request: NextRequest) {
@@ -37,20 +38,110 @@ export async function POST(request: NextRequest) {
         ? `https://meet.safeground.app/session/${providerId}-${Date.now().toString(36)}`
         : undefined;
 
+    const amountEtb = body.proBono ? 0 : (body.amountEtb ?? 0);
+    const paymentStatus = body.proBono ? 'waived' : 'pending';
+
+    const bookingRow = {
+      user_id: user.id,
+      provider_id: providerId,
+      session_type: sessionType,
+      scheduled_at,
+      duration_minutes: 50,
+      notes: body.notes ?? null,
+      status: body.proBono ? 'confirmed' : 'pending',
+      meeting_link: meetingLink,
+      payment_status: paymentStatus,
+      amount_etb: amountEtb || null,
+    };
+
     const { data, error } = await supabase
       .from('telehealth_bookings')
-      .insert({
-        user_id: user.id,
-        provider_id: providerId,
-        session_type: sessionType,
-        scheduled_at,
-        duration_minutes: 50,
-        notes: body.notes ?? null,
-        status: 'pending',
-        meeting_link: meetingLink,
-      })
-      .select('id, meeting_link, created_at')
+      .insert(bookingRow)
+      .select('id, meeting_link, created_at, payment_status, amount_etb')
       .single();
+
+    if (error && isMissingSupabaseTable(error)) {
+      const legacy = await supabase
+        .from('bookings')
+        .insert({
+          user_id: user.id,
+          provider_id: String(providerId),
+          provider_name: body.providerName ?? 'Provider',
+          booking_date: date,
+          booking_time: time,
+          notes: body.notes ?? null,
+          session_type: sessionType,
+          meeting_link: meetingLink ?? null,
+        status: 'pending',
+        payment_status: paymentStatus,
+        amount_etb: amountEtb || null,
+      })
+        .select('id, meeting_link, created_at')
+        .single();
+
+      if (legacy.error) {
+        console.error('[bookings]', legacy.error);
+      } else if (legacy.data) {
+        return NextResponse.json({
+          success: true,
+          booking_id: legacy.data.id,
+          booking: {
+            id: legacy.data.id,
+            providerId,
+            providerName: body.providerName,
+            date,
+            time,
+            notes: body.notes ?? '',
+            sessionType: body.sessionType,
+            meetingLink: legacy.data.meeting_link ?? meetingLink,
+            status: body.proBono ? 'confirmed' : 'pending',
+            paymentStatus,
+            amountEtb,
+            createdAt: legacy.data.created_at,
+          },
+          source: 'bookings',
+        });
+      }
+    }
+
+    if (error && isMissingSupabaseColumn(error)) {
+      const { data: basicData, error: basicError } = await supabase
+        .from('telehealth_bookings')
+        .insert({
+          user_id: user.id,
+          provider_id: providerId,
+          session_type: sessionType,
+          scheduled_at,
+          duration_minutes: 50,
+          notes: body.notes ?? null,
+          status: body.proBono ? 'confirmed' : 'pending',
+          meeting_link: meetingLink,
+        })
+        .select('id, meeting_link, created_at')
+        .single();
+
+      if (!basicError && basicData) {
+        return NextResponse.json({
+          success: true,
+          booking_id: basicData.id,
+          booking: {
+            id: basicData.id,
+            providerId,
+            providerName: body.providerName,
+            date,
+            time,
+            notes: body.notes ?? '',
+            sessionType: body.sessionType,
+            meetingLink: basicData.meeting_link ?? meetingLink,
+            status: body.proBono ? 'confirmed' : 'pending',
+            paymentStatus,
+            amountEtb,
+            createdAt: basicData.created_at,
+          },
+          source: 'database',
+        });
+      }
+    }
 
     if (error) {
       console.error('[bookings]', error);
@@ -81,7 +172,9 @@ export async function POST(request: NextRequest) {
         notes: body.notes ?? '',
         sessionType: body.sessionType,
         meetingLink: data.meeting_link ?? meetingLink,
-        status: 'pending',
+        status: body.proBono ? 'confirmed' : 'pending',
+        paymentStatus: (data as { payment_status?: string }).payment_status ?? paymentStatus,
+        amountEtb: (data as { amount_etb?: number }).amount_etb ?? amountEtb,
         createdAt: data.created_at,
       },
       source: 'database',

@@ -13,6 +13,7 @@ export type SessionMode = 'online' | 'in-person' | 'hybrid';
 export type DirectoryProvider = {
   id: string;
   name: string;
+  orgName?: string;
   category: ProviderCategory;
   providerType: ProviderType;
   typeLabel: string;
@@ -22,6 +23,7 @@ export type DirectoryProvider = {
   bio: string;
   price: string;
   priceHighlight: 'amber' | 'green';
+  consultationFee?: number | null;
   mode: SessionMode;
   modeLabel: string;
   proBono: boolean;
@@ -52,4 +54,7 @@ export type BookingRequest = {
   time: string;
   notes?: string;
   sessionType: 'online' | 'in-person';
+  amountEtb?: number;
+  proBono?: boolean;
+  bookingType?: 'spiritual' | 'clinical';
 };

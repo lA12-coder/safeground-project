@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield, LayoutGrid, Bandage, Users, BookOpen, HelpCircle, BookMarked, Loader2, Sparkles,
+  UserCircle, Check, MapPin, Globe, Calendar,
 } from 'lucide-react';
 import { PanicButton } from '@/components/layout/PanicButton';
+import { SpiritualBookingFlow } from '@/components/spiritual/SpiritualBookingFlow';
+import { RELIGION_OPTIONS, type ReligionId } from '@/lib/faith/constants';
+import type { DirectoryProvider } from '@/lib/directory/types';
 
 const SCRIPTURE_AM = 'እግዚአብሔር ብርሃኔ ነው፤ የማዳኔም ነው። ማንን እፈራለሁ?';
 const SCRIPTURE_EN = 'The Lord is my light and my salvation; whom shall I fear?';
@@ -43,13 +47,53 @@ export function SpiritualHub() {
   const [week, setWeek] = useState(1);
   const [totalWeeks] = useState(12);
   const [loading, setLoading] = useState(true);
+  const [religion, setReligion] = useState<ReligionId | null>(null);
+  const [savingReligion, setSavingReligion] = useState(false);
+  const [religionSaved, setReligionSaved] = useState(false);
+  const [teachers, setTeachers] = useState<DirectoryProvider[]>([]);
+  const [teachersLoading, setTeachersLoading] = useState(false);
+  const [bookingTeacher, setBookingTeacher] = useState<DirectoryProvider | null>(null);
+  const [languagePref, setLanguagePref] = useState('english');
+
+  const loadTeachers = useCallback(async (religionId: ReligionId | null) => {
+    if (!religionId || religionId === 'none') {
+      setTeachers([]);
+      return;
+    }
+    setTeachersLoading(true);
+    try {
+      const res = await fetch(`/api/faith/teachers?religion=${religionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTeachers(data.teachers ?? []);
+      }
+    } finally {
+      setTeachersLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchEnrollment().then((data) => {
-      setWeek(data.week);
-      setLoading(false);
-    });
-  }, []);
+    async function init() {
+      try {
+        const [enrollment, profileRes] = await Promise.all([
+          fetchEnrollment(),
+          fetch('/api/auth/profile'),
+        ]);
+        setWeek(enrollment.week);
+
+        if (profileRes.ok) {
+          const { profile } = await profileRes.json();
+          const r = profile?.religion as ReligionId | null;
+          setReligion(r ?? null);
+          setLanguagePref(profile?.language_pref ?? 'english');
+          if (r && r !== 'none') loadTeachers(r);
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    init();
+  }, [loadTeachers]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -59,6 +103,28 @@ export function SpiritualHub() {
   }, []);
 
   const progress = (week / totalWeeks) * 100;
+
+  const handleSaveReligion = async (selected: ReligionId) => {
+    setSavingReligion(true);
+    setReligion(selected);
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ religion: selected }),
+      });
+      if (res.ok) {
+        setReligionSaved(true);
+        setTimeout(() => setReligionSaved(false), 2000);
+        if (selected !== 'none') loadTeachers(selected);
+        else setTeachers([]);
+      }
+    } finally {
+      setSavingReligion(false);
+    }
+  };
+
+  const religionLabel = RELIGION_OPTIONS.find((r) => r.id === religion)?.label;
 
   const handleSaveReflection = async () => {
     if (!reflection.trim()) return;
@@ -94,7 +160,7 @@ export function SpiritualHub() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message,
-          user_context: { religion: 'orthodox', language_pref: 'english' },
+          user_context: { religion: religion ?? 'none', language_pref: languagePref },
         }),
       });
       if (!res.ok) throw new Error('Failed to get guidance');
@@ -159,6 +225,42 @@ export function SpiritualHub() {
             </div>
           ) : (
             <>
+              <motion.section variants={item} className="card p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <UserCircle className="w-8 h-8 text-primary" />
+                  <div>
+                    <h2 className="font-serif text-lg font-bold text-on-surface">Your Faith Identity</h2>
+                    <p className="text-sm text-on-surface-variant">
+                      Saved to your profile — used to match you with approved spiritual teachers.
+                    </p>
+                  </div>
+                </div>
+                {religion && religion !== 'none' && (
+                  <p className="text-sm">
+                    Current: <span className="font-semibold text-primary">{religionLabel}</span>
+                    {religionSaved && <span className="ml-2 text-secondary text-xs">Saved ✓</span>}
+                  </p>
+                )}
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {RELIGION_OPTIONS.filter((r) => r.id !== 'none').map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={savingReligion}
+                      onClick={() => handleSaveReligion(opt.id)}
+                      className={`px-4 py-3 rounded-xl text-sm font-medium border-2 text-left transition-all ${
+                        religion === opt.id
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-outline-variant hover:border-primary/40'
+                      }`}
+                    >
+                      {religion === opt.id && <Check className="w-4 h-4 inline mr-1.5" />}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </motion.section>
+
               <div className="grid lg:grid-cols-3 gap-8">
                 <motion.div variants={item} className="lg:col-span-2 space-y-6">
                   <motion.span
@@ -268,6 +370,71 @@ export function SpiritualHub() {
                   </div>
                 </div>
               </motion.section>
+
+              <motion.section variants={item} className="space-y-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <h2 className="font-serif text-xl font-bold text-on-surface">Spiritual Teachers</h2>
+                    <p className="text-sm text-on-surface-variant">
+                      Verified mentors from approved {religionLabel ?? 'faith'} institutions
+                    </p>
+                  </div>
+                  <Link href="/directory?type=faith" className="text-sm text-primary font-medium hover:underline">
+                    Browse all programs →
+                  </Link>
+                </div>
+
+                {!religion || religion === 'none' ? (
+                  <div className="card p-8 text-center text-on-surface-variant text-sm">
+                    Select your faith identity above to see teachers from your tradition.
+                  </div>
+                ) : teachersLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : teachers.length === 0 ? (
+                  <div className="card p-8 text-center text-on-surface-variant text-sm">
+                    No verified teachers yet for {religionLabel}. Check the directory or check back soon.
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {teachers.map((teacher) => (
+                      <div key={teacher.id} className="card p-5 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] font-bold tracking-widest text-primary uppercase">
+                              {teacher.typeLabel}
+                            </p>
+                            <h3 className="font-serif font-bold text-on-surface">{teacher.name}</h3>
+                            {teacher.orgName && (
+                              <p className="text-xs text-on-surface-variant">{teacher.orgName}</p>
+                            )}
+                          </div>
+                          {teacher.verified && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container">
+                              VERIFIED
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-on-surface-variant line-clamp-2">{teacher.bio}</p>
+                        <div className="flex flex-wrap gap-3 text-xs text-on-surface-variant">
+                          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{teacher.city}</span>
+                          <span className="flex items-center gap-1"><Globe className="w-3 h-3" />{teacher.modeLabel}</span>
+                          <span className="font-semibold text-primary">{teacher.price}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setBookingTeacher(teacher)}
+                          className="w-full btn-primary py-2.5 flex items-center justify-center gap-2"
+                        >
+                          <Calendar className="w-4 h-4" />
+                          Book Assistance
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.section>
             </>
           )}
         </motion.main>
@@ -341,6 +508,10 @@ export function SpiritualHub() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {bookingTeacher && (
+        <SpiritualBookingFlow provider={bookingTeacher} onClose={() => setBookingTeacher(null)} />
+      )}
     </div>
   );
 }
