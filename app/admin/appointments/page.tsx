@@ -16,12 +16,12 @@ interface Booking {
 }
 
 export default function AdminAppointmentsPage() {
-  const supabase = createClient()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchBookings() {
+      const supabase = createClient()
       const { data } = await supabase
         .from('telehealth_bookings')
         .select('*, profiles(alias), providers(display_name)')
@@ -31,7 +31,7 @@ export default function AdminAppointmentsPage() {
       setLoading(false)
     }
     fetchBookings()
-  }, [supabase])
+  }, [])
 
   const pending = bookings.filter(b => b.status === 'pending').length
   const confirmed = bookings.filter(b => b.status === 'confirmed').length

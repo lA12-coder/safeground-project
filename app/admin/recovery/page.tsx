@@ -12,12 +12,12 @@ interface RecoveryStats {
 }
 
 export default function AdminRecoveryPage() {
-  const supabase = createClient()
   const [stats, setStats] = useState<RecoveryStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
+      const supabase = createClient()
       try {
         const today = new Date().toISOString().split('T')[0]
         const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
@@ -51,7 +51,7 @@ export default function AdminRecoveryPage() {
       }
     }
     fetchData()
-  }, [supabase])
+  }, [])
 
   const cards = [
     { label: 'Total Users', icon: Heart, value: stats?.total_users, color: 'text-primary' },

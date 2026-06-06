@@ -145,11 +145,13 @@ export default function FaithOrganizationsPage() {
         body: JSON.stringify({ verified: false }),
       })
       if (res.ok) {
-        setOrganizations(prev => prev.filter(o => o.id !== id))
-        if (selected?.id === id) {
-          const remaining = organizations.filter(o => o.id !== id)
-          setSelected(remaining[0] || null)
-        }
+        setOrganizations(prev => {
+          const remaining = prev.filter(o => o.id !== id)
+          if (selected?.id === id) {
+            setSelected(remaining[0] ?? null)
+          }
+          return remaining
+        })
         setToast({ message: 'Faith organization rejected', type: 'error' })
       }
     } catch {

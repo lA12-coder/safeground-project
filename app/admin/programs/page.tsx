@@ -19,12 +19,12 @@ interface ProgramStats {
 }
 
 export default function AdminProgramsPage() {
-  const supabase = createClient()
   const [stats, setStats] = useState<ProgramStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
+      const supabase = createClient()
       try {
         const { data: enrollments } = await supabase
           .from('notification_logs')
@@ -50,7 +50,7 @@ export default function AdminProgramsPage() {
       }
     }
     fetchData()
-  }, [supabase])
+  }, [])
 
   const cards = [
     { label: 'Active Programs', icon: BookOpen, value: stats?.active_programs, color: 'text-primary' },

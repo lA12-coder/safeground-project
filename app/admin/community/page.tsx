@@ -11,12 +11,12 @@ interface CommunityStats {
 }
 
 export default function AdminCommunityPage() {
-  const supabase = createClient()
   const [stats, setStats] = useState<CommunityStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
+      const supabase = createClient()
       try {
         const today = new Date().toISOString().split('T')[0]
 
@@ -42,7 +42,7 @@ export default function AdminCommunityPage() {
       }
     }
     fetchData()
-  }, [supabase])
+  }, [])
 
   const cards = [
     { label: 'Users Active Today', icon: Users, value: stats?.online_users, color: 'text-primary' },

@@ -11,12 +11,12 @@ interface TelehealthStats {
 }
 
 export default function AdminTelehealthPage() {
-  const supabase = createClient()
   const [stats, setStats] = useState<TelehealthStats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
+      const supabase = createClient()
       try {
         const { count: total } = await supabase
           .from('telehealth_bookings')
@@ -44,7 +44,7 @@ export default function AdminTelehealthPage() {
       }
     }
     fetchData()
-  }, [supabase])
+  }, [])
 
   const cards = [
     { label: 'Total Bookings', icon: Calendar, value: stats?.total, color: 'text-primary' },

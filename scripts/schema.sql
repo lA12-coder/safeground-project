@@ -1,5 +1,5 @@
 -- SafeGround Database Schema
--- Run this in your Supabase SQL Editor (https://supabase.com/dashboard/project/cwrnufudrpsbchnunqha/sql/new)
+-- Run this in your Supabase SQL Editor (https://supabase.com/dashboard/project/your-project-id/sql/new)
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
