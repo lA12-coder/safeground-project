@@ -35,7 +35,10 @@ async function extractFromPdf(file: File): Promise<{ text: string; fileName: str
   const uint8Array = concatUint8Arrays([new Uint8Array(arrayBuffer)]);
 
   const pdfjsLib = await import('pdfjs-dist');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+  const isBrowser = typeof window !== 'undefined';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = isBrowser
+    ? '/pdf.worker.min.mjs'
+    : `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
   const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
   const pdf = await loadingTask.promise;
 
