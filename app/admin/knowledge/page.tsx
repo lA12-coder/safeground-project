@@ -21,15 +21,19 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_base_embedding
 
 ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can read knowledge_base" ON knowledge_base;
 CREATE POLICY "Anyone can read knowledge_base"
   ON knowledge_base FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Service role can insert knowledge_base" ON knowledge_base;
 CREATE POLICY "Service role can insert knowledge_base"
   ON knowledge_base FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Service role can update knowledge_base" ON knowledge_base;
 CREATE POLICY "Service role can update knowledge_base"
   ON knowledge_base FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "Service role can delete knowledge_base" ON knowledge_base;
 CREATE POLICY "Service role can delete knowledge_base"
   ON knowledge_base FOR DELETE USING (true);
 

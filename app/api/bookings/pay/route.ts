@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         .update({ status: 'confirmed', notes: `Paid via ${paymentMethod}${phone ? ` (${phone})` : ''}` })
         .eq('id', bookingId)
         .eq('user_id', user.id)
-        .select('id, status, meeting_link, scheduled_at')
+        .select('id, status, payment_status, payment_method, amount_etb, meeting_link, scheduled_at')
         .single();
       data = legacy.data;
       error = legacy.error;
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         .update(paymentPayload)
         .eq('id', bookingId)
         .eq('user_id', user.id)
-        .select('id, status, payment_status, amount_etb, meeting_link')
+        .select('id, status, payment_status, payment_method, amount_etb, meeting_link, scheduled_at')
         .single();
 
       if (legacyBooking.error) {

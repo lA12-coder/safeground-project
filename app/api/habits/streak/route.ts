@@ -33,7 +33,7 @@ export async function GET() {
     if (error && isMissingSupabaseColumn(error)) {
       const fallback = await supabase
         .from('streaks')
-        .select('current_streak, longest_streak, total_clean_days, last_logged_at, updated_at')
+        .select('current_streak, longest_streak, total_clean_days, last_clean_date, last_logged_at, updated_at')
         .eq('user_id', user.id)
         .maybeSingle();
       data = fallback.data;
