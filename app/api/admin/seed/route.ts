@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { generateAlias } from '@/lib/utils/aliasGenerator'
+import { generateEmbedding } from '@/lib/ai/embeddings'
+import { KNOWLEDGE_ENTRIES } from '@/lib/ai/knowledgeBase'
 
 export const dynamic = 'force-dynamic'
 
@@ -406,6 +408,29 @@ async function seedDemo(supabase: ReturnType<typeof createServerClient>) {
   return { message: 'Demo account reset with guardian, booking, and faith enrollment' }
 }
 
+async function seedKnowledge(supabase: ReturnType<typeof createServerClient>) {
+  let success = 0;
+  let fail = 0;
+  for (const entry of KNOWLEDGE_ENTRIES) {
+    try {
+      const embedding = await generateEmbedding(entry.content);
+      const { error } = await supabase.from('knowledge_base').insert({
+        content: entry.content,
+        category: entry.category,
+        source: entry.source,
+        embedding,
+      });
+      if (error) { fail++; console.error('[seed] knowledge insert:', error.message); }
+      else { success++; }
+      await new Promise((r) => setTimeout(r, 200));
+    } catch (err) {
+      fail++;
+      console.error('[seed] knowledge error:', err);
+    }
+  }
+  return { knowledge_seeded: success, knowledge_failed: fail };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const type = request.nextUrl.searchParams.get('type')
@@ -502,6 +527,10 @@ export async function POST(request: NextRequest) {
         const result = await seedBookings(supabase)
         return NextResponse.json({ success: true, ...result })
       }
+      case 'knowledge': {
+        const result = await seedKnowledge(supabase)
+        return NextResponse.json({ success: true, ...result })
+      }
       case 'demo': {
         const result = await seedDemo(supabase)
         return NextResponse.json({ success: true, ...result })
@@ -515,6 +544,7 @@ export async function POST(request: NextRequest) {
         await supabase.from('telehealth_bookings').delete().neq('id', 'placeholder')
         await supabase.from('guardian_controls').delete().neq('id', 'placeholder')
         await supabase.from('notification_logs').delete().neq('id', 'placeholder')
+        await supabase.from('knowledge_base').delete().neq('id', 0)
         return NextResponse.json({ success: true, message: 'All data cleared' })
       }
       default:
