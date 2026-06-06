@@ -48,10 +48,17 @@ export function AIChatWidget() {
         body: JSON.stringify({ message: text, history }),
       });
       const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: 'assistant', content: data.reply ?? 'I am here for you. Please tell me more.' },
-      ]);
+      if (!res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: `⚠ ${data.error ?? 'AI service unavailable'}` },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', content: data.reply ?? '' },
+        ]);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,

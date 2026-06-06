@@ -1,29 +1,24 @@
-export type ChatMessage = {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-};
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
-
-export function getOpenAIKey(): string | undefined {
-  return process.env.OPENAI_API_KEY;
+export function getGroqApiKey(): string | undefined {
+  return process.env.GROQ_API_KEY;
 }
 
-export function openAIAvailable(): boolean {
-  return Boolean(getOpenAIKey());
+export function isGroqConfigured(): boolean {
+  return Boolean(getGroqApiKey());
 }
 
-export async function generateChatText(options: {
+export async function generateGroqText(options: {
   systemPrompt: string;
   messages: { role: 'user' | 'assistant'; content: string }[];
   maxTokens?: number;
   temperature?: number;
 }): Promise<string> {
-  const apiKey = getOpenAIKey();
-  if (!apiKey) throw new Error('Missing OPENAI_API_KEY');
+  const apiKey = getGroqApiKey();
+  if (!apiKey) throw new Error('Missing GROQ_API_KEY');
 
-  const body: Record<string, unknown> = {
-    model: process.env.AI_CHAT_MODEL ?? 'gpt-4o-mini',
+  const body = {
+    model: process.env.GROQ_MODEL ?? 'llama3-70b-8192',
     messages: [
       { role: 'system', content: options.systemPrompt },
       ...options.messages,
@@ -32,7 +27,7 @@ export async function generateChatText(options: {
     temperature: options.temperature ?? 0.7,
   };
 
-  const res = await fetch(OPENAI_URL, {
+  const res = await fetch(GROQ_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -43,7 +38,7 @@ export async function generateChatText(options: {
 
   if (!res.ok) {
     const errText = await res.text().catch(() => 'Unknown error');
-    throw new Error(`OpenAI ${res.status}: ${errText}`);
+    throw new Error(`Groq ${res.status}: ${errText}`);
   }
 
   const data = await res.json();
