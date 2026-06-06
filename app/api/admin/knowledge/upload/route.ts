@@ -90,9 +90,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (successCount === 0) {
+      return NextResponse.json({
+        error: `File processed but 0 chunks were added. ${failCount} failed. Check that your embedding API key (Gemini or OpenAI) has available quota.`,
+        details: 'Embedding generation failed. Ensure GEMINI_API_KEY or OPENAI_API_KEY has quota.',
+      }, { status: 500 });
+    }
+
     return NextResponse.json({
       success: true,
-      message: `File "${fileName}" processed: ${successCount} chunks added, ${failCount} failed`,
+      message: `File "${fileName}" processed: ${successCount} chunks added${failCount > 0 ? `, ${failCount} failed` : ''}`,
       chunks: successCount,
     });
   } catch (error) {
