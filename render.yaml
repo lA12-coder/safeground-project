@@ -1,0 +1,38 @@
+# Render Blueprint — SafeGround (Next.js full-stack)
+# Dashboard: https://dashboard.render.com
+# Connect repo: github.com/lA12-coder/safeground-project
+
+services:
+  - type: web
+    name: safeground-project
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: ADMIN_SECRET_KEY
+        sync: false
