@@ -27,6 +27,7 @@ const titleMap: Record<string, string> = {
   '/admin/telehealth': 'Telehealth',
   '/admin/appointments': 'Appointments',
   '/admin/seed': 'Seed Data',
+  '/admin/knowledge': 'Knowledge Base',
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

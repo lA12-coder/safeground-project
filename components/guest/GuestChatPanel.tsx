@@ -60,15 +60,27 @@ export function GuestChatPanel() {
         body: JSON.stringify({ message: text, history }),
       });
       const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a-${Date.now()}`,
-          role: 'assistant',
-          content: data.reply ?? 'I am here with you. Take a breath.',
-          createdAt: Date.now(),
-        },
-      ]);
+      if (!res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `a-${Date.now()}`,
+            role: 'assistant',
+            content: `⚠ ${data.error ?? 'AI service unavailable. Check console for details.'}`,
+            createdAt: Date.now(),
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `a-${Date.now()}`,
+            role: 'assistant',
+            content: data.reply ?? '',
+            createdAt: Date.now(),
+          },
+        ]);
+      }
     } finally {
       setSending(false);
     }
