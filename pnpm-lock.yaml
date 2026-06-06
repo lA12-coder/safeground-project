@@ -14,6 +14,12 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.107.0
         version: 2.107.0
+      '@tailwindcss/postcss':
+        specifier: ^4.3.0
+        version: 4.3.0
+      autoprefixer:
+        specifier: ^10.4.16
+        version: 10.5.0(postcss@8.5.15)
       framer-motion:
         specifier: ^12.40.0
         version: 12.40.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -35,6 +41,9 @@ importers:
       pdfjs-dist:
         specifier: ^4.0.379
         version: 4.10.38
+      postcss:
+        specifier: ^8.4.32
+        version: 8.5.15
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@19.2.7)
@@ -51,9 +60,6 @@ importers:
         specifier: ^4.3.0
         version: 4.3.0
     devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4.3.0
-        version: 4.3.0
       '@types/node':
         specifier: ^20.10.6
         version: 20.19.41
@@ -63,12 +69,6 @@ importers:
       '@types/react-dom':
         specifier: ^19.0.2
         version: 19.2.3(@types/react@19.2.14)
-      autoprefixer:
-        specifier: ^10.4.16
-        version: 10.5.0(postcss@8.5.15)
-      postcss:
-        specifier: ^8.4.32
-        version: 8.5.15
       typescript:
         specifier: ^5.3.3
         version: 5.9.3

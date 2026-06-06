@@ -2,7 +2,7 @@
 # Deploy: https://app.netlify.com
 
 [build]
-  command = "npm run build"
+  command = "pnpm run build"
   functions = "netlify/functions"
   publish = ".next"
 
