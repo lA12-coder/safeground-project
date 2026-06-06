@@ -1,261 +1,588 @@
 -- =============================================================================
--- SafeGround — run this ENTIRE file once in Supabase SQL Editor
--- Dashboard → SQL → New query → Paste → Run
--- Then: Database → Replication → enable anonymous_chat
+-- SafeGround — COMPLETE DATABASE SCHEMA (single file)
+-- =============================================================================
+-- Run this ENTIRE file once in Supabase → SQL Editor → New query → Paste → Run
+--
+-- Safe to re-run on an existing project: uses IF NOT EXISTS / ADD COLUMN IF NOT EXISTS.
+-- After running:
+--   1. Database → Replication → enable `anonymous_chat` for Realtime chat
+--   2. npx tsx scripts/seed.ts          (demo data)
+--   3. npx tsx scripts/seedKnowledgeBase.ts  (RAG embeddings, needs OPENAI_API_KEY)
 -- =============================================================================
 
 -- -----------------------------------------------------------------------------
--- 1. Profiles (extends auth.users)
+-- Extensions
 -- -----------------------------------------------------------------------------
-create table if not exists public.profiles (
-  id uuid primary key references auth.users (id) on delete cascade,
-  alias text,
-  language text default 'en',
-  support_mode text default 'secular',
-  guardian_opt_in boolean default false,
-  recovery_goal text,
-  triggers jsonb not null default '[]'::jsonb,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
+
+-- -----------------------------------------------------------------------------
+-- 1. Profiles
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
+  alias TEXT NOT NULL DEFAULT 'Anonymous',
+  email TEXT,
+  full_name TEXT,
+  language_pref TEXT NOT NULL DEFAULT 'english',
+  support_preference TEXT NOT NULL DEFAULT 'secular',
+  trigger_tags TEXT[] NOT NULL DEFAULT '{}',
+  streak_goal INTEGER NOT NULL DEFAULT 30,
+  region TEXT,
+  religion TEXT,
+  onboarding_done BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-alter table public.profiles enable row level security;
+-- Legacy columns from older migrations (harmless if unused)
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS language TEXT,
+  ADD COLUMN IF NOT EXISTS support_mode TEXT,
+  ADD COLUMN IF NOT EXISTS guardian_opt_in BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS recovery_goal TEXT,
+  ADD COLUMN IF NOT EXISTS triggers JSONB DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS religion TEXT,
+  ADD COLUMN IF NOT EXISTS onboarding_done BOOLEAN DEFAULT false;
 
-drop policy if exists "profiles_select_own" on public.profiles;
-create policy "profiles_select_own"
-  on public.profiles for select using (auth.uid() = id);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-drop policy if exists "profiles_insert_own" on public.profiles;
-create policy "profiles_insert_own"
-  on public.profiles for insert with check (auth.uid() = id);
+DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
+CREATE POLICY "profiles_select_own"
+  ON public.profiles FOR SELECT USING (auth.uid() = id);
 
-drop policy if exists "profiles_update_own" on public.profiles;
-create policy "profiles_update_own"
-  on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
+CREATE POLICY "profiles_insert_own"
+  ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+CREATE POLICY "profiles_update_own"
+  ON public.profiles FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
 
 -- -----------------------------------------------------------------------------
 -- 2. Streaks
 -- -----------------------------------------------------------------------------
-create table if not exists public.streaks (
-  user_id uuid primary key references auth.users (id) on delete cascade,
-  current_streak integer not null default 0,
-  longest_streak integer not null default 0,
-  total_clean_days integer not null default 0,
-  last_logged_at timestamptz,
-  updated_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.streaks (
+  user_id UUID PRIMARY KEY REFERENCES auth.users (id) ON DELETE CASCADE,
+  current_streak INTEGER NOT NULL DEFAULT 0,
+  longest_streak INTEGER NOT NULL DEFAULT 0,
+  total_clean_days INTEGER NOT NULL DEFAULT 0,
+  last_clean_date DATE,
+  last_logged_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-alter table public.streaks enable row level security;
+-- Upgrade: old table may have separate id column — add missing app columns
+ALTER TABLE public.streaks
+  ADD COLUMN IF NOT EXISTS last_clean_date DATE,
+  ADD COLUMN IF NOT EXISTS last_logged_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
-drop policy if exists "streaks_select_own" on public.streaks;
-create policy "streaks_select_own"
-  on public.streaks for select using (auth.uid() = user_id);
+ALTER TABLE public.streaks ENABLE ROW LEVEL SECURITY;
 
-drop policy if exists "streaks_insert_own" on public.streaks;
-create policy "streaks_insert_own"
-  on public.streaks for insert with check (auth.uid() = user_id);
+DROP POLICY IF EXISTS "streaks_select_own" ON public.streaks;
+CREATE POLICY "streaks_select_own"
+  ON public.streaks FOR SELECT USING (auth.uid() = user_id);
 
-drop policy if exists "streaks_update_own" on public.streaks;
-create policy "streaks_update_own"
-  on public.streaks for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+DROP POLICY IF EXISTS "streaks_insert_own" ON public.streaks;
+CREATE POLICY "streaks_insert_own"
+  ON public.streaks FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "streaks_update_own" ON public.streaks;
+CREATE POLICY "streaks_update_own"
+  ON public.streaks FOR UPDATE
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- -----------------------------------------------------------------------------
--- 3. Habit logs (daily check-ins + panic sessions)
+-- 3. Habit logs (supports both legacy + app column names)
 -- -----------------------------------------------------------------------------
-create table if not exists public.habit_logs (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users (id) on delete cascade,
-  log_type text not null default 'daily'
-    check (log_type in ('daily', 'panic', 'relapse')),
-  mood smallint check (mood is null or (mood >= 1 and mood <= 5)),
-  stress smallint,
-  urge text,
-  khat_used boolean default false,
-  khat_hours_ago integer,
-  alcohol_used boolean default false,
-  triggers jsonb not null default '[]'::jsonb,
-  notes text,
-  ai_intervention_triggered boolean default false,
-  intensity smallint,
-  context_tags jsonb not null default '[]'::jsonb,
-  status text check (status is null or status in ('active', 'held_ground', 'resolved')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.habit_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  -- App columns (dashboard, check-in, admin)
+  log_date DATE,
+  mood_score SMALLINT DEFAULT 5,
+  stress_level SMALLINT DEFAULT 5,
+  urge_intensity SMALLINT DEFAULT 5,
+  relapsed BOOLEAN DEFAULT false,
+  khat_used_today BOOLEAN DEFAULT false,
+  khat_hours_ago INTEGER,
+  alcohol_used_today BOOLEAN DEFAULT false,
+  trigger_tags TEXT[] DEFAULT '{}',
+  ai_intervention_triggered BOOLEAN DEFAULT false,
+  -- Legacy columns (older check-in path)
+  log_type TEXT DEFAULT 'daily',
+  mood SMALLINT,
+  stress SMALLINT,
+  urge TEXT,
+  khat_used BOOLEAN DEFAULT false,
+  alcohol_used BOOLEAN DEFAULT false,
+  triggers JSONB DEFAULT '[]'::jsonb,
+  notes TEXT,
+  intensity SMALLINT,
+  context_tags JSONB DEFAULT '[]'::jsonb,
+  status TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-create index if not exists habit_logs_user_created_idx
-  on public.habit_logs (user_id, created_at desc);
+ALTER TABLE public.habit_logs
+  ADD COLUMN IF NOT EXISTS log_date DATE,
+  ADD COLUMN IF NOT EXISTS mood_score SMALLINT,
+  ADD COLUMN IF NOT EXISTS stress_level SMALLINT,
+  ADD COLUMN IF NOT EXISTS urge_intensity SMALLINT,
+  ADD COLUMN IF NOT EXISTS relapsed BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS khat_used_today BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS khat_hours_ago INTEGER,
+  ADD COLUMN IF NOT EXISTS alcohol_used_today BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS trigger_tags TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS log_type TEXT DEFAULT 'daily',
+  ADD COLUMN IF NOT EXISTS mood SMALLINT,
+  ADD COLUMN IF NOT EXISTS stress SMALLINT,
+  ADD COLUMN IF NOT EXISTS urge TEXT,
+  ADD COLUMN IF NOT EXISTS khat_used BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS alcohol_used BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS triggers JSONB DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS intensity SMALLINT,
+  ADD COLUMN IF NOT EXISTS context_tags JSONB DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS status TEXT,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
-alter table public.habit_logs enable row level security;
+UPDATE public.habit_logs SET log_date = created_at::date
+WHERE log_date IS NULL AND created_at IS NOT NULL;
 
-drop policy if exists "habit_logs_select_own" on public.habit_logs;
-create policy "habit_logs_select_own"
-  on public.habit_logs for select
-  using (user_id is null or auth.uid() = user_id);
+UPDATE public.habit_logs SET mood_score = LEAST(10, GREATEST(1, mood * 2))
+WHERE mood_score IS NULL AND mood IS NOT NULL;
 
-drop policy if exists "habit_logs_insert" on public.habit_logs;
-create policy "habit_logs_insert"
-  on public.habit_logs for insert
-  with check (user_id is null or auth.uid() = user_id);
+UPDATE public.habit_logs SET stress_level = LEAST(10, GREATEST(1, stress * 2))
+WHERE stress_level IS NULL AND stress IS NOT NULL;
 
-drop policy if exists "habit_logs_update_own" on public.habit_logs;
-create policy "habit_logs_update_own"
-  on public.habit_logs for update
-  using (user_id is null or auth.uid() = user_id)
-  with check (user_id is null or auth.uid() = user_id);
+UPDATE public.habit_logs SET urge_intensity = COALESCE(intensity, 5)
+WHERE urge_intensity IS NULL;
+
+UPDATE public.habit_logs SET khat_used_today = COALESCE(khat_used, false)
+WHERE khat_used_today IS NULL;
+
+UPDATE public.habit_logs SET alcohol_used_today = COALESCE(alcohol_used, false)
+WHERE alcohol_used_today IS NULL;
+
+CREATE INDEX IF NOT EXISTS habit_logs_user_log_date_idx
+  ON public.habit_logs (user_id, log_date DESC);
+
+CREATE INDEX IF NOT EXISTS habit_logs_user_created_idx
+  ON public.habit_logs (user_id, created_at DESC);
+
+ALTER TABLE public.habit_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "habit_logs_select_own" ON public.habit_logs;
+CREATE POLICY "habit_logs_select_own"
+  ON public.habit_logs FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "habit_logs_insert" ON public.habit_logs;
+CREATE POLICY "habit_logs_insert"
+  ON public.habit_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "habit_logs_update_own" ON public.habit_logs;
+CREATE POLICY "habit_logs_update_own"
+  ON public.habit_logs FOR UPDATE
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- -----------------------------------------------------------------------------
--- 4. Bookings (support directory)
+-- 4. Providers (clinical + faith orgs + spiritual teachers)
 -- -----------------------------------------------------------------------------
-create table if not exists public.bookings (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users (id) on delete set null,
-  provider_id text not null,
-  provider_name text not null,
-  booking_date date not null,
-  booking_time text not null,
-  notes text,
-  session_type text,
-  meeting_link text,
-  status text not null default 'confirmed',
-  created_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.providers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  org_name TEXT,
+  type TEXT NOT NULL,
+  specialization TEXT NOT NULL DEFAULT '',
+  city TEXT NOT NULL DEFAULT '',
+  region TEXT NOT NULL DEFAULT 'Ethiopia',
+  bio TEXT NOT NULL DEFAULT '',
+  languages TEXT[] NOT NULL DEFAULT '{}',
+  consultation_fee INTEGER,
+  pro_bono BOOLEAN NOT NULL DEFAULT false,
+  online BOOLEAN NOT NULL DEFAULT false,
+  in_person BOOLEAN NOT NULL DEFAULT true,
+  session_types TEXT[],
+  availability_slots JSONB,
+  is_verified BOOLEAN NOT NULL DEFAULT false,
+  is_active BOOLEAN NOT NULL DEFAULT false,
+  phone TEXT NOT NULL DEFAULT '',
+  rating INTEGER NOT NULL DEFAULT 0,
+  email TEXT,
+  user_id UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-alter table public.bookings enable row level security;
+ALTER TABLE public.providers
+  ADD COLUMN IF NOT EXISTS email TEXT,
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS availability_slots JSONB;
 
-drop policy if exists "bookings_select_own" on public.bookings;
-create policy "bookings_select_own"
-  on public.bookings for select using (auth.uid() = user_id);
+CREATE INDEX IF NOT EXISTS idx_providers_email ON public.providers (email);
+CREATE INDEX IF NOT EXISTS idx_providers_user_id ON public.providers (user_id);
+CREATE INDEX IF NOT EXISTS idx_providers_type_verified ON public.providers (type, is_verified, is_active);
 
-drop policy if exists "bookings_insert_own" on public.bookings;
-create policy "bookings_insert_own"
-  on public.bookings for insert with check (auth.uid() = user_id);
+ALTER TABLE public.providers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "providers_select_verified" ON public.providers;
+CREATE POLICY "providers_select_verified"
+  ON public.providers FOR SELECT USING (is_verified = true AND is_active = true);
+
+DROP POLICY IF EXISTS "providers_insert_public" ON public.providers;
+CREATE POLICY "providers_insert_public"
+  ON public.providers FOR INSERT WITH CHECK (true);
 
 -- -----------------------------------------------------------------------------
--- 5. Anonymous community chat
+-- 5. Anonymous chat (live chat + admin moderation)
 -- -----------------------------------------------------------------------------
-create table if not exists public.anonymous_chat (
-  id uuid primary key default gen_random_uuid(),
-  room_id text not null check (room_id in ('global', 'crisis', 'faith')),
-  message_type text not null default 'text'
-    check (message_type in ('text', 'milestone_share', 'support_reaction')),
-  content text not null,
-  alias text not null default 'Anonymous',
-  session_id text not null,
-  reactions jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.anonymous_chat (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id TEXT NOT NULL DEFAULT 'global',
+  message_type TEXT NOT NULL DEFAULT 'text',
+  content TEXT,
+  alias TEXT DEFAULT 'Anonymous',
+  session_id TEXT DEFAULT 'anon',
+  reactions JSONB NOT NULL DEFAULT '{}'::jsonb,
+  user_alias TEXT,
+  message TEXT,
+  is_flagged BOOLEAN NOT NULL DEFAULT false,
+  flag_reason TEXT,
+  is_deleted BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-create index if not exists anonymous_chat_room_created_idx
-  on public.anonymous_chat (room_id, created_at asc);
+ALTER TABLE public.anonymous_chat
+  ADD COLUMN IF NOT EXISTS content TEXT,
+  ADD COLUMN IF NOT EXISTS alias TEXT DEFAULT 'Anonymous',
+  ADD COLUMN IF NOT EXISTS session_id TEXT DEFAULT 'anon',
+  ADD COLUMN IF NOT EXISTS reactions JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS user_alias TEXT,
+  ADD COLUMN IF NOT EXISTS message TEXT,
+  ADD COLUMN IF NOT EXISTS is_flagged BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS flag_reason TEXT,
+  ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT false;
 
-alter table public.anonymous_chat enable row level security;
+CREATE INDEX IF NOT EXISTS anonymous_chat_room_created_idx
+  ON public.anonymous_chat (room_id, created_at ASC);
 
-drop policy if exists "anonymous_chat_select" on public.anonymous_chat;
-create policy "anonymous_chat_select"
-  on public.anonymous_chat for select using (true);
+ALTER TABLE public.anonymous_chat ENABLE ROW LEVEL SECURITY;
 
-drop policy if exists "anonymous_chat_insert" on public.anonymous_chat;
-create policy "anonymous_chat_insert"
-  on public.anonymous_chat for insert with check (true);
+DROP POLICY IF EXISTS "anonymous_chat_select" ON public.anonymous_chat;
+CREATE POLICY "anonymous_chat_select"
+  ON public.anonymous_chat FOR SELECT USING (true);
 
-drop policy if exists "anonymous_chat_update_reactions" on public.anonymous_chat;
-create policy "anonymous_chat_update_reactions"
-  on public.anonymous_chat for update using (true) with check (true);
+DROP POLICY IF EXISTS "anonymous_chat_insert" ON public.anonymous_chat;
+CREATE POLICY "anonymous_chat_insert"
+  ON public.anonymous_chat FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anonymous_chat_update" ON public.anonymous_chat;
+CREATE POLICY "anonymous_chat_update"
+  ON public.anonymous_chat FOR UPDATE USING (true) WITH CHECK (true);
 
 -- -----------------------------------------------------------------------------
--- 6. Guardian links
+-- 6. Guardian controls
 -- -----------------------------------------------------------------------------
-create table if not exists public.guardian_links (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
-  alias text not null,
-  relationship text not null check (
-    relationship in ('Parent', 'Sibling', 'Spouse', 'Mentor', 'Trusted Friend')
-  ),
-  monitoring_level text not null check (
-    monitoring_level in ('Alert Only', 'Weekly Summary', 'Full View')
-  ),
-  notify_panic boolean not null default true,
-  notify_relapse boolean not null default false,
-  notify_streak_break boolean not null default false,
-  token text not null unique,
-  revoked_at timestamptz,
-  created_at timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS public.guardian_controls (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  guardian_alias TEXT NOT NULL DEFAULT 'Guardian',
+  relationship TEXT NOT NULL DEFAULT 'trusted_friend',
+  monitoring_level TEXT NOT NULL DEFAULT 'alert_only',
+  notify_on_panic BOOLEAN NOT NULL DEFAULT true,
+  notify_on_relapse BOOLEAN NOT NULL DEFAULT false,
+  notify_streak_break BOOLEAN NOT NULL DEFAULT true,
+  token TEXT UNIQUE NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  last_accessed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-create index if not exists guardian_links_user_active_idx
-  on public.guardian_links (user_id)
-  where revoked_at is null;
+ALTER TABLE public.guardian_controls ENABLE ROW LEVEL SECURITY;
 
-alter table public.guardian_links enable row level security;
+DROP POLICY IF EXISTS "guardian_controls_select_own" ON public.guardian_controls;
+CREATE POLICY "guardian_controls_select_own"
+  ON public.guardian_controls FOR SELECT USING (auth.uid() = user_id);
 
-drop policy if exists "guardian_links_select_own" on public.guardian_links;
-create policy "guardian_links_select_own"
-  on public.guardian_links for select using (auth.uid() = user_id);
+DROP POLICY IF EXISTS "guardian_controls_insert_own" ON public.guardian_controls;
+CREATE POLICY "guardian_controls_insert_own"
+  ON public.guardian_controls FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-drop policy if exists "guardian_links_insert_own" on public.guardian_links;
-create policy "guardian_links_insert_own"
-  on public.guardian_links for insert with check (auth.uid() = user_id);
-
-drop policy if exists "guardian_links_update_own" on public.guardian_links;
-create policy "guardian_links_update_own"
-  on public.guardian_links for update
-  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+DROP POLICY IF EXISTS "guardian_controls_update_own" ON public.guardian_controls;
+CREATE POLICY "guardian_controls_update_own"
+  ON public.guardian_controls FOR UPDATE
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- -----------------------------------------------------------------------------
--- 7. Auto-create profile + streak on signup
+-- 7. Telehealth bookings (directory + spiritual program)
 -- -----------------------------------------------------------------------------
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  insert into public.profiles (id, alias)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data ->> 'alias', new.raw_user_meta_data ->> 'display_name', 'Anonymous')
-  )
-  on conflict (id) do nothing;
+CREATE TABLE IF NOT EXISTS public.telehealth_bookings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  provider_id TEXT NOT NULL,
+  session_type TEXT NOT NULL DEFAULT 'initial',
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  duration_minutes INTEGER NOT NULL DEFAULT 50,
+  status TEXT NOT NULL DEFAULT 'pending',
+  notes TEXT,
+  meeting_link TEXT,
+  payment_status TEXT DEFAULT 'pending',
+  payment_method TEXT,
+  amount_etb INTEGER,
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-  insert into public.streaks (user_id)
-  values (new.id)
-  on conflict (user_id) do nothing;
+ALTER TABLE public.telehealth_bookings
+  ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS payment_method TEXT,
+  ADD COLUMN IF NOT EXISTS amount_etb INTEGER,
+  ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
 
-  return new;
-end;
+CREATE INDEX IF NOT EXISTS telehealth_bookings_user_idx
+  ON public.telehealth_bookings (user_id, scheduled_at DESC);
+
+ALTER TABLE public.telehealth_bookings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "telehealth_bookings_select_own" ON public.telehealth_bookings;
+CREATE POLICY "telehealth_bookings_select_own"
+  ON public.telehealth_bookings FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "telehealth_bookings_insert_own" ON public.telehealth_bookings;
+CREATE POLICY "telehealth_bookings_insert_own"
+  ON public.telehealth_bookings FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "telehealth_bookings_update_own" ON public.telehealth_bookings;
+CREATE POLICY "telehealth_bookings_update_own"
+  ON public.telehealth_bookings FOR UPDATE
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
+-- 8. Legacy bookings table (fallback)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.bookings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users (id) ON DELETE SET NULL,
+  provider_id TEXT NOT NULL,
+  provider_name TEXT NOT NULL,
+  booking_date DATE NOT NULL,
+  booking_time TEXT NOT NULL,
+  notes TEXT,
+  session_type TEXT,
+  meeting_link TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  payment_status TEXT DEFAULT 'pending',
+  payment_method TEXT,
+  amount_etb INTEGER,
+  paid_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.bookings
+  ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS payment_method TEXT,
+  ADD COLUMN IF NOT EXISTS amount_etb INTEGER,
+  ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ;
+
+ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "bookings_select_own" ON public.bookings;
+CREATE POLICY "bookings_select_own"
+  ON public.bookings FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "bookings_insert_own" ON public.bookings;
+CREATE POLICY "bookings_insert_own"
+  ON public.bookings FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
+-- 9. Notification logs
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.notification_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  message TEXT NOT NULL,
+  read BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.notification_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "notification_logs_select_own" ON public.notification_logs;
+CREATE POLICY "notification_logs_select_own"
+  ON public.notification_logs FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "notification_logs_insert_own" ON public.notification_logs;
+CREATE POLICY "notification_logs_insert_own"
+  ON public.notification_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
+-- 10. Milestones
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.milestones (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users (id) ON DELETE CASCADE,
+  days INTEGER NOT NULL,
+  achieved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, days)
+);
+
+ALTER TABLE public.milestones ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "milestones_select_own" ON public.milestones;
+CREATE POLICY "milestones_select_own"
+  ON public.milestones FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "milestones_insert_own" ON public.milestones;
+CREATE POLICY "milestones_insert_own"
+  ON public.milestones FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- -----------------------------------------------------------------------------
+-- 11. Knowledge base (RAG / AI chat)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.knowledge_base (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  content TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'general',
+  source TEXT,
+  embedding VECTOR(768),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_base_embedding
+  ON public.knowledge_base USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+
+ALTER TABLE public.knowledge_base ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read knowledge_base" ON public.knowledge_base;
+CREATE POLICY "Anyone can read knowledge_base"
+  ON public.knowledge_base FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Service role can insert knowledge_base" ON public.knowledge_base;
+CREATE POLICY "Service role can insert knowledge_base"
+  ON public.knowledge_base FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Service role can update knowledge_base" ON public.knowledge_base;
+CREATE POLICY "Service role can update knowledge_base"
+  ON public.knowledge_base FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Service role can delete knowledge_base" ON public.knowledge_base;
+CREATE POLICY "Service role can delete knowledge_base"
+  ON public.knowledge_base FOR DELETE USING (true);
+
+CREATE OR REPLACE FUNCTION public.match_knowledge_base(
+  query_embedding VECTOR(768),
+  match_threshold FLOAT,
+  match_count INT
+)
+RETURNS TABLE (
+  id BIGINT,
+  content TEXT,
+  category TEXT,
+  source TEXT,
+  similarity FLOAT,
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    kb.id,
+    kb.content,
+    kb.category,
+    kb.source,
+    1 - (kb.embedding <=> query_embedding) AS similarity,
+    kb.created_at
+  FROM public.knowledge_base kb
+  WHERE kb.embedding IS NOT NULL
+    AND 1 - (kb.embedding <=> query_embedding) > match_threshold
+  ORDER BY kb.embedding <=> query_embedding
+  LIMIT match_count;
+END;
 $$;
 
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
+-- -----------------------------------------------------------------------------
+-- 12. Auto-create profile + streak on signup
+-- -----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, alias)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data ->> 'alias', NEW.raw_user_meta_data ->> 'display_name', 'Anonymous')
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  INSERT INTO public.streaks (user_id)
+  VALUES (NEW.id)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- -----------------------------------------------------------------------------
--- 8. Realtime for chat
+-- 13. Realtime for community chat
 -- -----------------------------------------------------------------------------
-do $$
-begin
-  if not exists (
-    select 1 from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public' and tablename = 'anonymous_chat'
-  ) then
-    alter publication supabase_realtime add table public.anonymous_chat;
-  end if;
-exception when undefined_object then null;
-         when duplicate_object then null;
-end $$;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public' AND tablename = 'anonymous_chat'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.anonymous_chat;
+  END IF;
+EXCEPTION WHEN undefined_object THEN NULL;
+         WHEN duplicate_object THEN NULL;
+END $$;
 
 -- -----------------------------------------------------------------------------
--- 9. Seed sample community milestones (guest echoes + chat demo)
+-- 14. Backfill profiles + streaks for existing auth users
 -- -----------------------------------------------------------------------------
-insert into public.anonymous_chat (room_id, message_type, content, alias, session_id)
-select 'global', 'milestone_share', 'Day 30 clean. Grateful for this community — you are not alone.', 'HopefulFalcon', 'seed'
-where not exists (select 1 from public.anonymous_chat where alias = 'HopefulFalcon' limit 1);
+INSERT INTO public.profiles (id, alias)
+SELECT id, COALESCE(raw_user_meta_data ->> 'alias', raw_user_meta_data ->> 'display_name', 'Anonymous')
+FROM auth.users
+ON CONFLICT (id) DO NOTHING;
 
-insert into public.anonymous_chat (room_id, message_type, content, alias, session_id)
-select 'global', 'milestone_share', 'Prayed through the urge tonight. Still standing.', 'QuietRiver', 'seed'
-where not exists (select 1 from public.anonymous_chat where alias = 'QuietRiver' limit 1);
+INSERT INTO public.streaks (user_id)
+SELECT id FROM auth.users
+ON CONFLICT (user_id) DO NOTHING;
+
+-- -----------------------------------------------------------------------------
+-- 15. Optional seed chat milestones (safe to skip if rows exist)
+-- -----------------------------------------------------------------------------
+INSERT INTO public.anonymous_chat (room_id, message_type, content, alias, session_id, user_alias, message)
+SELECT 'global', 'milestone_share',
+  'Day 30 clean. Grateful for this community — you are not alone.',
+  'HopefulFalcon', 'seed', 'HopefulFalcon',
+  'Day 30 clean. Grateful for this community — you are not alone.'
+WHERE NOT EXISTS (SELECT 1 FROM public.anonymous_chat WHERE alias = 'HopefulFalcon' LIMIT 1);
+
+INSERT INTO public.anonymous_chat (room_id, message_type, content, alias, session_id, user_alias, message)
+SELECT 'global', 'milestone_share',
+  'Prayed through the urge tonight. Still standing.',
+  'QuietRiver', 'seed', 'QuietRiver',
+  'Prayed through the urge tonight. Still standing.'
+WHERE NOT EXISTS (SELECT 1 FROM public.anonymous_chat WHERE alias = 'QuietRiver' LIMIT 1);
+
+-- =============================================================================
+-- Done. Verify with:
+--
+-- SELECT table_name FROM information_schema.tables
+-- WHERE table_schema = 'public'
+-- ORDER BY table_name;
+-- =============================================================================

@@ -1,82 +1,58 @@
 # Supabase setup
 
-Your app expects tables in the **`public`** schema. They are **not** created automatically — you must run the SQL migration once.
+All database tables live in **one migration file**. Run it once in the SQL Editor.
 
-## One-time: create all tables
+## One-time setup
 
-1. Open your project SQL Editor:  
-   [https://supabase.com/dashboard/project/ctgxllsmgasucwkujecp/sql/new](https://supabase.com/dashboard/project/ctgxllsmgasucwkujecp/sql/new)
-2. Open `supabase/migrations/00_full_schema.sql` in this repo.
-3. Copy the **entire file** and paste into the SQL Editor.
-4. Click **Run** (you should see “Success”).
-5. Go to **Database** → **Tables** — you should see:
+1. Open **Supabase Dashboard → SQL → New query**
+2. Open **`supabase/migrations/00_full_schema.sql`** in this repo
+3. Copy the **entire file**, paste into the editor, click **Run**
+4. **Database → Replication** → enable **`anonymous_chat`** (required for live chat)
+5. Seed demo data (optional):
+   ```bash
+   npx tsx scripts/seed.ts
+   npx tsx scripts/seedKnowledgeBase.ts   # needs OPENAI_API_KEY in .env.local
+   ```
 
-   | Table | Purpose |
-   |--------|---------|
-   | `profiles` | User settings after onboarding |
-   | `streaks` | Clean-day streak counters |
-   | `habit_logs` | Daily mood logs + panic sessions |
-   | `bookings` | Directory session bookings |
-   | `anonymous_chat` | Community chat + milestones |
-   | `guardian_links` | Guardian invite tokens |
+## What this creates
 
-6. **Database** → **Replication** → enable **`anonymous_chat`** for Realtime (required for live chat).
+| Table | Purpose |
+|--------|---------|
+| `profiles` | User settings, religion, onboarding |
+| `streaks` | Clean-day streak counters |
+| `habit_logs` | Daily check-ins + panic (legacy + app columns) |
+| `providers` | Clinical + faith orgs + spiritual teachers |
+| `telehealth_bookings` | Session bookings + payment fields |
+| `bookings` | Legacy booking fallback |
+| `anonymous_chat` | Community chat + moderation |
+| `guardian_controls` | Guardian invite tokens |
+| `notification_logs` | In-app notifications |
+| `milestones` | Streak milestone achievements |
+| `knowledge_base` | RAG embeddings for AI chat |
 
-### Verify
-
-In SQL Editor, run:
+## Verify
 
 ```sql
-select table_name
-from information_schema.tables
-where table_schema = 'public'
-  and table_name in (
-    'profiles', 'streaks', 'habit_logs', 'bookings',
-    'anonymous_chat', 'guardian_links'
-  )
-order by table_name;
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
 ```
 
-You should get **6 rows**.
+## Re-running
+
+The migration is **idempotent** (`IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`). Safe to run again after partial setups or schema drift.
 
 ## Environment
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-GEMINI_API_KEY=your_gemini_api_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+GROQ_API_KEY=your_groq_key
+OPENAI_API_KEY=your_openai_key   # RAG embeddings only
 ```
 
-`NEXT_PUBLIC_SITE_URL` must match **Authentication** → **URL configuration** → **Site URL**, and include `http://localhost:3000/auth/callback` under **Redirect URLs**.
+## Other migration files
 
-## Auth & email (local dev)
-
-1. **Authentication** → **Providers** → **Email** → turn **off** “Confirm email” (fastest for hackathons), **or** configure SMTP for production.
-2. **Site URL**: `http://localhost:3000`
-3. **Redirect URLs**: `http://localhost:3000/auth/callback`
-
-## Existing users (before migration)
-
-If you signed up before running the migration, run once in SQL Editor to backfill profile + streak rows:
-
-```sql
-insert into public.profiles (id, alias)
-select id, coalesce(raw_user_meta_data ->> 'alias', 'Anonymous')
-from auth.users
-on conflict (id) do nothing;
-
-insert into public.streaks (user_id)
-select id from auth.users
-on conflict (user_id) do nothing;
-```
-
-## Individual migrations
-
-If you prefer smaller files, run in order:
-
-1. `20240604120000_anonymous_chat.sql`
-2. `20240604120100_guardian_links.sql`
-3. `20240604120200_realtime_anonymous_chat.sql`
-
-Or use the all-in-one `00_full_schema.sql` (recommended).
+Files `01_*` through `04_*` and dated `20240604_*` migrations are **legacy**. Use **`00_full_schema.sql` only**.
