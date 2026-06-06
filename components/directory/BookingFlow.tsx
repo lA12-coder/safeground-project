@@ -1,8 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Check, CreditCard, Smartphone } from 'lucide-react';
 import type { DirectoryProvider } from '@/lib/directory/types';
+import { parseFeeAmount } from '@/lib/faith/constants';
+import { PaymentBreakdown } from '@/components/billing/PaymentBreakdown';
 
 type BookingFlowProps = {
   provider: DirectoryProvider;
@@ -27,38 +29,89 @@ function getAvailableDates(count = 14): Date[] {
 }
 
 export function BookingFlow({ provider, onClose }: BookingFlowProps) {
+  const amountEtb = parseFeeAmount(provider.price, provider.consultationFee);
+  const needsPayment = !provider.proBono && amountEtb > 0;
+  const totalSteps = needsPayment ? 5 : 4;
+
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'chapa' | 'telebirr'>('chapa');
+  const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<{
     meetingLink?: string;
+    paid?: boolean;
   } | null>(null);
 
   const dates = useMemo(() => getAvailableDates(), []);
+
+  const createBooking = async () => {
+    if (!selectedDate || !selectedTime) return null;
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        providerId: provider.id,
+        providerName: provider.name,
+        date: selectedDate.toISOString().split('T')[0],
+        time: selectedTime,
+        notes,
+        sessionType: provider.online ? 'online' : 'in-person',
+        amountEtb,
+        proBono: provider.proBono,
+        bookingType: 'clinical',
+      }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error('Booking failed');
+    return data.booking_id ?? data.booking?.id;
+  };
 
   const handleConfirm = async () => {
     if (!selectedDate || !selectedTime) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/bookings', {
+      const id = bookingId ?? (await createBooking());
+      if (!id) throw new Error('No booking id');
+      setBookingId(id);
+
+      if (needsPayment) {
+        setStep(4);
+      } else {
+        setConfirmation({ meetingLink: undefined, paid: true });
+        setStep(totalSteps);
+      }
+    } catch {
+      setConfirmation(null);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!bookingId) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/bookings/pay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          providerId: provider.id,
-          providerName: provider.name,
-          date: selectedDate.toISOString().split('T')[0],
-          time: selectedTime,
-          notes,
-          sessionType: provider.online ? 'online' : 'in-person',
+          booking_id: bookingId,
+          payment_method: paymentMethod,
+          phone: phone || undefined,
+          amount_etb: amountEtb,
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        setConfirmation({ meetingLink: data.booking.meetingLink });
-        setStep(4);
-      }
+      if (!data.success) throw new Error('Payment failed');
+      setConfirmation({
+        meetingLink: data.booking?.meeting_link,
+        paid: true,
+      });
+      setStep(totalSteps);
     } finally {
       setSubmitting(false);
     }
@@ -74,7 +127,7 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
         <div className="flex items-center justify-between p-6 border-b border-outline-variant">
           <div>
             <p className="text-xs text-on-surface-variant uppercase tracking-wider">
-              Step {step} of 4
+              Step {step} of {totalSteps}
             </p>
             <h2 className="font-serif text-xl font-bold text-on-surface">
               {provider.cta === 'join' ? 'Join Program' : 'Book Session'}
@@ -92,11 +145,10 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
               <p className="text-sm text-on-surface-variant">Select an available date</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {dates.map((d) => {
-                  const key = d.toISOString();
                   const selected = selectedDate?.toDateString() === d.toDateString();
                   return (
                     <button
-                      key={key}
+                      key={d.toISOString()}
                       type="button"
                       onClick={() => setSelectedDate(d)}
                       className={`py-3 px-2 rounded-lg text-sm font-medium border-2 transition-colors ${
@@ -145,10 +197,59 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
                 className="input-field min-h-[120px] resize-none"
                 rows={4}
               />
+              <PaymentBreakdown amountEtb={amountEtb} category="clinical" />
+              <p className="text-xs text-on-surface-variant">
+                {provider.proBono
+                  ? 'This session is pro bono — no payment required.'
+                  : 'You will complete payment in the next step via Chapa or Telebirr.'}
+              </p>
             </>
           )}
 
-          {step === 4 && confirmation && (
+          {step === 4 && needsPayment && (
+            <>
+              <p className="text-sm text-on-surface-variant">Complete payment to confirm your session</p>
+              <div className="text-center py-4">
+                <p className="text-3xl font-bold text-primary">{amountEtb} ETB</p>
+                <p className="text-sm text-on-surface-variant mt-1">with {provider.name}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('chapa')}
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 ${
+                    paymentMethod === 'chapa' ? 'border-primary bg-primary/5' : 'border-outline-variant'
+                  }`}
+                >
+                  <CreditCard className="w-6 h-6 text-primary" />
+                  <span className="text-sm font-semibold">Chapa</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('telebirr')}
+                  className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 ${
+                    paymentMethod === 'telebirr' ? 'border-primary bg-primary/5' : 'border-outline-variant'
+                  }`}
+                >
+                  <Smartphone className="w-6 h-6 text-primary" />
+                  <span className="text-sm font-semibold">Telebirr</span>
+                </button>
+              </div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Mobile number (09…)"
+                className="input-field w-full"
+              />
+              <PaymentBreakdown amountEtb={amountEtb} category="clinical" />
+              <p className="text-xs text-on-surface-variant">
+                Demo mode: payment is simulated. SafeGround keeps 20%; your provider receives 80%.
+              </p>
+            </>
+          )}
+
+          {step === totalSteps && confirmation && (
             <div className="text-center space-y-4 py-4">
               <div className="w-14 h-14 bg-secondary-container rounded-full flex items-center justify-center mx-auto">
                 <Check className="w-8 h-8 text-secondary" />
@@ -161,6 +262,11 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
                 <p>
                   <span className="font-semibold">When:</span> {dateLabel} at {selectedTime}
                 </p>
+                {needsPayment && confirmation.paid && (
+                  <p>
+                    <span className="font-semibold">Payment:</span> {amountEtb} ETB via {paymentMethod}
+                  </p>
+                )}
                 {confirmation.meetingLink && (
                   <p>
                     <span className="font-semibold">Meeting link:</span>{' '}
@@ -175,7 +281,7 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
         </div>
 
         <div className="flex justify-between p-6 border-t border-outline-variant gap-3">
-          {step > 1 && step < 4 ? (
+          {step > 1 && step < totalSteps ? (
             <button
               type="button"
               onClick={() => setStep((s) => s - 1)}
@@ -203,10 +309,20 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
               onClick={handleConfirm}
               className="btn-primary py-2 px-6 disabled:opacity-50"
             >
-              {submitting ? 'Confirming…' : 'Confirm booking'}
+              {submitting ? 'Saving…' : needsPayment ? 'Continue to payment' : 'Confirm booking'}
             </button>
           )}
-          {step === 4 && (
+          {step === 4 && needsPayment && (
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={handlePayment}
+              className="btn-primary py-2 px-6 disabled:opacity-50"
+            >
+              {submitting ? 'Processing…' : `Pay ${amountEtb} ETB`}
+            </button>
+          )}
+          {step === totalSteps && (
             <button type="button" onClick={onClose} className="btn-primary py-2 px-6 ml-auto">
               Done
             </button>

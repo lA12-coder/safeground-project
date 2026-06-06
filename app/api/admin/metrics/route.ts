@@ -97,6 +97,21 @@ export async function GET(request: NextRequest) {
       panic: val.panic,
     }))
 
+    const { data: paidBookings } = await supabase
+      .from('telehealth_bookings')
+      .select('platform_fee_etb')
+      .eq('payment_status', 'paid')
+
+    const platform_revenue_etb = (paidBookings ?? []).reduce(
+      (sum, row) => sum + (row.platform_fee_etb ?? 0),
+      0
+    )
+
+    const { count: ai_plus_subscribers } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('subscription_plan', 'ai_plus')
+
     const metrics: AdminMetrics = {
       total_users: total_users || 0,
       new_users_7d: new_users_7d || 0,
@@ -108,6 +123,8 @@ export async function GET(request: NextRequest) {
       chat_today: chat_today || 0,
       flagged_messages: flagged_messages || 0,
       activity_30d,
+      platform_revenue_etb,
+      ai_plus_subscribers: ai_plus_subscribers || 0,
     }
 
     return NextResponse.json(metrics)

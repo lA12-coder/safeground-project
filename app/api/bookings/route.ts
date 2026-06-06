@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { isMissingSupabaseTable, isMissingSupabaseColumn } from '@/lib/supabase/schema-errors';
+import { calculateBookingSplit } from '@/lib/billing/commission';
+import type { BookingCategory } from '@/lib/billing/constants';
 import type { BookingRequest } from '@/lib/directory/types';
 
 export async function POST(request: NextRequest) {
@@ -40,6 +42,9 @@ export async function POST(request: NextRequest) {
 
     const amountEtb = body.proBono ? 0 : (body.amountEtb ?? 0);
     const paymentStatus = body.proBono ? 'waived' : 'pending';
+    const bookingCategory: BookingCategory =
+      body.bookingType === 'spiritual' ? 'spiritual' : 'clinical';
+    const split = calculateBookingSplit(amountEtb);
 
     const bookingRow = {
       user_id: user.id,
@@ -52,12 +57,15 @@ export async function POST(request: NextRequest) {
       meeting_link: meetingLink,
       payment_status: paymentStatus,
       amount_etb: amountEtb || null,
+      platform_fee_etb: split.platformFeeEtb || null,
+      provider_payout_etb: split.providerPayoutEtb || null,
+      booking_category: bookingCategory,
     };
 
     const { data, error } = await supabase
       .from('telehealth_bookings')
       .insert(bookingRow)
-      .select('id, meeting_link, created_at, payment_status, amount_etb')
+      .select('id, meeting_link, created_at, payment_status, amount_etb, platform_fee_etb, provider_payout_etb, booking_category')
       .single();
 
     if (error && isMissingSupabaseTable(error)) {
@@ -173,8 +181,11 @@ export async function POST(request: NextRequest) {
         sessionType: body.sessionType,
         meetingLink: data.meeting_link ?? meetingLink,
         status: body.proBono ? 'confirmed' : 'pending',
-        paymentStatus: (data as { payment_status?: string }).payment_status ?? paymentStatus,
-        amountEtb: (data as { amount_etb?: number }).amount_etb ?? amountEtb,
+        paymentStatus,
+        amountEtb,
+        platformFeeEtb: split.platformFeeEtb,
+        providerPayoutEtb: split.providerPayoutEtb,
+        bookingCategory,
         createdAt: data.created_at,
       },
       source: 'database',

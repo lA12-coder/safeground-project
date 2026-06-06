@@ -37,6 +37,8 @@ async function fetchAdminData() {
     { data: activityData },
     { data: pendingProviders },
     { data: flaggedChatMessages },
+    { data: paidBookings },
+    { count: ai_plus_subscribers },
   ] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', sevenDaysAgoStr),
@@ -51,6 +53,8 @@ async function fetchAdminData() {
     supabase.from('habit_logs').select('log_date, ai_intervention_triggered').gte('log_date', new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]).order('log_date', { ascending: true }),
     supabase.from('providers').select('*').eq('is_verified', false).order('created_at', { ascending: false }).limit(20),
     supabase.from('anonymous_chat').select('*').eq('is_flagged', true).eq('is_deleted', false).order('created_at', { ascending: false }).limit(5),
+    supabase.from('telehealth_bookings').select('platform_fee_etb').eq('payment_status', 'paid'),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('subscription_plan', 'ai_plus'),
   ])
 
   const avg_streak = avgStreakData?.length
@@ -74,6 +78,11 @@ async function fetchAdminData() {
     }
   })
 
+  const platform_revenue_etb = (paidBookings ?? []).reduce(
+    (sum, row) => sum + (row.platform_fee_etb ?? 0),
+    0
+  )
+
   const metrics: AdminMetrics = {
     total_users: total_users || 0,
     new_users_7d: new_users_7d || 0,
@@ -84,6 +93,8 @@ async function fetchAdminData() {
     relapse_rate_7d,
     chat_today: chat_today || 0,
     flagged_messages: flagged_messages || 0,
+    platform_revenue_etb,
+    ai_plus_subscribers: ai_plus_subscribers || 0,
     activity_30d: Array.from(activityMap.entries()).map(([date, val]) => ({
       date,
       checkins: val.checkins,

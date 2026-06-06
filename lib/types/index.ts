@@ -147,6 +147,8 @@ export type AdminMetrics = {
   flagged_messages: number
   new_users_7d: number
   activity_30d: { date: string; checkins: number; panic: number }[]
+  platform_revenue_etb: number
+  ai_plus_subscribers: number
 }
 
 export type GuardianViewData = {

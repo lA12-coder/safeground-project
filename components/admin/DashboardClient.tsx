@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   AlertTriangle, Zap, Shield, Trash2, XCircle, TrendingUp,
   Activity, MessageCircle, CheckCircle, Flag, Database, Wifi,
-  BrainCircuit, ExternalLink, Settings, MapPin, Sparkles,
+  Sparkles, ExternalLink, Settings, MapPin, BrainCircuit, DollarSign,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line,
@@ -262,6 +262,11 @@ export function DashboardClient({ metrics, pendingProviders, flaggedMessages }: 
       label: 'Active Streaks', value: metrics.active_streaks,
       sub: `Avg ${metrics.avg_streak}d`, icon: Zap,
       color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-l-amber-500',
+    },
+    {
+      label: 'Platform Revenue', value: metrics.platform_revenue_etb,
+      sub: `${metrics.ai_plus_subscribers} AI Plus subs`, icon: DollarSign,
+      color: 'text-green-700', bg: 'bg-green-50', border: 'border-l-green-600',
     },
   ], [metrics])
 

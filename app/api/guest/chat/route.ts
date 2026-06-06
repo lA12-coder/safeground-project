@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const count = sessionCounts.get(session_id) || 0;
     if (count >= MAX_MESSAGES) {
       const limitReply =
-        'You have reached the message limit for this session. Consider creating a free account for unlimited support.';
+        'You have reached the guest message limit. Create a free account for 20 AI assistant requests, then upgrade to AI Plus for unlimited access.';
       return NextResponse.json({ success: true, reply: limitReply, response: limitReply });
     }
 

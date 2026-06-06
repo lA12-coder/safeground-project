@@ -580,6 +580,24 @@ SELECT 'global', 'milestone_share',
 WHERE NOT EXISTS (SELECT 1 FROM public.anonymous_chat WHERE alias = 'QuietRiver' LIMIT 1);
 
 -- =============================================================================
+-- 16. Business model: AI subscription + booking commission
+-- =============================================================================
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS subscription_plan TEXT NOT NULL DEFAULT 'free',
+  ADD COLUMN IF NOT EXISTS ai_requests_used INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS subscription_expires_at TIMESTAMPTZ;
+
+ALTER TABLE public.telehealth_bookings
+  ADD COLUMN IF NOT EXISTS booking_category TEXT DEFAULT 'clinical',
+  ADD COLUMN IF NOT EXISTS platform_fee_etb INTEGER,
+  ADD COLUMN IF NOT EXISTS provider_payout_etb INTEGER;
+
+ALTER TABLE public.bookings
+  ADD COLUMN IF NOT EXISTS booking_category TEXT DEFAULT 'clinical',
+  ADD COLUMN IF NOT EXISTS platform_fee_etb INTEGER,
+  ADD COLUMN IF NOT EXISTS provider_payout_etb INTEGER;
+
+-- =============================================================================
 -- Done. Verify with:
 --
 -- SELECT table_name FROM information_schema.tables

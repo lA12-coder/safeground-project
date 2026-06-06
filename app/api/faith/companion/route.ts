@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { generateGroqSingleTurn, isGroqConfigured } from '@/lib/ai/groq';
 import { FAITH_COMPANION_SYSTEM_PROMPT, FALLBACK_FAITH_RESPONSES } from '@/lib/ai/prompts';
+import { aiLimitResponse, consumeAiRequest } from '@/lib/billing/ai-access';
 
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const body = await request.json();
     const message = String(body.message ?? '').trim();
     const messages = Array.isArray(body.messages) ? body.messages : [];
@@ -16,6 +23,13 @@ export async function POST(request: NextRequest) {
 
     if (!userMessage.trim()) {
       return NextResponse.json({ error: 'Message is required.' }, { status: 400 });
+    }
+
+    if (user) {
+      const { ok, access } = await consumeAiRequest(supabase, user.id);
+      if (!ok) {
+        return NextResponse.json(aiLimitResponse(access), { status: 402 });
+      }
     }
 
     if (!isGroqConfigured()) {

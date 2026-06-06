@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Check, CreditCard, Smartphone } from 'lucide-react';
 import type { DirectoryProvider } from '@/lib/directory/types';
 import { parseFeeAmount } from '@/lib/faith/constants';
+import { PaymentBreakdown } from '@/components/billing/PaymentBreakdown';
 
 type SpiritualBookingFlowProps = {
   provider: DirectoryProvider;
@@ -197,14 +198,12 @@ export function SpiritualBookingFlow({ provider, onClose }: SpiritualBookingFlow
                 className="input-field min-h-[120px] resize-none"
                 rows={4}
               />
-              <div className="rounded-lg bg-surface-container-low p-4 text-sm space-y-1">
-                <p><span className="font-semibold">Session fee:</span> {provider.price}</p>
-                <p className="text-on-surface-variant text-xs">
-                  {provider.proBono
-                    ? 'This session is pro bono — no payment required.'
-                    : 'You will complete payment in the next step via Chapa or Telebirr.'}
-                </p>
-              </div>
+              <PaymentBreakdown amountEtb={amountEtb} category="spiritual" />
+              <p className="text-xs text-on-surface-variant">
+                {provider.proBono
+                  ? 'This session is pro bono — no payment required.'
+                  : 'You will complete payment in the next step via Chapa or Telebirr.'}
+              </p>
             </>
           )}
 
@@ -244,6 +243,7 @@ export function SpiritualBookingFlow({ provider, onClose }: SpiritualBookingFlow
                 placeholder="Mobile number (09…)"
                 className="input-field w-full"
               />
+              <PaymentBreakdown amountEtb={amountEtb} category="spiritual" />
               <p className="text-xs text-on-surface-variant">
                 Demo mode: payment is simulated. In production this connects to Chapa/Telebirr checkout.
               </p>

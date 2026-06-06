@@ -1,12 +1,21 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react';
+import { FREE_AI_REQUEST_LIMIT } from '@/lib/billing/constants';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
+};
+
+type UsageInfo = {
+  ai_requests_used: number;
+  ai_requests_limit: number;
+  remaining: number | null;
+  is_subscribed: boolean;
 };
 
 const WELCOME_MSG: ChatMessage = {
@@ -19,11 +28,31 @@ export function AIChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [limitReached, setLimitReached] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    fetch('/api/billing/subscription')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setUsage({
+            ai_requests_used: data.ai_requests_used,
+            ai_requests_limit: data.ai_requests_limit,
+            remaining: data.remaining,
+            is_subscribed: data.is_subscribed,
+          });
+          setLimitReached(!data.is_subscribed && data.remaining === 0);
+        }
+      })
+      .catch(() => {});
+  }, [open]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -35,7 +64,7 @@ export function AIChatWidget() {
 
   const send = async () => {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || limitReached) return;
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', content: text }]);
     setLoading(true);
@@ -48,12 +77,32 @@ export function AIChatWidget() {
         body: JSON.stringify({ message: text, history }),
       });
       const data = await res.json();
-      if (!res.ok) {
+      if (res.status === 402) {
+        setLimitReached(true);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: `You've used all ${FREE_AI_REQUEST_LIMIT} free AI requests. Upgrade to AI Plus for unlimited access.`,
+          },
+        ]);
+      } else if (!res.ok) {
         setMessages((prev) => [
           ...prev,
           { role: 'assistant', content: `⚠ ${data.error ?? 'AI service unavailable'}` },
         ]);
       } else {
+        if (data.usage) {
+          setUsage({
+            ai_requests_used: data.usage.ai_requests_used,
+            ai_requests_limit: data.usage.ai_requests_limit,
+            remaining: data.usage.remaining,
+            is_subscribed: data.usage.plan === 'ai_plus',
+          });
+          if (data.usage.remaining === 0 && data.usage.plan !== 'ai_plus') {
+            setLimitReached(true);
+          }
+        }
         setMessages((prev) => [
           ...prev,
           { role: 'assistant', content: data.reply ?? '' },
@@ -196,6 +245,20 @@ export function AIChatWidget() {
               </button>
             </div>
 
+            {usage && !usage.is_subscribed && (
+              <div style={{ padding: '8px 16px', fontSize: '11px', color: '#6f5b4e', borderBottom: '1px solid #e5e0db' }}>
+                {usage.remaining ?? 0} of {usage.ai_requests_limit} free AI requests left
+              </div>
+            )}
+
+            {limitReached && (
+              <div style={{ padding: '10px 16px', backgroundColor: '#fff8f0', borderBottom: '1px solid #e5e0db', fontSize: '12px' }}>
+                <Link href="/settings/subscription" style={{ color: '#92400E', fontWeight: 600 }}>
+                  Upgrade to AI Plus →
+                </Link>
+              </div>
+            )}
+
             {/* Messages */}
             <div
               style={{
@@ -283,8 +346,8 @@ export function AIChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your message..."
-                disabled={loading}
+                placeholder={limitReached ? 'Upgrade to continue…' : 'Type your message...'}
+                disabled={loading || limitReached}
                 style={{
                   flex: 1,
                   height: '40px',
@@ -308,7 +371,7 @@ export function AIChatWidget() {
               <button
                 type="button"
                 onClick={send}
-                disabled={!input.trim() || loading}
+                disabled={!input.trim() || loading || limitReached}
                 style={{
                   width: '40px',
                   height: '40px',

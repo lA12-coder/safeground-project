@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { generateGroqText, isGroqConfigured } from '@/lib/ai/groq';
 import { RAG_SYSTEM_PROMPT, AI_CHAT_SYSTEM_PROMPT } from '@/lib/ai/prompts';
 import { searchKnowledgeBase } from '@/lib/ai/rag';
+import { aiLimitResponse, consumeAiRequest } from '@/lib/billing/ai-access';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Sign in to use the AI assistant.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const message = String(body.message ?? '').trim();
     const history: { role: string; content: string }[] = Array.isArray(body.history) ? body.history : [];
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required.' }, { status: 400 });
+    }
+
+    const { ok, access } = await consumeAiRequest(supabase, user.id);
+    if (!ok) {
+      return NextResponse.json(aiLimitResponse(access), { status: 402 });
     }
 
     if (!isGroqConfigured()) {
@@ -39,7 +55,17 @@ export async function POST(request: NextRequest) {
       temperature: 0.7,
     });
 
-    return NextResponse.json({ success: true, reply, source: 'groq' });
+    return NextResponse.json({
+      success: true,
+      reply,
+      source: 'groq',
+      usage: {
+        ai_requests_used: access.aiRequestsUsed,
+        ai_requests_limit: access.aiRequestsLimit,
+        remaining: access.remaining,
+        plan: access.plan,
+      },
+    });
   } catch (error) {
     console.error('[ai/chat] Error:', error);
     return NextResponse.json(
