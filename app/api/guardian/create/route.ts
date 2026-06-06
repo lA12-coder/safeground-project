@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { resolvePublicSiteUrl } from '@/lib/site/config';
 import crypto from 'crypto';
 
 const RELATIONSHIP_MAP: Record<string, string> = {
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = crypto.randomBytes(32).toString('hex');
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = resolvePublicSiteUrl();
     const access_url = `${appUrl}/guardian/${token}`;
 
     const { data, error } = await supabase

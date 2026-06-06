@@ -1,8 +1,8 @@
+import { resolvePublicSiteUrl } from '@/lib/site/config';
+
 /** Canonical app URL for Supabase email links and OAuth redirects */
 export function getSiteUrl(): string {
-  const url = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (url) return url.replace(/\/$/, '');
-  return 'http://localhost:3000';
+  return resolvePublicSiteUrl();
 }
 
 export function getAuthCallbackUrl(next = '/onboarding'): string {
