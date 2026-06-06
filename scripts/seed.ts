@@ -99,11 +99,9 @@ async function seedAuth() {
       await supabase.from('profiles').upsert({
         id: data.user.id,
         alias: 'Admin-SafeGround-00',
-        language_pref: 'english',
-        support_preference: 'secular',
-        trigger_tags: [],
-        streak_goal: 30,
-        region: 'Addis Abeba',
+        language: 'english',
+        triggers: [],
+        recovery_goal: 30,
         onboarding_done: true,
       }, { onConflict: 'id' })
       await supabase.from('streaks').upsert({
@@ -116,11 +114,9 @@ async function seedAuth() {
       await supabase.from('profiles').upsert({
         id: data.user.id,
         alias: 'Dr-Provider-00',
-        language_pref: 'english',
-        support_preference: 'clinical',
-        trigger_tags: [],
-        streak_goal: 0,
-        region: 'Addis Abeba',
+        language: 'english',
+        triggers: [],
+        recovery_goal: 0,
         onboarding_done: true,
       }, { onConflict: 'id' })
       await supabase.from('streaks').upsert({
@@ -133,11 +129,9 @@ async function seedAuth() {
       await supabase.from('profiles').upsert({
         id: data.user.id,
         alias: 'Biruk-Eagle-28',
-        language_pref: 'english',
-        support_preference: 'secular',
-        trigger_tags: ['stress', 'late_night'],
-        streak_goal: 30,
-        region: 'Addis Abeba',
+        language: 'english',
+        triggers: ['stress', 'late_night'],
+        recovery_goal: 30,
         religion: 'orthodox',
         onboarding_done: true,
       }, { onConflict: 'id' })
@@ -153,65 +147,21 @@ async function seedAuth() {
   console.log('✅ Auth users seeded')
 }
 
-// ── Seed Users ──────────────────────────────────────────
-async function seedUsers() {
-  console.log('Seeding 25 user profiles...')
-  for (let i = 0; i < 25; i++) {
-    const alias = generateAlias()
-    const regionIdx = i < 10 ? 0 : i < 15 ? 1 : i < 19 ? 2 : i < 22 ? 3 : 4
-    const { error } = await supabase.from('profiles').upsert({
-      id: `seed-user-${i}`,
-      alias,
-      language_pref: pick(languages),
-      support_preference: pick(['secular', 'faith_based', 'clinical']),
-      trigger_tags: [],
-      streak_goal: 30,
-      region: regions[regionIdx],
-      religion: pick(religions),
-      onboarding_done: true,
-    }, { onConflict: 'id' })
-    if (error) console.error(`  User ${i} error:`, error.message)
+const DEMO_USER_ID = 'd88f56b0-908e-40f1-9195-d5def890af5f'
 
-    const streakDays = Math.floor(Math.random() * 45)
-    await supabase.from('streaks').upsert({
-      user_id: `seed-user-${i}`,
-      current_streak: streakDays,
-      longest_streak: streakDays + Math.floor(Math.random() * 15),
-      total_clean_days: streakDays + Math.floor(Math.random() * 30),
-    }, { onConflict: 'user_id' })
-  }
-
-  // Demo account
-  console.log('Creating demo account (Biruk-Eagle-28)...')
-  await supabase.from('profiles').upsert({
-    id: 'demo-user',
-    alias: 'Biruk-Eagle-28',
-    language_pref: 'english',
-    support_preference: 'secular',
-    trigger_tags: ['stress', 'late_night'],
-    streak_goal: 30,
-    region: 'Addis Abeba',
-    religion: 'orthodox',
-    onboarding_done: true,
-  }, { onConflict: 'id' })
-
-  await supabase.from('streaks').upsert({
-    user_id: 'demo-user',
-    current_streak: 28,
-    longest_streak: 28,
-    total_clean_days: 30,
-  }, { onConflict: 'user_id' })
-
-  console.log('✅ 26 profiles created (25 seed + 1 demo)')
+async function getProfileIds() {
+  const { data } = await supabase.from('profiles').select('id').limit(50)
+  return (data || []).map(p => p.id)
 }
 
 // ── Seed Habit Logs ──────────────────────────────────────
 async function seedLogs() {
   console.log('Seeding 60 days of habit logs per user...')
+  const userIds = await getProfileIds()
   let total = 0
 
-  for (let u = 0; u < 25; u++) {
-    const userId = `seed-user-${u}`
+  for (let u = 0; u < Math.min(25, userIds.length); u++) {
+    const userId = userIds[u]
     let streak = 0
     const relapsedDays = new Set<number>()
     const numRelapses = 2 + Math.floor(Math.random() * 2)
@@ -277,7 +227,7 @@ async function seedLogs() {
     const dateStr = logDate.toISOString().split('T')[0]
 
     await supabase.from('habit_logs').insert({
-      user_id: 'demo-user',
+      user_id: DEMO_USER_ID,
       log_date: dateStr,
       mood_score: 6 + Math.round(Math.sin(d * 0.2) * 1.5 + (Math.random() - 0.5)),
       stress_level: 4 + Math.round(Math.sin(d * 0.15) * 2 + (Math.random() - 0.5) * 1.5),
@@ -295,7 +245,7 @@ async function seedLogs() {
     current_streak: demoStreak,
     longest_streak: demoStreak,
     total_clean_days: demoStreak + 2,
-  }).eq('user_id', 'demo-user')
+  }).eq('user_id', DEMO_USER_ID)
 
   console.log(`✅ ${total} habit logs seeded`)
 }
@@ -415,10 +365,11 @@ async function seedChat() {
 // ── Seed Guardians ──────────────────────────────────────
 async function seedGuardians() {
   console.log('Seeding guardian links...')
+  const userIds = await getProfileIds()
   const guardians = [
-    { user_id: 'seed-user-0', token: 'guardian-seed-001-alpha-bravo-charlie', guardian_alias: 'Guardian-A', relationship: 'family', is_active: true },
-    { user_id: 'seed-user-5', token: 'guardian-seed-002-delta-echo-foxtrot', guardian_alias: 'Guardian-B', relationship: 'trusted_friend', is_active: true },
-    { user_id: 'demo-user', token: 'demo-guardian-token-safeground-2024', guardian_alias: 'Guardian', relationship: 'family', is_active: true, notify_on_panic: true, notify_on_relapse: true, notify_streak_break: false, monitoring_level: 'alert_only' },
+    { user_id: userIds[0] || DEMO_USER_ID, token: 'guardian-seed-001-alpha-bravo-charlie', guardian_alias: 'Guardian-A', relationship: 'family', is_active: true },
+    { user_id: userIds[Math.min(5, userIds.length-1)] || DEMO_USER_ID, token: 'guardian-seed-002-delta-echo-foxtrot', guardian_alias: 'Guardian-B', relationship: 'trusted_friend', is_active: true },
+    { user_id: DEMO_USER_ID, token: 'demo-guardian-token-safeground-2024', guardian_alias: 'Guardian', relationship: 'family', is_active: true, notify_on_panic: true, notify_on_relapse: true, notify_streak_break: false, monitoring_level: 'alert_only' },
   ]
 
   for (const g of guardians) {
@@ -437,6 +388,7 @@ async function seedGuardians() {
 // ── Seed Bookings ────────────────────────────────────────
 async function seedBookings() {
   console.log('Seeding telehealth bookings...')
+  const userIds = await getProfileIds()
 
   // Get a provider ID for Dr. Hiwot Bekele
   const { data: providers } = await supabase
@@ -454,7 +406,7 @@ async function seedBookings() {
     tomorrow.setHours(10, 0, 0, 0)
 
     await supabase.from('telehealth_bookings').upsert({
-      user_id: 'demo-user',
+      user_id: DEMO_USER_ID,
       provider_id: hiwotId,
       session_type: 'follow_up',
       scheduled_at: tomorrow.toISOString(),
@@ -477,7 +429,7 @@ async function seedBookings() {
       bookingDate.setHours(i % 2 === 0 ? 10 : 14, 0, 0, 0)
 
       await supabase.from('telehealth_bookings').upsert({
-        user_id: `seed-user-${i * 6}`,
+        user_id: userIds[i * 6] || DEMO_USER_ID,
         provider_id: allProviders[i % allProviders.length].id,
         session_type: i === 0 ? 'initial' : i === 1 ? 'follow_up' : i === 2 ? 'crisis' : 'follow_up',
         scheduled_at: bookingDate.toISOString(),
@@ -495,7 +447,7 @@ async function seedBookings() {
 async function seedFaithProgram() {
   console.log('Seeding demo faith program enrollment...')
   await supabase.from('notification_logs').upsert({
-    user_id: 'demo-user',
+    user_id: DEMO_USER_ID,
     type: 'program_enrollment',
     message: 'You are enrolled in Restoration Fellowship — Week 4 of 12.',
     read: false,
@@ -516,7 +468,6 @@ async function main() {
   const startTime = Date.now()
 
   if (types.includes('full') || types.includes('auth')) await seedAuth()
-  if (types.includes('full') || types.includes('users')) await seedUsers()
   if (types.includes('full') || types.includes('logs')) await seedLogs()
   if (types.includes('full') || types.includes('providers')) await seedProviders()
   if (types.includes('full') || types.includes('chat')) await seedChat()
