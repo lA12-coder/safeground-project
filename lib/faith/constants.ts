@@ -1,3 +1,10 @@
+import {
+  formatEtb,
+  formatPaymentStatus,
+  formatBookingStatus,
+  parseFeeAmount as parseFeeFromCurrency,
+} from '@/lib/billing/currency';
+
 export type ReligionId = 'orthodox' | 'protestant' | 'muslim' | 'catholic' | 'other' | 'none';
 
 export const RELIGION_OPTIONS: { id: ReligionId; label: string; denomination?: string }[] = [
@@ -15,10 +22,7 @@ export function religionToDenomination(religion: string | null | undefined): str
 }
 
 export function parseFeeAmount(price: string, consultationFee?: number | null): number {
-  if (consultationFee != null && consultationFee > 0) return consultationFee;
-  const etb = price.match(/(\d+)\s*ETB/i);
-  if (etb) return parseInt(etb[1], 10);
-  const usd = price.match(/\$(\d+)/);
-  if (usd) return parseInt(usd[1], 10) * 55;
-  return 0;
+  return parseFeeFromCurrency(price, consultationFee);
 }
+
+export { formatEtb, formatPaymentStatus, formatBookingStatus };

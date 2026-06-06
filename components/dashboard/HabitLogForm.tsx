@@ -33,13 +33,13 @@ export function HabitLogForm({ onSubmit }: HabitLogFormProps) {
     setIsSubmitting(true)
 
     const formData = {
-      mood,
-      stress,
-      urge: String(urge),
-      khatUsed: slipToday,
-      khatHoursAgo: null,
-      alcoholUsed: false,
-      triggers,
+      mood_score: mood,
+      stress_level: stress,
+      urge_intensity: urge,
+      khat_used_today: slipToday,
+      khat_hours_ago: null,
+      alcohol_used_today: false,
+      trigger_tags: triggers,
       notes,
     }
 
@@ -53,6 +53,9 @@ export function HabitLogForm({ onSubmit }: HabitLogFormProps) {
       if (response.ok) {
         onSubmit?.(formData)
         setNotes('')
+      } else {
+        const err = await response.json().catch(() => ({}))
+        console.error('[HabitLogForm] Save failed:', err.error ?? response.statusText)
       }
     } finally {
       setIsSubmitting(false)

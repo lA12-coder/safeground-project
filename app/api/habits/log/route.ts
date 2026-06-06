@@ -11,7 +11,11 @@ const URGE_TO_SCORE: Record<string, number> = {
 
 function urgeToScore(urge: unknown): number {
   if (typeof urge === 'number') return urge;
-  if (typeof urge === 'string' && urge in URGE_TO_SCORE) return URGE_TO_SCORE[urge];
+  if (typeof urge === 'string') {
+    if (urge in URGE_TO_SCORE) return URGE_TO_SCORE[urge];
+    const parsed = Number(urge);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
   return 5;
 }
 

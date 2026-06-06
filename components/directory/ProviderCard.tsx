@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Globe, Laptop, User } from 'lucide-react';
 import type { DirectoryProvider } from '@/lib/directory/types';
+import { resolveProviderImageUrl } from '@/lib/directory/images';
 
 type ProviderCardProps = {
   provider: DirectoryProvider;
@@ -11,13 +12,14 @@ type ProviderCardProps = {
 
 export function ProviderCard({ provider, onAction }: ProviderCardProps) {
   const isFaith = provider.badge === 'faith';
+  const imageSrc = resolveProviderImageUrl(provider.imageUrl);
 
   return (
     <article className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden shadow-sm flex flex-col">
       <div className="relative h-44 w-full bg-surface-container">
         <Image
-          src={provider.imageUrl}
-          alt=""
+          src={imageSrc}
+          alt={provider.name}
           fill
           className="object-cover"
           sizes="(max-width:768px) 100vw, 33vw"

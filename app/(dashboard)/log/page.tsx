@@ -5,8 +5,8 @@ import { HabitLogForm } from '@/components/dashboard/HabitLogForm';
 import { ArrowLeft } from 'lucide-react';
 
 export default function LogPage() {
-  const handleSubmit = (data: any) => {
-    console.log('[v0] Habit log submitted:', data);
+  const handleSubmit = (data: Record<string, unknown>) => {
+    console.log('[log] Habit log submitted:', data);
   };
 
   return (

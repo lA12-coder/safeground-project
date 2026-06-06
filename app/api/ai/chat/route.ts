@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       systemPrompt,
       messages: chatMessages,
       maxTokens: 300,
-      temperature: 0.7,
+      temperature: 0.4,
     });
 
     return NextResponse.json({

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateGroqText, isGroqConfigured } from '@/lib/ai/groq';
-import { RAG_SYSTEM_PROMPT, GUEST_CHAT_SYSTEM_PROMPT } from '@/lib/ai/prompts';
-import { searchKnowledgeBase } from '@/lib/ai/rag';
+import { generateGroqText, isGroqConfigured, isGroqRateLimitError } from '@/lib/ai/groq';
+import { GUEST_CHAT_SYSTEM_PROMPT, FALLBACK_REPLIES } from '@/lib/ai/prompts';
 
 export const runtime = 'nodejs';
 
 const sessionCounts = new Map<string, number>();
 const MAX_MESSAGES = 20;
+
+function pickFallbackReply(): string {
+  return FALLBACK_REPLIES[Math.floor(Math.random() * FALLBACK_REPLIES.length)];
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,10 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isGroqConfigured()) {
-      return NextResponse.json(
-        { error: 'No AI service configured. Add GROQ_API_KEY to .env.local' },
-        { status: 503 }
-      );
+      const reply = pickFallbackReply();
+      sessionCounts.set(session_id, count + 1);
+      return NextResponse.json({ success: true, reply, response: reply, source: 'fallback' });
     }
 
     const chatHistory = history.slice(-8).map((m: { role: string; content: string }) => ({
@@ -39,27 +41,37 @@ export async function POST(request: NextRequest) {
       content: String(m.content),
     }));
 
-    const { context } = await searchKnowledgeBase(message);
+    // Guest chat uses Groq only — no RAG (avoids OpenAI embedding quota/latency).
+    let reply: string;
+    let source: 'groq' | 'fallback' = 'groq';
 
-    const systemPrompt = context
-      ? RAG_SYSTEM_PROMPT.replace('{context}', context)
-      : GUEST_CHAT_SYSTEM_PROMPT;
-
-    const reply = await generateGroqText({
-      systemPrompt,
-      messages: [...chatHistory, { role: 'user', content: message }],
-      maxTokens: 200,
-      temperature: 0.7,
-    });
+    try {
+      reply = await generateGroqText({
+        systemPrompt: GUEST_CHAT_SYSTEM_PROMPT,
+        messages: [...chatHistory, { role: 'user', content: message }],
+        maxTokens: 200,
+        temperature: 0.4,
+      });
+      if (!reply.trim()) {
+        reply = pickFallbackReply();
+        source = 'fallback';
+      }
+    } catch (error) {
+      if (isGroqRateLimitError(error)) {
+        console.warn('[guest/chat] Groq rate limit — using fallback reply');
+      } else {
+        console.error('[guest/chat] Groq failed:', error);
+      }
+      reply = pickFallbackReply();
+      source = 'fallback';
+    }
 
     sessionCounts.set(session_id, count + 1);
 
-    return NextResponse.json({ success: true, reply, response: reply, source: 'groq' });
+    return NextResponse.json({ success: true, reply, response: reply, source });
   } catch (error) {
     console.error('[guest/chat] Error:', error);
-    return NextResponse.json(
-      { error: 'AI service unavailable. Check your GROQ_API_KEY.' },
-      { status: 503 }
-    );
+    const reply = pickFallbackReply();
+    return NextResponse.json({ success: true, reply, response: reply, source: 'fallback' });
   }
 }

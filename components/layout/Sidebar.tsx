@@ -24,6 +24,7 @@ const userMenu: SidebarItem[] = [
   { label: 'Chat Rooms', href: '/chat', icon: MessageCircle },
   { label: 'Support Directory', href: '/directory', icon: Users },
   { label: 'Faith Support', href: '/spiritual', icon: Sparkles },
+  { label: 'My Sessions', href: '/bookings', icon: Calendar },
   { label: 'Guardian', href: '/settings/guardian', icon: UserRound },
   { label: 'Profile', href: '/profile', icon: UserRound },
   { label: 'Settings', href: '/settings', icon: Settings },

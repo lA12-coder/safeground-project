@@ -111,18 +111,27 @@ function modernInsert(input: HabitLogInput) {
 }
 
 function legacyInsert(input: HabitLogInput) {
+  const log_date = input.log_date ?? new Date().toISOString().split('T')[0];
   const logType = input.log_type ?? (input.ai_intervention_triggered ? 'panic' : 'daily');
   const triggers = Array.isArray(input.trigger_tags) ? input.trigger_tags : [];
 
   return {
     user_id: input.user_id,
+    log_date,
+    mood_score: input.mood_score ?? 5,
+    stress_level: input.stress_level ?? 5,
+    urge_intensity: input.urge_intensity ?? 5,
+    relapsed: input.relapsed ?? input.khat_used_today ?? false,
+    khat_used_today: input.khat_used_today ?? false,
+    khat_hours_ago: input.khat_hours_ago ?? null,
+    alcohol_used_today: input.alcohol_used_today ?? false,
+    trigger_tags: triggers,
     log_type: logType,
     mood: toMoodSmall(input.mood_score),
     stress: toMoodSmall(input.stress_level),
     urge: urgeLabel(input.urge_intensity),
     intensity: input.urge_intensity,
     khat_used: input.khat_used_today ?? false,
-    khat_hours_ago: input.khat_hours_ago ?? null,
     alcohol_used: input.alcohol_used_today ?? false,
     triggers,
     context_tags: triggers,
@@ -157,11 +166,13 @@ export async function insertHabitLog(
   if (!result.error) return result;
 
   if (isMissingSupabaseColumn(result.error)) {
-    // Partial migration: only columns present in both schemas.
+    const log_date = input.log_date ?? new Date().toISOString().split('T')[0];
     const minimal = {
       user_id: input.user_id,
+      log_date,
       log_type: input.log_type ?? (input.ai_intervention_triggered ? 'panic' : 'daily'),
       mood: toMoodSmall(input.mood_score),
+      mood_score: input.mood_score ?? 5,
       ai_intervention_triggered: input.ai_intervention_triggered ?? false,
     };
     return tryInsert(supabase, minimal);

@@ -18,7 +18,11 @@ function formatTimeAgo(ts: number): string {
   return `${min}m ago`;
 }
 
-export function GuestChatPanel() {
+type GuestChatPanelProps = {
+  sessionId?: string;
+};
+
+export function GuestChatPanel({ sessionId }: GuestChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -54,19 +58,43 @@ export function GuestChatPanel() {
         role: m.role,
         content: m.content,
       }));
-      const res = await fetch('/api/guest/chat', {
+
+      // Logged-in users: same endpoint as the floating AI widget.
+      let res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history }),
       });
+
+      if (res.status === 401) {
+        res = await fetch('/api/guest/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, history, session_id: sessionId }),
+        });
+      }
+
       const data = await res.json();
-      if (!res.ok) {
+
+      if (res.status === 402) {
         setMessages((prev) => [
           ...prev,
           {
             id: `a-${Date.now()}`,
             role: 'assistant',
-            content: `⚠ ${data.error ?? 'AI service unavailable. Check console for details.'}`,
+            content:
+              data.error ??
+              'You have used all free AI requests. Create an account or upgrade to AI Plus for more.',
+            createdAt: Date.now(),
+          },
+        ]);
+      } else if (!res.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `a-${Date.now()}`,
+            role: 'assistant',
+            content: data.reply ?? data.error ?? 'I am here with you. Please try again in a moment.',
             createdAt: Date.now(),
           },
         ]);
@@ -81,6 +109,16 @@ export function GuestChatPanel() {
           },
         ]);
       }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `a-${Date.now()}`,
+          role: 'assistant',
+          content: 'Connection issue. Please try again — you are still in a safe, anonymous space.',
+          createdAt: Date.now(),
+        },
+      ]);
     } finally {
       setSending(false);
     }

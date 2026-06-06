@@ -27,7 +27,7 @@ export function GuestSanctuary() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-8 py-8">
         <div className="grid lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
-            <GuestChatPanel />
+            <GuestChatPanel sessionId={sessionId} />
           </div>
           <div className="lg:col-span-2">
             <GuestRightPanel />

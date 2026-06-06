@@ -87,11 +87,13 @@ export default function DashboardPage() {
 
         if (streakResponse.ok) {
           const data = await streakResponse.json();
-          setStreakData({
-            currentStreak: data.currentStreak ?? data.current_streak ?? 0,
-            longestStreak: data.longestStreak ?? data.longest_streak ?? 0,
-            totalCleanDays: data.totalCleanDays ?? data.total_clean_days ?? 0,
-          });
+          const currentStreak = data.currentStreak ?? data.current_streak ?? 0;
+          const longestStreak = data.longestStreak ?? data.longest_streak ?? 0;
+          const totalCleanDays = data.totalCleanDays ?? data.total_clean_days ?? 0;
+          setStreakData({ currentStreak, longestStreak, totalCleanDays });
+          if (currentStreak > 0 || totalCleanDays > 0) {
+            setIsDataEmpty(false);
+          }
         }
 
         if (historyResponse.ok) {
@@ -126,7 +128,15 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData();
-    return () => { active = false; };
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') fetchDashboardData();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      active = false;
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   const daysLogged = useMemo(() => {

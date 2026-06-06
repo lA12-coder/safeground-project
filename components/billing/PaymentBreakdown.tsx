@@ -1,4 +1,5 @@
 import { calculateBookingSplit } from '@/lib/billing/commission';
+import { formatEtb } from '@/lib/billing/currency';
 import type { BookingCategory } from '@/lib/billing/constants';
 
 type PaymentBreakdownProps = {
@@ -17,19 +18,19 @@ export function PaymentBreakdown({ amountEtb, category }: PaymentBreakdownProps)
       <p className="font-semibold text-on-surface">Payment breakdown</p>
       <div className="flex justify-between text-on-surface-variant">
         <span>Session with {categoryLabel}</span>
-        <span>{split.totalEtb} ETB</span>
+        <span>{formatEtb(split.totalEtb)}</span>
       </div>
       <div className="flex justify-between text-on-surface-variant">
         <span>SafeGround platform fee (20%)</span>
-        <span>{split.platformFeeEtb} ETB</span>
+        <span>{formatEtb(split.platformFeeEtb)}</span>
       </div>
       <div className="flex justify-between text-on-surface-variant">
         <span>Provider receives</span>
-        <span>{split.providerPayoutEtb} ETB</span>
+        <span>{formatEtb(split.providerPayoutEtb)}</span>
       </div>
       <div className="border-t border-outline-variant pt-2 flex justify-between font-semibold text-on-surface">
         <span>You pay</span>
-        <span>{split.totalEtb} ETB</span>
+        <span>{formatEtb(split.totalEtb)}</span>
       </div>
     </div>
   );

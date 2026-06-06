@@ -1,9 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { X, ChevronLeft, ChevronRight, Check, CreditCard, Smartphone } from 'lucide-react';
 import type { DirectoryProvider } from '@/lib/directory/types';
 import { parseFeeAmount } from '@/lib/faith/constants';
+import { formatEtb } from '@/lib/billing/currency';
 import { PaymentBreakdown } from '@/components/billing/PaymentBreakdown';
 
 type BookingFlowProps = {
@@ -210,7 +212,7 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
             <>
               <p className="text-sm text-on-surface-variant">Complete payment to confirm your session</p>
               <div className="text-center py-4">
-                <p className="text-3xl font-bold text-primary">{amountEtb} ETB</p>
+                <p className="text-3xl font-bold text-primary">{formatEtb(amountEtb)}</p>
                 <p className="text-sm text-on-surface-variant mt-1">with {provider.name}</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -264,7 +266,7 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
                 </p>
                 {needsPayment && confirmation.paid && (
                   <p>
-                    <span className="font-semibold">Payment:</span> {amountEtb} ETB via {paymentMethod}
+                    <span className="font-semibold">Payment:</span> {formatEtb(amountEtb)} via {paymentMethod}
                   </p>
                 )}
                 {confirmation.meetingLink && (
@@ -319,13 +321,18 @@ export function BookingFlow({ provider, onClose }: BookingFlowProps) {
               onClick={handlePayment}
               className="btn-primary py-2 px-6 disabled:opacity-50"
             >
-              {submitting ? 'Processing…' : `Pay ${amountEtb} ETB`}
+              {submitting ? 'Processing…' : `Pay ${formatEtb(amountEtb)}`}
             </button>
           )}
           {step === totalSteps && (
-            <button type="button" onClick={onClose} className="btn-primary py-2 px-6 ml-auto">
-              Done
-            </button>
+            <div className="flex gap-2 ml-auto">
+              <Link href="/bookings" className="btn-primary py-2 px-6 inline-flex items-center">
+                My sessions
+              </Link>
+              <button type="button" onClick={onClose} className="py-2 px-6 border border-outline-variant rounded-lg font-medium">
+                Done
+              </button>
+            </div>
           )}
         </div>
       </div>

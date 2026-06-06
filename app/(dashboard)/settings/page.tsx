@@ -1,8 +1,9 @@
 import Link from 'next/link'
-import { Shield, User, Bell, Lock, ChevronRight, Sparkles } from 'lucide-react'
+import { Shield, User, Bell, Lock, ChevronRight, Sparkles, Calendar } from 'lucide-react'
 
 const sections = [
   { icon: Sparkles, label: 'AI Plus', desc: '20 free AI requests, then upgrade for unlimited', href: '/settings/subscription' },
+  { icon: Calendar, label: 'My Sessions', desc: 'Booked psychiatrist & spiritual sessions (ETB)', href: '/bookings' },
   { icon: User, label: 'Profile', desc: 'Alias, language, recovery preferences', href: '/settings/guardian' },
   { icon: Shield, label: 'Guardian', desc: 'Manage guardian link and permissions', href: '/settings/guardian' },
   { icon: Bell, label: 'Notifications', desc: 'Alert preferences and frequency', href: '/settings/guardian' },

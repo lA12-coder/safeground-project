@@ -1,9 +1,23 @@
-import { generateEmbedding } from '@/lib/ai/embeddings';
+import { generateEmbedding, isEmbeddingConfigured } from '@/lib/ai/embeddings';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 const MAX_CONTEXT_CHARS = 3000;
 const SIMILARITY_THRESHOLD = 0.7;
 const MAX_RESULTS = 5;
+
+/** Skip repeated OpenAI calls after quota/network failures for this server process. */
+let embeddingsUnavailable = false;
+
+function isEmbeddingQuotaError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return (
+    msg.includes('429') ||
+    msg.includes('quota') ||
+    msg.includes('insufficient_quota') ||
+    msg.includes('ENOTFOUND') ||
+    msg.includes('fetch failed')
+  );
+}
 
 export type RagResult = {
   context: string;
@@ -11,6 +25,10 @@ export type RagResult = {
 };
 
 export async function searchKnowledgeBase(query: string): Promise<RagResult> {
+  if (!isEmbeddingConfigured() || embeddingsUnavailable) {
+    return { context: '', sources: [] };
+  }
+
   try {
     const embedding = await generateEmbedding(query);
 
@@ -50,6 +68,9 @@ export async function searchKnowledgeBase(query: string): Promise<RagResult> {
 
     return { context: combined, sources };
   } catch (err) {
+    if (isEmbeddingQuotaError(err)) {
+      embeddingsUnavailable = true;
+    }
     console.error('[rag] search error:', err);
     return { context: '', sources: [] };
   }

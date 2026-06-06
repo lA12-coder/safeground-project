@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { formatEtb } from '@/lib/billing/currency';
 import { MOCK_PROVIDERS, filterProviders } from '@/lib/directory/providers';
+import { resolveProviderImageUrl } from '@/lib/directory/images';
 import type { DirectoryProvider } from '@/lib/directory/types';
 import { religionToDenomination } from '@/lib/faith/constants';
 
@@ -37,7 +39,7 @@ function mapDbProvider(row: Record<string, unknown>): DirectoryProvider {
     city: String(row.city ?? ''),
     languages: (row.languages as string[]) ?? [],
     bio: String(row.bio ?? ''),
-    price: proBono ? 'Free (Pro bono)' : fee ? `${fee} ETB` : 'Contact',
+    price: proBono ? 'Free (Pro bono)' : fee ? formatEtb(fee, { perSession: true }) : 'Contact',
     priceHighlight: proBono ? 'green' : 'amber',
     consultationFee: fee,
     mode: row.online && row.in_person ? 'hybrid' : row.online ? 'online' : 'in-person',
@@ -47,7 +49,7 @@ function mapDbProvider(row: Record<string, unknown>): DirectoryProvider {
     inPerson: Boolean(row.in_person),
     verified: Boolean(row.is_verified),
     denomination: extractDenomination(row) as DirectoryProvider['denomination'],
-    imageUrl: '',
+    imageUrl: resolveProviderImageUrl(row.image_url as string | null),
     cta: type === 'religious_org' ? 'join' : 'book',
   };
 }

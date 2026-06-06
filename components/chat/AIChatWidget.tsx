@@ -71,11 +71,28 @@ export function AIChatWidget() {
 
     try {
       const history = messages.slice(1).map((m) => ({ role: m.role, content: m.content }));
-      const res = await fetch('/api/ai/chat', {
+      let res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history }),
       });
+
+      if (res.status === 401) {
+        const guestSession =
+          typeof sessionStorage !== 'undefined'
+            ? sessionStorage.getItem('sg_guest_session')
+            : null;
+        res = await fetch('/api/guest/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            history,
+            session_id: guestSession ?? undefined,
+          }),
+        });
+      }
+
       const data = await res.json();
       if (res.status === 402) {
         setLimitReached(true);

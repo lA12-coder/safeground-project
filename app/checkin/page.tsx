@@ -11,36 +11,27 @@ export default function CheckInPage() {
   const [submitted, setSubmitted] = useState(false)
   const [reflection, setReflection] = useState('')
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    setSubmitted(true);
+    const mood_score = data.mood_score ?? data.mood;
+    const urge_intensity = data.urge_intensity ?? data.urge;
+    const stress_level = data.stress_level ?? data.stress;
     try {
-      const res = await fetch('/api/habits/log', {
+      const affirmRes = await fetch('/api/ai/affirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-      if (res.ok) {
-        setSubmitted(true)
-        const { mood_score, stress_level, urge_intensity } = data
-        try {
-          const affirmRes = await fetch('/api/ai/affirmation', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mood_score, urge_intensity }),
-          })
-          if (affirmRes.ok) {
-            const { affirmation } = await affirmRes.json()
-            setReflection(affirmation)
-          } else {
-            setReflection('Today showed resilience despite the challenges. Keep going.')
-          }
-        } catch {
-          setReflection('Today showed resilience despite the challenges. Keep going.')
-        }
+        body: JSON.stringify({ mood_score, urge_intensity, stress_level }),
+      });
+      if (affirmRes.ok) {
+        const { affirmation } = await affirmRes.json();
+        setReflection(affirmation);
+      } else {
+        setReflection('Today showed resilience despite the challenges. Keep going.');
       }
-    } catch (e) {
-      console.error('Failed to submit check-in', e)
+    } catch {
+      setReflection('Today showed resilience despite the challenges. Keep going.');
     }
-  }
+  };
 
   return (
     <DashboardShell pageTitle="Daily Check-In" breadcrumb="Recovery">

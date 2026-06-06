@@ -18,6 +18,7 @@ export const PROTECTED_ROUTES = [
   '/directory',
   '/spiritual',
   '/settings',
+  '/bookings',
 ] as const;
 
 const AUTH_ENTRY_PATHS = new Set(['/login', '/admin-login', '/register', '/guest', ONBOARDING_PATH]);
