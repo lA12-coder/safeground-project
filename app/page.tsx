@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { PrivacyBadges } from '@/components/layout/PrivacyBadges';
+import { AuthFooterLinks } from '@/components/layout/AuthFooterLinks';
 import { FullPageLink } from '@/components/ui/FullPageLink';
 
 const stats = [
@@ -193,14 +194,14 @@ export default function LandingPage() {
                 Trusted by 15k+ Ethiopian university students
               </div>
               <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-serif font-bold text-[#2c241f] leading-[1.08] mb-3">
-                Your Journey is{' '}
+                Your Freedom is{' '}
                 <span className="text-[#92400E] italic">Private.</span>
                 <br />
-                Your Healing is{' '}
+                Your Recovery is{' '}
                 <span className="bg-gradient-to-r from-[#92400E] to-[#d97706] bg-clip-text text-transparent">Possible.</span>
               </h1>
               <p className="text-base md:text-lg text-[#6f5b4e] max-w-md leading-[1.35] mb-5">
-                A private, judgment-free space for Ethiopian youth seeking support for recovery, digital well-being, and healing.
+                A private, judgment-free platform helping Ethiopian youth break free from pornography addiction — with daily tools, anonymous support, and healing rooted in dignity.
               </p>
               <div className="flex flex-wrap items-center gap-2.5 mb-7">
                 <FullPageLink
@@ -735,8 +736,7 @@ export default function LandingPage() {
             </div>
             <div className="space-y-3">
               <h4 className="text-[10px] font-semibold uppercase tracking-widest text-[#d97706]">Support</h4>
-              <FullPageLink href="/register" className="block text-xs text-white/60 hover:text-white transition-colors">Create Account</FullPageLink>
-              <FullPageLink href="/login" className="block text-xs text-white/60 hover:text-white transition-colors">Sign In</FullPageLink>
+              <AuthFooterLinks />
               <FullPageLink href="/guest" className="block text-xs text-white/60 hover:text-white transition-colors">Guest Access</FullPageLink>
               <Link href="/settings/guardian" className="block text-xs text-white/60 hover:text-white transition-colors">Guardian Setup</Link>
               <Link href="/panic" className="block text-xs text-white/60 hover:text-white transition-colors">Panic Support</Link>

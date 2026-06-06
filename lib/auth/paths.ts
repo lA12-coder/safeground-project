@@ -11,6 +11,9 @@ export const PUBLIC_PREFIXES = ['/auth'];
 export const PROTECTED_ROUTES = [
   '/dashboard',
   '/log',
+  '/checkin',
+  '/panic',
+  '/profile',
   '/chat',
   '/directory',
   '/spiritual',
@@ -18,6 +21,8 @@ export const PROTECTED_ROUTES = [
 ] as const;
 
 const AUTH_ENTRY_PATHS = new Set(['/login', '/admin-login', '/register', '/guest', ONBOARDING_PATH]);
+
+export { AUTH_ENTRY_PATHS };
 
 export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT_PATHS.has(pathname)) return true;

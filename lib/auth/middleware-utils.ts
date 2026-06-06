@@ -9,4 +9,4 @@ export function isNextClientNavigation(request: NextRequest): boolean {
   );
 }
 
-export const AUTH_ENTRY_PATHS = new Set(['/login', '/admin-login', '/register']);
+export { AUTH_ENTRY_PATHS } from './paths';

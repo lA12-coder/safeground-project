@@ -4,13 +4,16 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { User } from '@supabase/supabase-js';
 import {
   Shield, Menu, X, ArrowRight, LayoutDashboard, ClipboardCheck,
   AlertTriangle, MessageCircle, UserCheck, Search,
   Info, HelpCircle,
-  Phone, ChevronDown, Activity, Cross, PanelRight,
+  Phone, ChevronDown, Activity, Cross, PanelRight, LogOut,
 } from 'lucide-react';
 import { FullPageLink } from '@/components/ui/FullPageLink';
+import { createClient } from '@/lib/supabase/client';
+import { signOut } from '@/lib/auth/actions';
 
 type MegaMenuItem = {
   label: string;
@@ -88,9 +91,29 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openMega, setOpenMega] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const megaRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      setAuthReady(true);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -251,18 +274,40 @@ export function SiteHeader() {
         </div>
 
         <div className="hidden lg:flex items-center gap-1.5">
-          <FullPageLink
-            href="/login"
-            className="px-3.5 py-1.5 rounded-md text-sm font-medium text-[#6f5b4e] hover:text-[#2c241f] hover:bg-[#f6f5f1] transition-colors"
-          >
-            Sign In
-          </FullPageLink>
-          <FullPageLink
-            href="/register"
-            className="px-3.5 py-1.5 rounded-md text-sm font-semibold text-white bg-[#92400E] hover:bg-[#a04e14] transition-colors shadow-sm"
-          >
-            Start Anonymously
-          </FullPageLink>
+          {authReady && user ? (
+            <>
+              <FullPageLink
+                href="/dashboard"
+                className="px-3.5 py-1.5 rounded-md text-sm font-medium text-[#6f5b4e] hover:text-[#2c241f] hover:bg-[#f6f5f1] transition-colors"
+              >
+                Dashboard
+              </FullPageLink>
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className="px-3.5 py-1.5 rounded-md text-sm font-medium text-[#6f5b4e] hover:text-[#2c241f] hover:bg-[#f6f5f1] transition-colors inline-flex items-center gap-1.5"
+                >
+                  <LogOut className="w-3.5 h-3.5" aria-hidden />
+                  Log Out
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <FullPageLink
+                href="/login"
+                className="px-3.5 py-1.5 rounded-md text-sm font-medium text-[#6f5b4e] hover:text-[#2c241f] hover:bg-[#f6f5f1] transition-colors"
+              >
+                Sign In
+              </FullPageLink>
+              <FullPageLink
+                href="/register"
+                className="px-3.5 py-1.5 rounded-md text-sm font-semibold text-white bg-[#92400E] hover:bg-[#a04e14] transition-colors shadow-sm"
+              >
+                Start Anonymously
+              </FullPageLink>
+            </>
+          )}
           <FullPageLink
             href="/panic"
             className="px-3.5 py-1.5 rounded-md text-sm font-semibold text-white bg-[#dc2626] hover:bg-[#b91c1c] transition-colors"
@@ -319,20 +364,44 @@ export function SiteHeader() {
                 );
               })}
               <hr className="my-2 border-[#e5e0db]" />
-              <FullPageLink
-                href="/register"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center gap-2 bg-[#92400E] text-white font-semibold px-4 py-2.5 rounded-lg text-sm hover:bg-[#a04e14] transition-colors"
-              >
-                Start Anonymously <ArrowRight size={14} />
-              </FullPageLink>
-              <FullPageLink
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="block text-center px-3 py-2.5 text-sm text-[#6f5b4e] font-medium hover:text-[#92400E] transition-colors"
-              >
-                Sign In
-              </FullPageLink>
+              {authReady && user ? (
+                <>
+                  <FullPageLink
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-2 bg-[#92400E] text-white font-semibold px-4 py-2.5 rounded-lg text-sm hover:bg-[#a04e14] transition-colors"
+                  >
+                    Dashboard <ArrowRight size={14} />
+                  </FullPageLink>
+                  <form action={signOut}>
+                    <button
+                      type="submit"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-center gap-2 w-full px-3 py-2.5 text-sm text-[#6f5b4e] font-medium hover:text-[#92400E] transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" aria-hidden />
+                      Log Out
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <FullPageLink
+                    href="/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-2 bg-[#92400E] text-white font-semibold px-4 py-2.5 rounded-lg text-sm hover:bg-[#a04e14] transition-colors"
+                  >
+                    Start Anonymously <ArrowRight size={14} />
+                  </FullPageLink>
+                  <FullPageLink
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="block text-center px-3 py-2.5 text-sm text-[#6f5b4e] font-medium hover:text-[#92400E] transition-colors"
+                  >
+                    Sign In
+                  </FullPageLink>
+                </>
+              )}
             </div>
           </motion.div>
         )}

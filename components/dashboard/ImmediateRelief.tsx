@@ -52,7 +52,7 @@ export function ImmediateRelief({ onTechniqueSelect }: ImmediateReliefProps) {
   return (
     <div className="space-y-4">
       <h3 className="label-caps block">Immediate Relief</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {techniques.map((technique) => (
           <button
             key={technique.id}
@@ -60,19 +60,21 @@ export function ImmediateRelief({ onTechniqueSelect }: ImmediateReliefProps) {
               setExpanded(expanded === technique.id ? null : technique.id);
               onTechniqueSelect?.(technique.id);
             }}
-            className={`card p-6 text-left transition-all hover:shadow-lg cursor-pointer ${
+            className={`card w-full min-w-0 p-5 text-left transition-all hover:shadow-lg cursor-pointer ${
               expanded === technique.id
                 ? 'ring-2 ring-primary'
                 : ''
             }`}
           >
-            <div className="flex items-start gap-3 mb-3">
-              <div className={`p-3 rounded-lg ${technique.bgColor}`}>
+            <div className="flex items-start gap-3 mb-3 min-w-0">
+              <div className={`p-2.5 rounded-lg shrink-0 ${technique.bgColor}`}>
                 {technique.icon}
               </div>
-              <div>
-                <h4 className="heading-md text-on-surface">{technique.title}</h4>
-                <p className="text-sm text-on-surface-variant">{technique.description}</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-base font-serif font-semibold text-on-surface leading-snug break-words">
+                  {technique.title}
+                </h4>
+                <p className="text-sm text-on-surface-variant mt-0.5 break-words">{technique.description}</p>
               </div>
             </div>
 
