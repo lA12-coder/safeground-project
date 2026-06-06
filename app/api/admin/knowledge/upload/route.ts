@@ -1,22 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { getSupabaseUrl } from '@/lib/supabase/env';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { extractTextFromFile } from '@/lib/ai/textExtractor';
 import { generateEmbedding } from '@/lib/ai/embeddings';
 import { chunkText } from '@/lib/ai/chunker';
 
-async function checkAuth(request: NextRequest) {
-  const supabase = createAdminClient();
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '');
-  if (!token) return false;
+async function getAuthUser(request: NextRequest) {
+  const supabase = createServerClient(
+    getSupabaseUrl(),
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll(); },
+        setAll() {},
+      },
+    }
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
 
-  const { data: { user } } = await supabase.auth.getUser(token);
+function isAdmin(user: { email?: string | null }): boolean {
   const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map((e) => e.trim().toLowerCase());
-  return user?.email ? adminEmails.includes(user.email.toLowerCase()) : false;
+  return !!user.email && adminEmails.includes(user.email.toLowerCase());
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await checkAuth(request))) {
+  const user = await getAuthUser(request);
+  if (!user || !isAdmin(user)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -29,16 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const allowedTypes = [
-      'text/plain',
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ];
-
-    if (!allowedTypes.includes(file.type) &&
-        !file.name.endsWith('.txt') &&
-        !file.name.endsWith('.pdf') &&
-        !file.name.endsWith('.docx')) {
+    if (!file.name.endsWith('.txt') && !file.name.endsWith('.pdf') && !file.name.endsWith('.docx')) {
       return NextResponse.json(
         { error: 'Unsupported file type. Use .txt, .pdf, or .docx' },
         { status: 400 }
