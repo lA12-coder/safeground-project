@@ -22,6 +22,8 @@ export default function KnowledgeBasePage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [tableMissing, setTableMissing] = useState(false);
+  const [initializing, setInitializing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -41,6 +43,11 @@ export default function KnowledgeBasePage() {
       if (res.ok) {
         setEntries(data.data ?? []);
         setTotal(data.total ?? 0);
+        setTableMissing(false);
+      } else if (data?.tableMissing) {
+        setEntries([]);
+        setTotal(0);
+        setTableMissing(true);
       }
     } catch {
       showToast('Failed to load knowledge base', 'error');
@@ -84,6 +91,27 @@ export default function KnowledgeBasePage() {
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  const handleInit = async () => {
+    setInitializing(true);
+    try {
+      const res = await fetch('/api/admin/knowledge/init', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message, 'success');
+        setTableMissing(false);
+        fetchEntries();
+      } else if (data.hint) {
+        showToast('Open Supabase SQL Editor and run the migration', 'error');
+      } else {
+        showToast(data.error ?? 'Init failed', 'error');
+      }
+    } catch {
+      showToast('Failed to initialize', 'error');
+    } finally {
+      setInitializing(false);
     }
   };
 
@@ -161,11 +189,27 @@ export default function KnowledgeBasePage() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-[#92400E]" />
             </div>
-          ) : entries.length === 0 ? (
+          ) : entries.length === 0 && !tableMissing ? (
             <div className="text-center py-12 text-[#6f5b4e]">
               <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No knowledge base entries yet</p>
               <p className="text-xs mt-1">Upload a file above to seed the AI knowledge base</p>
+            </div>
+          ) : tableMissing ? (
+            <div className="text-center py-12 text-[#6f5b4e]">
+              <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm font-medium text-[#92400E]">Database table not found</p>
+              <p className="text-xs mt-1 mb-4">The <code className="bg-[#f6f5f1] px-1 rounded">knowledge_base</code> table needs to be created</p>
+              <button
+                onClick={handleInit}
+                disabled={initializing}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#92400E] text-white rounded-md text-xs font-semibold hover:bg-[#a04e14] disabled:opacity-50"
+              >
+                {initializing ? 'Setting up...' : 'Setup Knowledge Base Table'}
+              </button>
+              <p className="text-xs mt-3 text-[#9a8a7d]">
+                Or run the SQL in <code className="bg-[#f6f5f1] px-1 rounded">supabase/migrations/02_add_knowledge_base.sql</code> via Supabase SQL Editor
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
